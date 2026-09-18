@@ -1,0 +1,17 @@
+# Environment
+.env
+config/.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Data (generated)
+data/metadata.json
+
+# IDE
+.vscode/
+.idea/
