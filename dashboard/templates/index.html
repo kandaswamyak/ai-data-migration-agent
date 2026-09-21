@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Data Migration Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/theme_override.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-shell">
+
+<!-- ============================================================
+     LEFT STEP RAIL
+     ============================================================ -->
+<nav class="top-nav" id="stepRail">
+    <div class="nav-brand">
+        <span class="nav-logo">
+            <span style="display:flex;gap:2px;align-items:flex-end;height:18px;">
+                <span style="display:block;width:4px;height:9px;background:#b7eed0;border-radius:2px 2px 0 0;"></span>
+                <span style="display:block;width:4px;height:15px;background:#d9f56a;border-radius:2px 2px 0 0;"></span>
+                <span style="display:block;width:4px;height:12px;background:#b7eed0;border-radius:2px 2px 0 0;"></span>
+            </span>
+        </span>
+        <div class="nav-brand-text">
+            <h1>Migration AI</h1>
+        </div>
+    </div>
+    <div class="nav-steps" id="navSteps">
+        <div class="nav-section">Discover</div>
+        <div class="nav-step active" data-step="0" onclick="goToStep(0)" title="Source">
+            <span class="step-num"><span>1</span></span> <span class="nav-step-label">Connect Source</span>
+            <span class="step-meta" id="metaSource"></span>
+        </div>
+        <div class="nav-step" data-step="1" onclick="goToStep(1)" title="Schema">
+            <span class="step-num"><span>2</span></span> <span class="nav-step-label">Discover Schema</span>
+            <span class="step-meta" id="metaSchema"></span>
+        </div>
+        <div class="nav-step" data-step="2" onclick="goToStep(2)" title="Analysis">
+            <span class="step-num"><span>3</span></span> <span class="nav-step-label">Analyze Types</span>
+            <span class="step-meta" id="metaAnalysis"></span>
+        </div>
+
+        <div class="nav-section">Plan</div>
+        <div class="nav-step" data-step="3" onclick="goToStep(3)" title="Mapping">
+            <span class="step-num"><span>4</span></span> <span class="nav-step-label">Map Columns</span>
+            <span class="step-meta" id="metaMapping"></span>
+        </div>
+        <div class="nav-step" data-step="4" onclick="goToStep(4)" title="Approval">
+            <span class="step-num"><span>5</span></span> <span class="nav-step-label">Review & Approve</span>
+            <span class="step-meta" id="metaApproval"></span>
+        </div>
+        <div class="nav-step" data-step="5" onclick="goToStep(5)" title="SQL Gen">
+            <span class="step-num"><span>6</span></span> <span class="nav-step-label">SQL / DDL</span>
+            <span class="step-meta" id="metaDDL"></span>
+        </div>
+
+        <div class="nav-section">Execute</div>
+        <div class="nav-step" data-step="6" onclick="goToStep(6)" title="Migration">
+            <span class="step-num"><span>7</span></span> <span class="nav-step-label">Migration</span>
+            <span class="step-meta" id="metaMigration"></span>
+        </div>
+        <div class="nav-step" data-step="7" onclick="goToStep(7)" title="Validation">
+            <span class="step-num"><span>8</span></span> <span class="nav-step-label">Validation</span>
+            <span class="step-meta" id="metaValidation"></span>
+        </div>
+        <div class="nav-step" data-step="8" onclick="goToStep(8)" title="Report">
+            <span class="step-num"><span>9</span></span> <span class="nav-step-label">Report</span>
+            <span class="step-meta" id="metaReport"></span>
+        </div>
+    </div>
+    <div class="rail-foot">
+        <span class="rail-foot-text" id="railFootText">Last run --:--</span>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleRail()" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</nav>
+
+<div class="app-main">
+
+<!-- ============================================================
+     TOPBAR
+     ============================================================ -->
+<header class="topbar" style="background:#082b30;color:#f3f0e8;border:0;padding:0 5.5vw;height:68px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20;">
+    <a href="/" style="display:flex;align-items:center;gap:12px;text-decoration:none;color:#f3f0e8;font-family:'Manrope',sans-serif;font-size:15px;font-weight:800;letter-spacing:.22em;">
+        <span style="display:flex;gap:3px;align-items:flex-end;height:25px;">
+            <span style="display:block;width:6px;height:13px;background:#b7eed0;border-radius:3px 3px 0 0;"></span>
+            <span style="display:block;width:6px;height:21px;background:#d9f56a;border-radius:3px 3px 0 0;"></span>
+            <span style="display:block;width:6px;height:17px;background:#b7eed0;border-radius:3px 3px 0 0;"></span>
+        </span>
+        MIGRATION<span style="color:#0f7472;"> AI</span>
+    </a>
+    <div style="display:flex;align-items:center;gap:30px;">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.09em;color:rgba(243,240,232,0.6);"><span style="color:#d9f56a;">PROJECT /</span> DATA MODERNIZATION</span>
+        <a href="/" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.09em;color:#b7eed0;text-decoration:none;">Back to overview <span style="color:#d9f56a;font-size:14px;margin-left:4px;">&#8598;</span></a>
+    </div>
+</header>
+<!-- Connection status bar -->
+<div style="background:#071b20;padding:6px 5.5vw;display:flex;align-items:center;justify-content:center;gap:18px;border-bottom:1px solid rgba(183,238,208,0.1);">
+    <div style="display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:#b7eed0;letter-spacing:.05em;">
+        <span class="dot" id="srcDot"></span> Source <b id="srcName" style="color:#f3f0e8;margin-left:2px;">not connected</b>
+    </div>
+    <span style="color:rgba(183,238,208,0.3);font-size:12px;">→</span>
+    <div id="tgtPill" onclick="refreshTargetStatus()" title="Click to test target" style="display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:#b7eed0;letter-spacing:.05em;cursor:pointer;">
+        <span class="dot" id="tgtDot"></span> Target <b id="tgtName" style="color:#f3f0e8;margin-left:2px;">Azure SQL</b>
+    </div>
+    <span style="color:rgba(183,238,208,0.15);margin:0 4px;">|</span>
+    <button class="btn btn-sm" onclick="rescanUiState()" style="background:transparent;border:1px solid rgba(183,238,208,0.2);color:#b7eed0;font-size:9px;padding:2px 10px;border-radius:12px;cursor:pointer;">Rescan</button>
+    <button class="btn btn-sm" onclick="goToStep(6)" style="background:#d9f56a;color:#071b20;border:0;font-weight:700;font-size:9px;padding:3px 12px;border-radius:12px;cursor:pointer;">Run migration</button>
+</div>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main-content">
+
+    <div class="status-banner" id="statusBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" style="margin-top:1px"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        <div>
+            <b id="statusBannerTitle">Target unreachable - running in dry-run mode</b>
+            <p id="statusBannerText">Azure SQL handshake failed (08001). Check firewall or connect through VPN/private route.</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="refreshTargetStatus()">Diagnose</button>
+    </div>
+
+    <!-- ========== STEP 1: SOURCE CONNECTION ========== -->
+    <div class="step-panel active" id="step-0">
+        <div class="card mockup-preview-card">
+            <div class="card-header">
+                <div>
+                    <h2>Delta Plan</h2>
+                    <p class="card-subtitle" id="deltaSubtitle">Comparing source fingerprint and watermark against target objects</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline btn-sm">Export</button>
+                    <button class="btn btn-primary btn-sm" style="margin-left: 8px;">Approve selected</button>
+                </div>
+            </div>
+
+            <div class="delta-toolbar">
+                <div class="delta-search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    <input id="deltaSearchInput" placeholder="Filter objects..." oninput="renderDeltaPreview()">
+                </div>
+                <div class="delta-chips" id="deltaChips">
+                    <button class="delta-chip on" data-mode="all" onclick="setDeltaFilter('all')">All</button>
+                    <button class="delta-chip" data-mode="new" onclick="setDeltaFilter('new')">New</button>
+                    <button class="delta-chip" data-mode="changed" onclick="setDeltaFilter('changed')">Changed</button>
+                    <button class="delta-chip" data-mode="unchanged" onclick="setDeltaFilter('unchanged')">Unchanged</button>
+                    <button class="delta-chip" data-mode="blocked" onclick="setDeltaFilter('blocked')">Blocked</button>
+                </div>
+                <div class="spacer"></div>
+                <span class="step-indicator">Mode: <strong id="deltaModeLabel">Incremental</strong></span>
+            </div>
+
+            <div id="deltaPreviewTable"></div>
+        </div>
+
+                <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Database Connection</h2>
+                    <p class="card-subtitle">Configure source and target databases</p>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <!-- SOURCE -->
+            <div style="padding:20px;background:rgba(8,43,48,0.04);border-radius:10px;border:1px solid rgba(15,116,114,0.12);">
+                <h3 style="font-size:13px;font-weight:700;margin:0 0 16px;color:#082b30;">Source</h3>
+                <div class="form-group">
+                    <label>Database Type</label>
+                    <select class="form-control" id="sourceType" onchange="toggleSourceFields()">
+                        <option value="Oracle (Real)" selected>Oracle</option>
+                        <option value="SQL Server">SQL Server</option>
+                        <option value="Azure SQL">Azure SQL</option>
+                    </select>
+                </div>
+                <div id="oracleFields">
+<div class="form-row">
+                    <div class="form-group"><label>Server</label><input type="text" class="form-control" id="oraHost" value="localhost"></div>
+                    <div class="form-group"><label>Database</label><input type="text" class="form-control" id="oraService" value="FREEPDB1"></div>
+                </div>
+                <!-- Hidden fields for backend compatibility -->
+                </div>
+<input type="hidden" id="oraPort" value="1521">
+                <input type="hidden" id="oraSID" value="">
+                <input type="hidden" id="oraUser" value="poc_migration">
+                <input type="hidden" id="oraPass" value="Poc2026migrate">
+                <div id="sqlFields" class="hidden">
+                    <div class="form-row">
+                        <div class="form-group"><label>Server</label><input type="text" class="form-control" id="sqlServer" value="localhost"></div>
+                        <div class="form-group"><label>Database</label><input type="text" class="form-control" id="sqlDatabase" value="MigrationDemo"></div>
+                    </div>
+                </div>
+                <div id="azureSqlFields" class="hidden">
+                    <div class="form-row">
+                        <div class="form-group"><label>Server</label><input type="text" class="form-control" id="azServer" value="dxcsqlmigpoc260812a.database.windows.net"></div>
+                        <div class="form-group"><label>Database</label><input type="text" class="form-control" id="azDatabase" value="MigrationTargetDB"></div>
+                    </div>
+                    <input type="hidden" id="azUser" value="sqladminuser">
+                    <input type="hidden" id="azPass" value="Sai99sai*">
+                </div>
+            </div>
+
+            <!-- TARGET -->
+            <div style="padding:20px;background:rgba(183,238,208,0.08);border-radius:10px;border:1px solid rgba(183,238,208,0.2);">
+                <h3 style="font-size:13px;font-weight:700;margin:0 0 16px;color:#082b30;">Target</h3>
+                <div class="form-group">
+                    <label>Database Type</label>
+                    <select class="form-control" id="targetType" onchange="updateTargetFields()">
+                        <option value="Azure SQL" selected>Azure SQL</option>
+                        <option value="SQL Server">SQL Server</option>
+                        <option value="Oracle">Oracle</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Server</label><input type="text" class="form-control" id="tgtServer" value="dxcsqlmigpoc260812a.database.windows.net"></div>
+                    <div class="form-group"><label>Database</label><input type="text" class="form-control" id="tgtDatabase" value="MigrationTargetDB"></div>
+                </div>
+                <input type="hidden" id="tgtUser" value="sqladminuser">
+            </div>
+            </div><!-- end grid -->
+
+            <div id="connectStatus"></div>
+            <button class="btn btn-primary" id="btnConnect" onclick="connectSource()" style="margin-top:18px;">
+                <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>Connect to Database
+            </button>
+        </div>
+
+
+        <div class="bottom-nav">
+            <div></div>
+            <span class="step-indicator">Step 1 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(1)">Next: Schema →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 2: SCHEMA DISCOVERY ========== -->
+    <div class="step-panel" id="step-1">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Schema Discovery</h2>
+                    <p class="card-subtitle">AI agent discovers tables, columns, and data types from the source database</p>
+                </div>
+                <button class="btn btn-primary" id="btnDiscoverSchema" onclick="discoverSchema()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Discover Schema
+                </button>
+            </div>
+
+            <div id="schemaLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI Agent analyzing schema...</span>
+            </div>
+
+            <div id="schemaMetrics" class="metrics-row hidden"></div>
+            <div id="schemaTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(0)">← Back: Source</button>
+            <span class="step-indicator">Step 2 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(2)">Next: Analysis →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 3: AI DATATYPE ANALYSIS ========== -->
+    <div class="step-panel" id="step-2">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>AI Datatype Analysis</h2>
+                <p class="card-subtitle">AI agent analyzes each column for target database compatibility</p>
+                </div>
+                <button class="btn btn-primary" id="btnAnalyze" onclick="runAnalysis()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5a2 2 0 0 1 5 0v1.2a5.5 5.5 0 0 1 3.4 5.1v2.2a2.2 2.2 0 0 0 .6 1.5l1.1 1.1a1 1 0 0 1-.7 1.7H5.1a1 1 0 0 1-.7-1.7l1.1-1.1a2.2 2.2 0 0 0 .6-1.5V8.8a5.5 5.5 0 0 1 3.4-5.1z"/><path d="M9 17a3 3 0 0 0 6 0"/></svg></span>Run AI Analysis
+                </button>
+            </div>
+
+            <div id="analysisLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI analyzing datatypes... this may take a moment</span>
+            </div>
+            <div id="analysisProgress" class="hidden">
+                <div class="progress-bar"><div class="fill" style="width: 0%"></div></div>
+            </div>
+
+            <div id="analysisMetrics" class="metrics-row hidden"></div>
+            <div id="analysisTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(1)">← Back: Schema</button>
+            <span class="step-indicator">Step 3 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(3)">Next: Mapping →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 4: AI MAPPING ========== -->
+    <div class="step-panel" id="step-3">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>AI Column Mapping</h2>
+                    <p class="card-subtitle">AI generates source → target mappings with risk assessment</p>
+                </div>
+                <button class="btn btn-primary" id="btnMapping" onclick="generateMapping()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>Generate Mapping
+                </button>
+            </div>
+
+            <div id="mappingLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI generating mappings...</span>
+            </div>
+
+            <div id="mappingMetrics" class="metrics-row hidden"></div>
+            <div id="mappingTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(2)">← Back: Analysis</button>
+            <span class="step-indicator">Step 4 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(4)">Next: Approval →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 5: HUMAN APPROVAL ========== -->
+    <div class="step-panel" id="step-5">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Human Approval Gate</h2>
+                    <p class="card-subtitle">Review and approve mappings before migration execution</p>
+                </div>
+                <div>
+                    <button class="btn btn-success btn-sm" onclick="approveAll()"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Approve All</button>
+                    <button class="btn btn-outline btn-sm" onclick="approveLowRisk()" style="margin-left: 8px;">Approve Low Risk</button>
+                </div>
+            </div>
+
+            <div id="approvalMetrics" class="metrics-row"></div>
+            <div id="approvalTable">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(3)"> ← Back: Mapping</button>
+            <span class="step-indicator">Step 5 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(5)">Next: SQL Gen →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 6: SQL/DDL GENERATOR ========== -->
+    <div class="step-panel" id="step-4">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>SQL / DDL Generator</h2>
+                    <p class="card-subtitle">Schema-aware DDL — only generates what's needed (CREATE, ALTER, or SKIP)</p>
+                </div>
+                <button class="btn btn-primary" id="btnDDL" onclick="generateDDL()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg></span>Generate DDL
+                </button>
+            </div>
+
+            <div id="ddlLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI generating DDL statements...</span>
+            </div>
+
+            <div id="ddlContent" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(4)"> ← Back: Approval</button>
+            <span class="step-indicator">Step 6 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(6)">Next: Migration →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 7: MIGRATION ========== -->
+    <div class="step-panel" id="step-6">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Migration Execution</h2>
+                    <p class="card-subtitle">Execute the approved migration plan (Dry Run mode)</p>
+                </div>
+            </div>
+
+            <div id="migrationStatus"></div>
+
+            <div class="form-row" style="margin-bottom: 12px;">
+                <div class="form-group" style="max-width: 320px;">
+                    <label>Migration Mode</label>
+                    <select class="form-control" id="migrationMode">
+                        <option value="append">Append (skip duplicates)</option>
+                        <option value="incremental">Incremental CDC (ORA_ROWSCN)</option>
+                        <option value="truncate_reload">Truncate/Reload (delete + reload)</option>
+                        <option value="upsert" selected>Upsert (stage + merge)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button class="btn btn-outline" id="btnPrecheck" onclick="runPreMigrationCheck()"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Run Pre-Migration Check</button>
+                </div>
+            </div>
+
+            <div id="preMigrationResult" class="hidden"></div>
+
+            <div id="migrationLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Executing migration dry run...</span>
+            </div>
+
+            <div id="migrationResult" class="hidden"></div>
+
+            <button class="btn btn-success" id="btnMigrate" onclick="executeMigration()">
+                <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-1 9-9a2.1 2.1 0 0 0-3-3l-9 9-1 6z"/><path d="M14 6l4 4"/></svg></span>Execute Migration
+            </button>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(5)"> ← Back: SQL Gen</button>
+            <span class="step-indicator">Step 7 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(7)">Next: Validation →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 8: VALIDATION ========== -->
+    <div class="step-panel" id="step-7">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Post-Migration Validation</h2>
+                    <p class="card-subtitle">Automated validation checks to ensure data integrity</p>
+                </div>
+                <button class="btn btn-primary" id="btnValidate" onclick="runValidation()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Run Validation
+                </button>
+            </div>
+
+            <div id="validationLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Running validation checks...</span>
+            </div>
+
+            <div id="validationResult" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(6)">← Back: Migration</button>
+            <span class="step-indicator">Step 8 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(8)">Next: Report →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 9: REPORT ========== -->
+    <div class="step-panel" id="step-8">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Migration Report</h2>
+                    <p class="card-subtitle">Executive summary and final migration report</p>
+                </div>
+                <button class="btn btn-primary" id="btnReport" onclick="loadReport()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-3 3 2 4-5"/></svg></span>Generate Report
+                </button>
+                <button class="btn btn-outline btn-sm" id="btnDownloadReport" onclick="downloadReport()" style="margin-left: 8px; display:none;">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></span>Download Report
+                </button>
+
+            </div>
+
+            <div id="reportLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Generating report...</span>
+            </div>
+
+            <div id="reportContent" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(7)">← Back: Validation</button>
+            <span class="step-indicator">Step 9 of 9</span>
+            <div></div>
+        </div>
+    </div>
+
+</div>
+
+</div><!-- /.app-main -->
+</div><!-- /.app-shell -->
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// State tracking
+let currentStep = 0;
+const steps = document.querySelectorAll('.step-panel');
+const navSteps = document.querySelectorAll('.nav-step');
+const completedSteps = new Set();
+let uiStateCache = null;
+let deltaFilterMode = 'all';
+let deltaData = null;  // Real delta plan data from backend
+
+const STEP_GROUPS = [
+    ['Discover', 'Source'], ['Discover', 'Schema'], ['Discover', 'Analysis'],
+    ['Plan', 'Mapping'], ['Plan', 'Approval'], ['Plan', 'SQL Gen'],
+    ['Execute', 'Migration'], ['Execute', 'Validation'], ['Execute', 'Report']
+];
+
+// ============================================================
+// APPEARANCE
+// ============================================================
+function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('mig-theme', next); } catch (e) { /* storage unavailable */ }
+}
+
+function toggleRail() {
+    const rail = document.getElementById('stepRail');
+    rail.classList.toggle('collapsed');
+    try { localStorage.setItem('mig-rail', rail.classList.contains('collapsed') ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+}
+
+(function restoreAppearance() {
+    try {
+        const t = localStorage.getItem('mig-theme');
+        if (t) document.documentElement.dataset.theme = t;
+        if (localStorage.getItem('mig-rail') === '1') {
+            document.getElementById('stepRail').classList.add('collapsed');
+        }
+    } catch (e) { /* storage unavailable */ }
+})();
+
+function setConnStatus(which, ok, name) {
+    const dot = document.getElementById(which === 'source' ? 'srcDot' : 'tgtDot');
+    const label = document.getElementById(which === 'source' ? 'srcName' : 'tgtName');
+    if (dot) dot.className = 'dot ' + (ok ? 'ok' : 'bad');
+    if (label && name) label.textContent = name;
+}
+
+function updateStatusBanner(kind, title, text) {
+    const box = document.getElementById('statusBanner');
+    const t = document.getElementById('statusBannerTitle');
+    const p = document.getElementById('statusBannerText');
+    if (!box || !t || !p) return;
+    box.classList.remove('ok', 'bad');
+    if (kind === 'ok') box.classList.add('ok');
+    if (kind === 'bad') box.classList.add('bad');
+    t.textContent = title;
+    p.textContent = text;
+}
+
+function updateDashboardStats(state) {
+    const schemaCount = state?.schema_count || 0;
+    const mappingCount = state?.mapping_count || 0;
+    const pending = Math.max(0, mappingCount - (state?.approved_count || (state?.all_approved ? mappingCount : 0)));
+
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value);
+    };
+
+    setText('metaSchema', schemaCount > 0 ? schemaCount : '');
+    setText('metaAnalysis', state?.analysis_count > 0 ? state.analysis_count : '');
+    setText('metaMapping', mappingCount > 0 ? mappingCount : '');
+    setText('metaApproval', pending > 0 ? pending : (mappingCount > 0 ? 'ok' : ''));
+    setText('metaDDL', state?.ddl_count > 0 ? state.ddl_count : '');
+    setText('metaMigration', state?.migration_executed ? 'ok' : '');
+    setText('metaValidation', state?.validation_count > 0 ? state.validation_count : '');
+    setText('metaReport', state?.report_generated ? 'ok' : '');
+
+    const approvalStep = navSteps[4];
+    if (approvalStep) {
+        approvalStep.classList.toggle('blocked', pending > 0 && mappingCount > 0);
+    }
+}
+
+function setDeltaFilter(mode) {
+    deltaFilterMode = mode;
+    document.querySelectorAll('.delta-chip').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    renderDeltaPreview();
+}
+
+function buildDeltaRows(state) {
+    return deltaData || [];
+}
+
+function renderDeltaPreview() {
+    const host = document.getElementById('deltaPreviewTable');
+    if (!host) return;
+    const rows = buildDeltaRows(uiStateCache || {});
+    const query = (document.getElementById('deltaSearchInput')?.value || '').trim().toLowerCase();
+    const filtered = rows.filter(r => {
+        if (deltaFilterMode !== 'all' && r.state !== deltaFilterMode) return false;
+        if (!query) return true;
+        return String(r.object).toLowerCase().includes(query);
+    });
+
+    const fmt = n => Number(n || 0).toLocaleString();
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Object</th><th>State</th><th class="num">Source rows</th><th class="num">Target rows</th><th class="num">Delta</th><th>Action</th></tr></thead><tbody>`;
+
+    filtered.forEach(r => {
+        html += `<tr>
+            <td><strong>${r.object}</strong></td>
+            <td><span class="state-pill ${r.state}">${r.state}</span></td>
+            <td class="num">${fmt(r.sourceRows)}</td>
+            <td class="num">${fmt(r.targetRows)}</td>
+            <td class="num">${fmt(r.delta)}</td>
+            <td>${r.action}</td>
+        </tr>`;
+    });
+
+    if (!filtered.length) {
+        html += '<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:18px;">No objects match this filter.</td></tr>';
+    }
+
+    html += '</tbody></table></div>';
+    host.innerHTML = html;
+}
+
+function stampLastRun() {
+    const el = document.getElementById('railFootText');
+    if (!el) return;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    el.textContent = `Last run ${hh}:${mm}`;
+}
+
+async function rescanUiState() {
+    await loadState();
+    await refreshTargetStatus();
+    await fetchDeltaPlan();
+    stampLastRun();
+    showAlert('', 'info', 'UI state refreshed from current backend state.');
+}
+
+async function fetchDeltaPlan() {
+    try {
+        const response = await apiCall('/api/delta');
+        if (response.success && response.delta_plan) {
+            deltaData = response.delta_plan;
+            renderDeltaPreview();
+        }
+    } catch (e) {
+        deltaData = [];
+        renderDeltaPreview();
+        console.warn('Delta fetch failed; no measured delta data available', e);
+    }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goToStep(index) {
+    // Hide all
+    steps.forEach(s => s.classList.remove('active'));
+    navSteps.forEach(n => { n.classList.remove('active'); });
+
+    // Show target
+    steps[index].classList.add('active');
+    navSteps[index].classList.add('active');
+    currentStep = index;
+
+    const crumb = document.getElementById('crumb');
+    if (crumb && STEP_GROUPS[index]) {
+        crumb.innerHTML = STEP_GROUPS[index][0] + ' / <b>' + STEP_GROUPS[index][1] + '</b>';
+    }
+
+    // Mark completed
+    completedSteps.forEach(i => navSteps[i].classList.add('completed'));
+
+    // Auto-load data for specific steps
+    if (index === 0) fetchDeltaPlan();    // Step 1: Delta Plan / Source
+    if (index === 4) loadApprovalData();  // Step 5: Approval
+    if (index === 8) loadReport();        // Step 9: Report
+
+    updateDashboardStats();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function markComplete(index) {
+    completedSteps.add(index);
+    navSteps[index].classList.add('completed');
+    updateDashboardStats();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const TOAST_TITLES = { success: 'Success', error: 'Failed', info: 'Info', warning: 'Warning' };
+
+// Signature kept for existing callers; the container argument is no longer used.
+function showAlert(container, type, message) {
+    const host = document.getElementById('toasts');
+    if (!host) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    toast.innerHTML = `
+        <span class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</span>
+        <div class="toast-body"><b>${TOAST_TITLES[type] || 'Info'}</b>${message}</div>
+        <button class="toast-close" aria-label="Dismiss">&times;</button>`;
+
+    const remove = () => toast.remove();
+    toast.querySelector('.toast-close').addEventListener('click', remove);
+    host.appendChild(toast);
+
+    // Errors stay until dismissed so the detail can be read.
+    if (type !== 'error') setTimeout(remove, 6000);
+}
+
+const TOAST_ICONS = {
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>',
+    warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2.2" stroke-linecap="round"><path d="M12 11v5M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>'
+};
+
+function skeletonRows(count) {
+    let html = '<div class="skeleton-stack"><div class="skeleton-row head">'
+        + '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+    for (let i = 0; i < count; i++) {
+        const w = [92, 74, 86, 64, 80][i % 5];
+        html += `<div class="skeleton-row">
+            <div class="skeleton" style="width:${w}%"></div>
+            <div class="skeleton" style="width:${w - 12}%"></div>
+            <div class="skeleton" style="width:60%"></div>
+            <div class="skeleton" style="width:40%"></div>
+        </div>`;
+    }
+    return html + '</div>';
+}
+
+function showLoading(id, show) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (show) {
+        if (!el.dataset.enhanced) {
+            el.innerHTML = '<div class="loading-head">' + el.innerHTML + '</div>' + skeletonRows(5);
+            el.dataset.enhanced = '1';
+        }
+        el.classList.add('active');
+    } else {
+        el.classList.remove('active');
+    }
+}
+
+const EMPTY_STATES = {
+    schemaTable: ['Nothing discovered yet', 'Run Discover Schema to pull tables, columns and data types from the source.'],
+    analysisTable: ['No analysis yet', 'Run AI Analysis to check every column for Azure SQL compatibility.'],
+    mappingTable: ['No mappings yet', 'Generate the AI column mapping to see proposed source-to-target pairs.'],
+    approvalTable: ['Nothing to approve', 'Mappings appear here once analysis and mapping have been generated.'],
+    ddlContent: ['No DDL generated', 'Generate SQL to preview the CREATE TABLE statements for the target.'],
+    migrationResult: ['Migration not run', 'Execute the migration to see per-table row counts and errors.'],
+    validationResult: ['Not validated', 'Run validation to compare source and target row counts and checksums.'],
+    reportContent: ['No report yet', 'The summary report is generated after migration and validation complete.']
+};
+
+const EMPTY_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>';
+
+function renderEmptyStates() {
+    Object.keys(EMPTY_STATES).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const [title, text] = EMPTY_STATES[id];
+        el.innerHTML = `<div class="empty-state">
+            <span class="empty-icon">${EMPTY_ICON}</span>
+            <b>${title}</b><span>${text}</span>
+        </div>`;
+        el.classList.remove('hidden');
+    });
+}
+
+function buildMetrics(data) {
+    return data.map(m => `
+        <div class="metric-card ${m.cls || ''}">
+            <div class="label">${m.label}</div>
+            <div class="value">${m.value}</div>
+        </div>
+    `).join('');
+}
+
+function riskBadge(risk) {
+    const cls = (risk || '').toLowerCase();
+    return `<span class="badge-status badge-${cls}">${risk || 'N/A'}</span>`;
+}
+
+function statusBadge(status) {
+    const s = (status || '').toLowerCase();
+    const cls = s.includes('pass') || s.includes('compatible') || s.includes('approved') ? 'pass'
+        : s.includes('review') || s.includes('pending') ? 'medium'
+        : 'fail';
+    return `<span class="badge-status badge-${cls}">${status}</span>`;
+}
+
+async function apiCall(url, options = {}) {
+    try {
+        const resp = await fetch(url, {
+            headers: { 'Content-Type': 'application/json' },
+            ...options
+        });
+        if (!resp.ok) {
+            return { success: false, error: `HTTP ${resp.status}: ${resp.statusText}` };
+        }
+        return await resp.json();
+    } catch (err) {
+        console.error('API call failed:', url, err);
+        const hint = 'Unable to reach backend API. Ensure Flask app is running at http://localhost:5000 and Python env has required packages.';
+        return { success: false, error: `${err.message || 'Network error'}. ${hint}` };
+    }
+}
+
+// ============================================================
+// STEP 1: CONNECT
+// ============================================================
+function toggleSourceFields() {
+    const type = document.getElementById('sourceType').value;
+    const oracleFields = document.getElementById('oracleFields');
+    const sqlFields = document.getElementById('sqlFields');
+    const azureSqlFields = document.getElementById('azureSqlFields');
+    oracleFields.classList.add('hidden');
+    sqlFields.classList.add('hidden');
+    azureSqlFields.classList.add('hidden');
+    if (type === 'Oracle (Real)') oracleFields.classList.remove('hidden');
+    else if (type === 'SQL Server') sqlFields.classList.remove('hidden');
+    else if (type === 'Azure SQL') azureSqlFields.classList.remove('hidden');
+    // Clear previous connection status
+    document.getElementById('connectStatus').innerHTML = '';
+    updateTargetLabel();
+}
+
+function updateTargetFields() {
+    const targetType = document.getElementById('targetType').value;
+    const tgtName = document.getElementById('tgtName');
+    if (tgtName) tgtName.textContent = targetType;
+    const sourceType = document.getElementById('sourceType').value;
+    const subtitle = document.getElementById('deltaSubtitle');
+    if (subtitle) subtitle.textContent = `Migration path: ${sourceType} \u2192 ${targetType}`;
+
+    const tgtServer = document.getElementById('tgtServer');
+    const tgtDatabase = document.getElementById('tgtDatabase');
+    const defaults = {
+        'Azure SQL':  { server: 'dxcsqlmigpoc260812a.database.windows.net', database: 'MigrationTargetDB' },
+        'SQL Server': { server: 'localhost', database: 'MigrationDemo' },
+        'Oracle':     { server: 'localhost:1521', database: 'FREEPDB1' }
+    };
+    const d = defaults[targetType] || defaults['Azure SQL'];
+    if (tgtServer) tgtServer.value = d.server;
+    if (tgtDatabase) tgtDatabase.value = d.database;
+}
+function updateTargetLabel() { updateTargetFields(); }
+
+function clearAllTabData() {
+    // Clear all tab content when source changes
+    const divsToClear = [
+        'schemaMetrics', 'schemaTable',
+        'analysisMetrics', 'analysisTable', 'analysisProgress',
+        'mappingMetrics', 'mappingTable',
+        'ddlContent',
+        'approvalMetrics', 'approvalTable',
+        'migrationStatus', 'migrationResult',
+        'validationResult',
+        'reportContent'
+    ];
+    divsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = '';
+        }
+    });
+    renderEmptyStates();
+    // Hide download/email buttons
+    const btnDl = document.getElementById('btnDownloadReport');
+    const btnEm = document.getElementById('btnEmailReport');
+    if (btnDl) btnDl.style.display = 'none';
+    if (btnEm) btnEm.style.display = 'none';
+}
+
+async function connectSource() {
+    const type = document.getElementById('sourceType').value;
+    const btn = document.getElementById('btnConnect');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Connecting...';
+
+    const targetType = document.getElementById('targetType').value;
+    const payload = { source_type: type, target_type: targetType };
+    if (type === 'Oracle (Real)') {
+        payload.host = document.getElementById('oraHost').value;
+        payload.port = document.getElementById('oraPort').value;
+        payload.service_name = document.getElementById('oraService').value;
+        payload.sid = document.getElementById('oraSID').value;
+        payload.username = document.getElementById('oraUser').value;
+        payload.password = document.getElementById('oraPass').value;
+    } else if (type === 'SQL Server') {
+        payload.server = document.getElementById('sqlServer').value;
+        payload.database = document.getElementById('sqlDatabase').value;
+    } else if (type === 'Azure SQL') {
+        payload.server = document.getElementById('azServer').value;
+        payload.database = document.getElementById('azDatabase').value;
+        payload.username = document.getElementById('azUser').value;
+        payload.password = document.getElementById('azPass').value;
+    }
+
+    const res = await apiCall('/api/connect', { method: 'POST', body: JSON.stringify(payload) });
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>Connect to Database';
+
+    if (res.success) {
+        const tableCount = res.table_count || (Array.isArray(res.tables) ? res.tables.length : 0);
+        const tableNames = Array.isArray(res.tables) ? res.tables.join(', ') : '';
+        let msg = `✅ Connected! Found <strong>${tableCount}</strong> table(s)`;
+        if (tableCount > 0 && tableNames && !tableNames.includes('Not connected')) {
+            msg += `: ${tableNames}`;
+        }
+        if (res.message) msg += `<br><em>${res.message}</em>`;
+        showAlert('connectStatus', 'success', msg);
+        setConnStatus('source', true, type);
+        setConnStatus('target', false, targetType);
+        // Reset all step checkmarks (fresh start)
+        completedSteps.clear();
+        navSteps.forEach(n => n.classList.remove('completed'));
+        clearAllTabData();
+        markComplete(0);
+        updateStatusBanner('ok', 'Source connected', `Connected using ${type}. Continue to Schema Discovery.`);
+        // Don't call loadState() here — it would re-mark steps from stale data.
+        // Step 0 is already marked above. Other steps will mark as user completes them.
+        updateDashboardStats();
+        fetchDeltaPlan();
+        stampLastRun();
+    } else {
+        showAlert('connectStatus', 'error', `❌ ${res.error}`);
+        setConnStatus('source', false, type);
+        updateStatusBanner('bad', 'Source connection failed', 'Review credentials or host details, then try again.');
+    }
+}
+
+// ============================================================
+// STEP 2: SCHEMA DISCOVERY
+// ============================================================
+async function discoverSchema() {
+    const btn = document.getElementById('btnDiscoverSchema');
+    btn.disabled = true;
+    showLoading('schemaLoading', true);
+    document.getElementById('schemaMetrics').classList.add('hidden');
+    document.getElementById('schemaTable').classList.add('hidden');
+
+    const res = await apiCall('/api/discover_schema', { method: 'POST', body: '{}' });
+
+    showLoading('schemaLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const schema = res.schema || res.data || [];
+        const tableSet = new Set(schema.map(r => r.table_name || r.TABLE_NAME || ''));
+        const tableCount = tableSet.size;
+        const colCount = schema.length;
+
+        document.getElementById('schemaMetrics').classList.remove('hidden');
+        document.getElementById('schemaMetrics').innerHTML = buildMetrics([
+            { label: 'Tables', value: tableCount, cls: 'success' },
+            { label: 'Columns', value: colCount, cls: '' },
+        ]);
+
+        const table = document.getElementById('schemaTable');
+        table.classList.remove('hidden');
+        let html = `<div class="table-container"><table>
+            <thead><tr><th>Load</th><th>Table</th><th>Column</th><th>Data Type</th><th>Nullable</th></tr></thead><tbody>`;
+        const seenTables = new Set();
+        schema.forEach(r => {
+            const tableName = r.table_name || r.TABLE_NAME || '';
+            const showSelector = !seenTables.has(tableName);
+            seenTables.add(tableName);
+            html += `<tr>
+                <td>${showSelector ? `<input type="checkbox" class="schema-table-select" value="${tableName}" checked aria-label="Select ${tableName} for migration">` : ''}</td>
+                <td><strong>${tableName}</strong></td>
+                <td>${r.column_name || r.COLUMN_NAME || ''}</td>
+                <td><code>${r.data_type || r.DATA_TYPE || r.FULL_DATA_TYPE || ''}</code></td>
+                <td>${r.nullable || r.IS_NULLABLE || r.NULLABLE || 'Y'}</td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        html += `<div style="margin-top:12px;display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-primary" onclick="selectSchemaObjects()">Use selected objects</button>
+            <span id="selectedObjectsStatus" class="card-subtitle">All discovered objects selected</span>
+        </div>`;
+        table.innerHTML = html;
+        markComplete(1);
+    } else {
+        showAlert('schemaTable', 'error', res.error);
+        document.getElementById('schemaTable').classList.remove('hidden');
+    }
+}
+
+async function selectSchemaObjects() {
+    const tables = [...document.querySelectorAll('.schema-table-select:checked')].map(input => input.value);
+    const res = await apiCall('/api/select_objects', {
+        method: 'POST',
+        body: JSON.stringify({ tables })
+    });
+    const status = document.getElementById('selectedObjectsStatus');
+    if (res.success) {
+        if (status) status.textContent = `${res.selected_tables.length} object(s) selected for DDL and load`;
+        showAlert('', 'success', `Selected objects: ${res.selected_tables.join(', ')}`);
+        fetchDeltaPlan();
+    } else {
+        if (status) status.textContent = res.error || 'Selection failed';
+        showAlert('', 'error', res.error || 'Unable to select objects');
+    }
+}
+
+// ============================================================
+// STEP 3: AI ANALYSIS
+// ============================================================
+async function runAnalysis() {
+    const btn = document.getElementById('btnAnalyze');
+    btn.disabled = true;
+    showLoading('analysisLoading', true);
+    document.getElementById('analysisMetrics').classList.add('hidden');
+    document.getElementById('analysisTable').classList.add('hidden');
+    const progressEl = document.getElementById('analysisProgress');
+    if (progressEl) {
+        progressEl.classList.remove('hidden');
+        // Restore progress bar if it was cleared
+        if (!progressEl.querySelector('.fill')) {
+            progressEl.innerHTML = '<div class="progress-bar"><div class="fill" style="width:0%;height:100%;background:#6c63ff;transition:width 0.5s;border-radius:4px;"></div></div>';
+        }
+    }
+
+    // Animate progress
+    const fill = document.querySelector('#analysisProgress .fill');
+    if (fill) {
+        fill.style.width = '30%';
+        setTimeout(() => { if (fill) fill.style.width = '60%'; }, 1000);
+        setTimeout(() => { if (fill) fill.style.width = '85%'; }, 2500);
+    }
+
+    const res = await apiCall('/api/analyze', { method: 'POST', body: '{}' });
+
+    if (fill) fill.style.width = '100%';
+    if (progressEl) setTimeout(() => progressEl.classList.add('hidden'), 500);
+    showLoading('analysisLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const data = res.analysis || res.data || [];
+        const total = data.length;
+        const compatible = data.filter(r => (r.status || '').toLowerCase() === 'compatible').length;
+        const issues = total - compatible;
+
+        document.getElementById('analysisMetrics').classList.remove('hidden');
+        document.getElementById('analysisMetrics').innerHTML = buildMetrics([
+            { label: 'Total Columns', value: total, cls: '' },
+            { label: 'Compatible', value: compatible, cls: 'success' },
+            { label: 'Issues', value: issues, cls: issues > 0 ? 'warning' : 'success' },
+        ]);
+
+        const table = document.getElementById('analysisTable');
+        table.classList.remove('hidden');
+        let html = `<div class="table-container"><table>
+            <thead><tr><th>Table</th><th>Column</th><th>Source</th><th>Target</th><th>Status</th><th>Risk</th><th>Confidence</th></tr></thead><tbody>`;
+        data.forEach(r => {
+            const rawConf = r.confidence || 1; const conf = ((rawConf > 1 ? rawConf : rawConf * 100)).toFixed(0) + '%';
+            html += `<tr>
+                <td><strong>${r.table}</strong></td>
+                <td>${r.column}</td>
+                <td><code>${r.source_type || r.source || ''}</code></td>
+                <td><code>${r.target_type || r.target || ''}</code></td>
+                <td>${statusBadge(r.status)}</td>
+                <td>${riskBadge(r.risk)}</td>
+                <td>${conf}</td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        table.innerHTML = html;
+        markComplete(2);
+    } else {
+        showAlert('analysisTable', 'error', res.error);
+        document.getElementById('analysisTable').classList.remove('hidden');
+    }
+}
+
+// ============================================================
+// STEP 4: AI MAPPING
+// ============================================================
+async function generateMapping() {
+    const btn = document.getElementById('btnMapping');
+    btn.disabled = true;
+    showLoading('mappingLoading', true);
+    document.getElementById('mappingMetrics').classList.add('hidden');
+    document.getElementById('mappingTable').classList.add('hidden');
+
+    const res = await apiCall('/api/generate_mapping', { method: 'POST', body: '{}' });
+
+    showLoading('mappingLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const mappings = res.mappings || res.data || [];
+        const total = mappings.length;
+        const approved = mappings.filter(m => m.approved).length;
+        const pending = total - approved;
+
+        document.getElementById('mappingMetrics').classList.remove('hidden');
+        document.getElementById('mappingMetrics').innerHTML = buildMetrics([
+            { label: 'Total Mappings', value: total, cls: '' },
+            { label: 'Auto-Approved', value: approved, cls: 'success' },
+            { label: 'Pending Review', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+        ]);
+
+        renderMappingTable(mappings);
+        markComplete(3);
+    } else {
+        showAlert('mappingTable', 'error', res.error);
+        document.getElementById('mappingTable').classList.remove('hidden');
+    }
+}
+
+function renderMappingTable(data) {
+    const table = document.getElementById('mappingTable');
+    table.classList.remove('hidden');
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Source Table</th><th>Source Col</th><th>Source Type</th><th>Target Type</th><th>Risk</th><th>Status</th></tr></thead><tbody>`;
+    (data || []).forEach(m => {
+        const approved = m.approved ? '<span class="badge-status badge-pass">✓ Approved</span>' : '<span class="badge-status badge-medium">Pending</span>';
+        html += `<tr>
+            <td><strong>${m.source_table || m.table || ''}</strong></td>
+            <td>${m.source_column || m.column || ''}</td>
+            <td><code>${m.source_type || ''}</code></td>
+            <td><code>${m.target_type || ''}</code></td>
+            <td>${riskBadge(m.risk_level || m.risk || 'Low')}</td>
+            <td>${approved}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    table.innerHTML = html;
+}
+
+// ============================================================
+// STEP 5: DDL GENERATION
+// ============================================================
+async function generateDDL() {
+    const btn = document.getElementById('btnDDL');
+    btn.disabled = true;
+    showLoading('ddlLoading', true);
+    document.getElementById('ddlContent').classList.add('hidden');
+
+    const unchangedTables = (deltaData || [])
+        .filter(r => r.state === 'unchanged')
+        .map(r => r.object);
+    const targetType = (document.getElementById('targetType') || {}).value;
+    const res = await apiCall('/api/generate_ddl', { method: 'POST', body: JSON.stringify({ unchanged_tables: unchangedTables, target_type: targetType }) });
+
+    showLoading('ddlLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const ddlEl = document.getElementById('ddlContent');
+        ddlEl.classList.remove('hidden');
+        const statements = res.statements || res.ddl || [];
+        const skippedNote = (res.skipped_unchanged && res.skipped_unchanged.length)
+            ? `<p class="card-subtitle">Skipped ${res.skipped_unchanged.length} unchanged table(s): ${res.skipped_unchanged.join(', ')}</p>`
+            : '';
+        let html = `${skippedNote}<div class="metrics-row" style="margin-bottom: 20px">
+            ${buildMetrics([
+                    { label: 'Total Objects', value: (res.table_summary || []).length || res.count || 0, cls: 'success' },
+                    { label: 'CREATE', value: (res.table_summary || []).filter(t => t.action === 'CREATE TABLE').length, cls: 'success' },
+                    { label: 'ALTER', value: (res.table_summary || []).filter(t => t.action === 'ALTER TABLE').length, cls: res.table_summary?.some(t => t.action === 'ALTER TABLE') ? 'info' : '' },
+                    { label: 'No Changes', value: (res.table_summary || []).filter(t => t.action && t.action.startsWith('SKIP')).length, cls: '' },
+                    { label: 'DROP', value: (res.table_summary || []).filter(t => t.action && t.action.startsWith('DROP')).length, cls: (res.table_summary || []).some(t => t.action && t.action.startsWith('DROP')) ? 'error' : '' },
+                ])}
+        </div>`;
+
+        statements.forEach((stmt, idx) => {
+            if (typeof stmt === 'string') {
+                const escaped = stmt.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                // Section headers (comment-only lines like "-- ALTER TABLE statements...")
+                if (stmt.trim().startsWith('-- =')) {
+                    return; // skip separator lines
+                }
+                // Unchanged table skip notes
+                const skipMatch = stmt.match(/-- SKIP: \[dbo\]\.\[(\w+)\]/i);
+                if (skipMatch) {
+                    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;margin:8px 0;border-radius:8px;background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.2);">
+                        <span style="font-size:1.2em">✅</span>
+                        <span><strong>${skipMatch[1]}</strong> — no schema changes, DDL not required</span>
+                    </div>`;
+                    return;
+                }
+                // DROP TABLE (orphaned tables — requires approval) — check BEFORE generic comments
+                const dropMatch = stmt.match(/-- DROP TABLE \[dbo\]\.\[(\w+)\]/i) || stmt.match(/-- DROP TABLE \[DBO\]\.\[(\w+)\]/i);
+                if (dropMatch) {
+                    const dropTable = dropMatch[1];
+                    html += `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 16px;margin:8px 0;border-radius:8px;background:rgba(244,67,54,0.08);border:1px solid rgba(244,67,54,0.3);">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="font-size:1.3em">🗑️</span>
+                            <span><strong>${dropTable}</strong> — table no longer exists in source.</span>
+                        </div>
+                        <button class="btn btn-outline" style="border-color:rgba(244,67,54,0.6);color:#f44336;font-size:0.85em;padding:6px 16px;cursor:pointer;" onclick="approveDropTable('${dropTable}')">⚠️ Approve & Drop</button>
+                    </div>`;
+                    return;
+                }
+                // Section title comments (e.g. "-- Unchanged tables (no DDL required)")
+                if (stmt.trim().startsWith('-- ') && !stmt.trim().startsWith('-- REVIEW:')) {
+                    const title = stmt.replace(/^--\s*/, '').trim();
+                    if (title) {
+                        html += `<h4 style="margin:20px 0 8px;color:var(--text-secondary,#aaa);font-size:0.85em;text-transform:uppercase;letter-spacing:0.5px;">${title}</h4>`;
+                    }
+                    return;
+                }
+                // CREATE TABLE
+                const createMatch = stmt.match(/CREATE TABLE \[?dbo\]?\.\[?(\w+)\]?/i);
+                if (createMatch) {
+                    html += `<h4 style="margin: 16px 0 8px;">🆕 ${createMatch[1]} <span style="font-size:0.8em;color:var(--text-secondary,#888);">(CREATE TABLE)</span></h4>
+                             <div class="code-block"><pre>${escaped}</pre></div>`;
+                    return;
+                }
+                // ALTER TABLE ADD
+                const alterAddMatch = stmt.match(/ALTER TABLE \[?dbo\]?\.\[?(\w+)\]?\s+ADD\s+\[?(\w+)\]?/i);
+                if (alterAddMatch) {
+                    html += `<h4 style="margin: 16px 0 8px;">🔧 ${alterAddMatch[1]} <span style="font-size:0.8em;color:var(--accent-blue,#4fc3f7);">ADD COLUMN: ${alterAddMatch[2]}</span></h4>
+                             <div class="code-block"><pre>${escaped}</pre></div>`;
+                    return;
+                }
+                // ALTER TABLE ALTER COLUMN
+                const alterModMatch = stmt.match(/ALTER TABLE \[?dbo\]?\.\[?(\w+)\]?\s+ALTER\s+COLUMN/i);
+                if (alterModMatch) {
+                    html += `<h4 style="margin: 16px 0 8px;">🔧 ${alterModMatch[1]} <span style="font-size:0.8em;color:var(--accent-yellow,#ffd54f);">MODIFY COLUMN</span></h4>
+                             <div class="code-block"><pre>${escaped}</pre></div>`;
+                    return;
+                }
+                // REVIEW comments (removed columns)
+                if (stmt.trim().startsWith('-- REVIEW:')) {
+                    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px 16px;margin:8px 0;border-radius:8px;background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);">
+                        <span style="font-size:1.2em">⚠️</span>
+                        <span style="font-size:0.9em;">${escaped.replace('-- REVIEW: ', '')}</span>
+                    </div>`;
+                    return;
+                }
+                // (DROP TABLE check moved above)
+                // Fallback: generic DDL
+                const genericMatch = stmt.match(/\[?(\w+)\]?/);
+                const name = genericMatch ? genericMatch[1] : `Statement ${idx + 1}`;
+                html += `<h4 style="margin: 16px 0 8px;">📋 ${name}</h4>
+                         <div class="code-block"><pre>${escaped}</pre></div>`;
+            } else {
+                const tableName = stmt.table_name || 'Unknown';
+                const ddl = (stmt.ddl || stmt.sql || JSON.stringify(stmt, null, 2)).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                html += `<h4 style="margin: 16px 0 8px;">📋 ${tableName}</h4>
+                         <div class="code-block"><pre>${ddl}</pre></div>`;
+            }
+        });
+
+        html += `<button class="btn btn-outline" style="margin-top: 16px;" onclick="downloadDDL()">⬇️ Download DDL</button>`;
+        ddlEl.innerHTML = html;
+        markComplete(5);
+    } else {
+        document.getElementById('ddlContent').classList.remove('hidden');
+        document.getElementById('ddlContent').innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+async function approveDropTable(tableName) {
+    if (!confirm('⚠️ Are you sure you want to DROP TABLE [' + tableName + '] from the target database? This cannot be undone.')) {
+        return;
+    }
+    try {
+        const res = await apiCall('/api/drop_orphaned_tables', {
+            method: 'POST',
+            body: JSON.stringify({ tables: [tableName] })
+        });
+        if (res.success) {
+            alert('✅ ' + res.message);
+            // Refresh DDL view
+            generateDDL();
+        } else {
+            alert('❌ ' + (res.error || 'Drop failed'));
+        }
+    } catch (e) {
+        alert('❌ Error: ' + e.message);
+    }
+}
+
+async function downloadDDL() {
+    try {
+        const response = await fetch('/api/download_ddl');
+        if (!response.ok) {
+            alert('DDL file not available. Generate DDL first.');
+            return;
+        }
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'migration_ddl.sql';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (e) {
+        alert('Download failed: ' + e.message);
+    }
+}
+
+// ============================================================
+// STEP 6: APPROVAL
+// ============================================================
+async function loadApprovalData() {
+    const res = await apiCall('/api/state');
+    if (res.mappings && res.mappings.length > 0) {
+        const mappings = res.mappings;
+        const total = mappings.length;
+        const approved = mappings.filter(m => m.approved).length;
+        const pending = total - approved;
+        const metricsEl = document.getElementById('approvalMetrics');
+        if (metricsEl) {
+            metricsEl.classList.remove('hidden');
+            metricsEl.innerHTML = buildMetrics([
+                { label: 'Total', value: total, cls: '' },
+                { label: 'Approved', value: approved, cls: 'success' },
+                { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+            ]);
+        }
+        const tableEl = document.getElementById('approvalTable');
+        if (tableEl) tableEl.classList.remove('hidden');
+        renderApprovalTable(mappings);
+        if (pending === 0) markComplete(4);
+    }
+}
+
+async function approveAll() {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'approve_all' }) });
+    if (res.success) {
+        refreshApprovalView(res);
+        markComplete(4);
+    }
+}
+
+async function approveLowRisk() {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'approve_low_risk' }) });
+    if (res.success) {
+        refreshApprovalView(res);
+        markComplete(4);
+    }
+}
+
+function refreshApprovalView(res) {
+    const mappings = res.mappings || res.data || [];
+    const total = mappings.length;
+    const approved = mappings.filter(m => m.approved).length;
+    const pending = total - approved;
+    document.getElementById('approvalMetrics').innerHTML = buildMetrics([
+        { label: 'Total', value: total, cls: '' },
+        { label: 'Approved', value: approved, cls: 'success' },
+        { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+    ]);
+    renderApprovalTable(mappings);
+    if (pending === 0) markComplete(4);
+}
+
+function renderApprovalTable(data) {
+    const table = document.getElementById('approvalTable');
+    const riskRank = { high: 0, medium: 1, low: 2 };
+    const rows = (data || []).map((m, i) => ({ ...m, _idx: i }));
+    rows.sort((a, b) => (riskRank[(a.risk_level || a.risk || '').toLowerCase()] ?? 3) - (riskRank[(b.risk_level || b.risk || '').toLowerCase()] ?? 3));
+
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Approve</th><th>Table</th><th>Column</th><th>Source → Target</th><th>Risk</th><th>Status</th></tr></thead><tbody>`;
+    rows.forEach((m) => {
+        const checked = m.approved ? 'checked' : '';
+        const approved = m.approved ? '<span class="badge-status badge-pass">✓ Approved</span>' : '<span class="badge-status badge-medium">Pending</span>';
+        html += `<tr>
+            <td><input type="checkbox" ${checked} onchange="setApproval(${m._idx}, this.checked)" aria-label="Approve mapping"></td>
+            <td><strong>${m.source_table || m.table || ''}</strong></td>
+            <td>${m.source_column || m.column || ''}</td>
+            <td><code>${m.source_type || ''}</code> → <code>${m.target_type || ''}</code></td>
+            <td>${riskBadge(m.risk_level || m.risk || 'Low')}</td>
+            <td>${approved}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    table.innerHTML = html;
+}
+
+async function toggleApproval(index) {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'toggle', index }) });
+    if (res.success) refreshApprovalView(res);
+}
+
+async function setApproval(index, approved) {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ index, approved }) });
+    if (res.success) refreshApprovalView(res);
+}
+
+// ============================================================
+// STEP 7: MIGRATION
+// ============================================================
+async function executeMigration() {
+    const btn = document.getElementById('btnMigrate');
+    const mode = (document.getElementById('migrationMode')?.value || 'upsert');
+    btn.disabled = true;
+    showLoading('migrationLoading', true);
+    document.getElementById('migrationResult').classList.add('hidden');
+
+    const res = await apiCall('/api/execute_migration', { method: 'POST', body: JSON.stringify({ migration_mode: mode, target_type: (document.getElementById('targetType') || {}).value, target_server: (document.getElementById('tgtServer') || {}).value || '', target_database: (document.getElementById('tgtDatabase') || {}).value || '' }) });
+
+    showLoading('migrationLoading', false);
+    btn.disabled = false;
+
+    const result = document.getElementById('migrationResult');
+    result.classList.remove('hidden');
+
+    if (res.success) {
+        let modeLabel = res.mode === 'live' ? '🟢 LIVE' : '🔵 DRY RUN';
+        let alertClass = res.errors && res.errors.length ? 'alert-warning' : 'alert-success';
+        let icon = res.mode === 'live' ? '🎉' : '✅';
+        let errHtml = '';
+        if (res.errors && res.errors.length) {
+            errHtml = '<div style="margin-top:10px;padding:8px;background:rgba(245,158,11,0.1);border-radius:6px;">' +
+                '<strong>⚠️ Warnings:</strong><ul style="margin:4px 0;">' +
+                res.errors.map(e => `<li>${e}</li>`).join('') + '</ul></div>';
+        }
+        result.innerHTML = `<div class="alert ${alertClass}">
+            ${icon} <strong>${modeLabel} — Migration Complete!</strong><br>
+            ${res.message}<br>
+            <small>Mode: ${res.migration_mode || mode} | Tables: ${res.tables_migrated} | Columns: ${res.columns_migrated}${res.skipped ? ' | Skipped: ' + res.skipped : ''}${res.rows_migrated ? ' | Inserted: ' + res.rows_migrated : ''}${res.rows_updated ? ' | Updated: ' + res.rows_updated : ''}${res.rows_deleted ? ' | Deleted: ' + res.rows_deleted : ''}${res.duplicate_rows_skipped ? ' | Duplicates Skipped: ' + res.duplicate_rows_skipped : ''}${res.ddl_created ? ' | DDL Created: ' + res.ddl_created : ''}${res.ddl_skipped_existing ? ' | DDL Skipped: ' + res.ddl_skipped_existing : ''} | ⏱ ${res.duration || '—'}</small>
+            ${errHtml}
+        </div>`;
+        markComplete(6);
+    } else {
+        result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+async function runPreMigrationCheck() {
+    const btn = document.getElementById('btnPrecheck');
+    const mode = (document.getElementById('migrationMode')?.value || 'upsert');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Running...';
+    const res = await apiCall('/api/pre_migration_check', {
+        method: 'POST',
+        body: JSON.stringify({ migration_mode: mode, target_type: (document.getElementById('targetType') || {}).value, target_server: (document.getElementById('tgtServer') || {}).value || '', target_database: (document.getElementById('tgtDatabase') || {}).value || '' })
+    });
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Run Pre-Migration Check';
+
+    const el = document.getElementById('preMigrationResult');
+    el.classList.remove('hidden');
+
+    if (!res.success) {
+        el.innerHTML = `<div class="alert alert-error">❌ ${res.error || 'Pre-migration check failed'}</div>`;
+        return;
+    }
+
+    const allPass = !!res.ready;
+    const checks = res.checks || [];
+    let html = `<div class="alert ${allPass ? 'alert-success' : 'alert-warning'}" style="margin-bottom:10px;">`
+        + `${allPass ? '✅ Ready' : '⚠️ Review Required'} for mode <strong>${res.migration_mode}</strong></div>`;
+    html += `<div class="table-container"><table><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>`;
+    checks.forEach(c => {
+        const ok = (c.status || '').toUpperCase() === 'PASS';
+        html += `<tr><td>${c.check}</td><td>${ok ? '✅ PASS' : '❌ FAIL'}</td><td>${c.detail || ''}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    if (res.estimated_row_volume !== undefined) {
+        html += `<div class="alert alert-success" style="margin-top:10px;">`
+            + `<strong>Capacity Recommendation:</strong> Estimated rows ${res.estimated_row_volume}. `
+            + `Suggested batch size ${res.batch_size_recommendation || 5000}. `
+            + `${res.index_strategy_recommendation || ''}`
+            + `</div>`;
+    }
+    el.innerHTML = html;
+}
+
+// ============================================================
+// STEP 8: VALIDATION
+// ============================================================
+async function runValidation() {
+    const btn = document.getElementById('btnValidate');
+    btn.disabled = true;
+    showLoading('validationLoading', true);
+    document.getElementById('validationResult').classList.add('hidden');
+
+    const res = await apiCall('/api/validate', {
+        method: 'POST',
+        body: JSON.stringify({ target_type: (document.getElementById('targetType') || {}).value })
+    });
+
+    showLoading('validationLoading', false);
+    btn.disabled = false;
+
+    const result = document.getElementById('validationResult');
+    result.classList.remove('hidden');
+
+    if (res.success) {
+        const checks = res.checks || res.results || [];
+        const overallMsg = res.overall || (res.all_passed ? 'All Validation Checks Passed' : 'Some Checks Failed');
+        let html = `<div class="alert alert-success" style="margin-bottom: 16px;">✅ <strong>${overallMsg}</strong></div>`;
+        html += `<div class="table-container"><table>
+            <thead><tr><th>Check</th><th>Source</th><th>Target</th><th>Status</th></tr></thead><tbody>`;
+        checks.forEach(c => {
+            html += `<tr>
+                <td><strong>${c.check}</strong></td>
+                <td>${c.source}</td>
+                <td>${c.target}</td>
+                <td><span class="badge-status badge-pass">✓ ${c.status}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        result.innerHTML = html;
+        markComplete(7);
+    } else {
+        result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+// ============================================================
+// STEP 9: REPORT
+// ============================================================
+async function loadReport() {
+    const btn = document.getElementById('btnReport');
+    btn.disabled = true;
+    showLoading('reportLoading', true);
+    document.getElementById('reportContent').classList.add('hidden');
+
+    const res = await apiCall('/api/report');
+
+    showLoading('reportLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const rpt = res.report;
+        const summary = rpt.summary || rpt;
+        const status = rpt.status || summary.status || 'IN PROGRESS';
+        const reportEl = document.getElementById('reportContent');
+        reportEl.classList.remove('hidden');
+
+        let html = `<div class="metrics-row">
+            ${buildMetrics([
+                { label: 'Source', value: summary.source || 'N/A', cls: '' },
+                { label: 'Target', value: (document.getElementById('targetType') || {}).value || 'Azure SQL', cls: '' },
+                { label: 'Tables', value: summary.tables, cls: 'success' },
+                { label: 'Columns', value: (rpt.approved_count || summary.columns) + (rpt.skipped_count ? '/' + summary.columns : ''), cls: '' },
+                { label: 'Status', value: status, cls: status === 'COMPLETE' ? 'success' : 'warning' },
+            ])}
+        </div>`;
+
+        if (rpt.executive_summary) {
+            // Simple markdown-to-html conversion for display
+            let summaryHtml = rpt.executive_summary
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/## (.*?)\n/g, '<h4>$1</h4>')
+                .replace(/### (.*?)\n/g, '<h5>$1</h5>')
+                .replace(/^- (.*)/gm, '<li>$1</li>')
+                .replace(/^\d+\. (.*)/gm, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+                .replace(/\n/g, '<br>');
+            html += `<div class="card" style="margin-top: 16px; padding: 20px;">
+                <h3 style="margin-bottom: 12px;">📝 Executive Summary</h3>
+                <div style="color: var(--text-muted); line-height: 1.8;">${summaryHtml}</div>
+            </div>`;
+        }
+
+        // Skipped Columns section
+        if (rpt.skipped_columns && rpt.skipped_columns.length > 0) {
+            let skippedHtml = `<div class="card" style="margin-top: 16px; padding: 20px; border-left: 4px solid #f59e0b;">
+                <h3 style="margin-bottom: 12px;">⚠️ Skipped Columns (${rpt.skipped_count})</h3>
+                <p style="color: var(--text-muted); margin-bottom: 12px;">The following columns were not approved and skipped during migration:</p>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead><tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="text-align: left; padding: 8px;">Column</th>
+                        <th style="text-align: left; padding: 8px;">Details</th>
+                    </tr></thead><tbody>`;
+            rpt.skipped_columns.forEach(col => {
+                skippedHtml += `<tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 8px; font-family: monospace;">${col}</td>
+                    <td style="padding: 8px;"><span class="badge badge-warning">Skipped</span></td>
+                </tr>`;
+            });
+            skippedHtml += `</tbody></table>
+                <p style="color: var(--text-muted); margin-top: 12px; font-size: 0.9em;">
+                    These columns require manual review before migration.
+                </p>
+            </div>`;
+            html += skippedHtml;
+        }
+
+
+
+        reportEl.innerHTML = html;
+        markComplete(8);
+        document.getElementById('btnDownloadReport').style.display = 'inline-block';
+        
+    }
+}
+
+// ============================================================
+// Load state on page open (refresh persistence)
+// ============================================================
+async function loadState() {
+    try {
+        const res = await apiCall('/api/state');
+        uiStateCache = res;
+        completedSteps.clear();
+        navSteps.forEach(n => n.classList.remove('completed'));
+        clearAllTabData();
+
+        // Use workflow_steps from backend — only mark steps that were
+        // explicitly completed through the dashboard workflow
+        const ws = res.workflow_steps || {};
+        for (const [stepIdx, info] of Object.entries(ws)) {
+            if (info && info.status === 'completed') {
+                markComplete(parseInt(stepIdx));
+            }
+        }
+
+        if (res.source_type) setConnStatus('source', true, res.source_type);
+        updateDashboardStats(res);
+        renderDeltaPreview();
+        stampLastRun();
+    } catch (e) {}
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+    // Don't auto-restore checkmarks on page load
+    // Checkmarks will appear as user completes steps in this session
+    // If you want to resume a previous session, click "Resume" (optional)
+    renderEmptyStates();
+    updateDashboardStats();
+    toggleSourceFields();
+    updateTargetLabel();
+    fetchDeltaPlan();
+    renderDeltaPreview();
+    stampLastRun();
+});
+
+// Probe is blocking and slow, so it only runs when the user clicks the target pill.
+async function refreshTargetStatus() {
+    const foot = document.getElementById('railFootText');
+    if (foot) foot.textContent = 'Checking target...';
+    const selectedTarget = (document.getElementById('targetType') || {}).value || 'Azure SQL';
+    try {
+        const res = await apiCall('/api/test_azure_sql');
+        setConnStatus('target', !!res.success, res.database || selectedTarget);
+        if (foot) foot.textContent = res.success ? 'Target online' : 'Target offline';
+        if (res.success) {
+            updateStatusBanner('ok', 'Target connectivity healthy', `Connected to ${res.server || selectedTarget} / ${res.database || 'database'}.`);
+        } else {
+            updateStatusBanner('bad', 'Target connectivity issue', (res.error || `Unable to connect to ${selectedTarget}.`).slice(0, 180));
+        }
+        stampLastRun();
+    } catch (e) {
+        setConnStatus('target', false, selectedTarget);
+        if (foot) foot.textContent = 'Target offline';
+        updateStatusBanner('bad', 'Target connectivity issue', 'Unable to reach the connectivity endpoint from the browser.');
+        stampLastRun();
+    }
+}
+
+// Download report as JSON file
+async function downloadReport() {
+    const res = await apiCall('/api/report');
+    const blob = new Blob([JSON.stringify(res, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'migration_report.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+function emailReport() {
+    const subject = encodeURIComponent('AI Data Migration Report - ' + new Date().toLocaleDateString());
+    const body = encodeURIComponent('Hi,\n\nPlease find the AI Data Migration Report.\n\nGenerated: ' + new Date().toLocaleString() + '\n\nRegards,\nAI Migration Agent');
+    window.open('mailto:?subject=' + subject + '&body=' + body);
+}
+
+</script>
+
+</body>
+</html>

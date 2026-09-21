@@ -1,0 +1,37 @@
+{
+  "generated_at_utc": "2026-09-18T19:14:10.410727+00:00",
+  "mode": "upsert",
+  "rows_read": 0,
+  "rows_written": 0,
+  "rows_updated": 0,
+  "duplicates_skipped": 0,
+  "failed_rows": 0,
+  "table_metrics": [
+    {
+      "source_table": "CUSTOMER",
+      "target_table": "CUSTOMER",
+      "rows_read": 0,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 385.046,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "MIGRATION_DEMO_CUSTOMER",
+      "target_table": "MIGRATION_DEMO_CUSTOMER",
+      "rows_read": 0,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 385.045,
+      "throughput_rps": 0.0
+    }
+  ],
+  "failed_rows_sample": [],
+  "retry_candidates": []
+}

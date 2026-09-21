@@ -1,0 +1,84 @@
+{
+  "generated_at_utc": "2026-09-18T17:57:55.990108+00:00",
+  "overall": "All validation checks passed",
+  "all_passed": true,
+  "mismatched_tables": [],
+  "checksum_results": [
+    {
+      "table": "CUSTOMER->CUSTOMER",
+      "source_hash": "b0a86c375188a3b6ab55c073831679831a4b8dda0fe995677394b1d5a461d2fe",
+      "target_hash": "b0a86c375188a3b6ab55c073831679831a4b8dda0fe995677394b1d5a461d2fe",
+      "status": "PASS"
+    },
+    {
+      "table": "MIGRATION_DEMO_CUSTOMER->MIGRATION_DEMO_CUSTOMER",
+      "source_hash": "1a3777f7f52886ed75df4b4b271f3a9ae51155380947e2c0b1c49de4fdb77477",
+      "target_hash": "1a3777f7f52886ed75df4b4b271f3a9ae51155380947e2c0b1c49de4fdb77477",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "retry_candidates": [],
+  "results": [
+    {
+      "check": "Row Count Match (CUSTOMER -> CUSTOMER)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS"
+    },
+    {
+      "check": "Duplicate Key Check (CUSTOMER.CUSTOMER_ID)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS"
+    },
+    {
+      "check": "Null Key Check (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS"
+    },
+    {
+      "check": "Checksum Match (CUSTOMER -> CUSTOMER)",
+      "source": "b0a86c375188",
+      "target": "b0a86c375188",
+      "status": "PASS"
+    },
+    {
+      "check": "Row Count Match (MIGRATION_DEMO_CUSTOMER -> MIGRATION_DEMO_CUSTOMER)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS"
+    },
+    {
+      "check": "Duplicate Key Check (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS"
+    },
+    {
+      "check": "Null Key Check (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS"
+    },
+    {
+      "check": "Checksum Match (MIGRATION_DEMO_CUSTOMER -> MIGRATION_DEMO_CUSTOMER)",
+      "source": "1a3777f7f528",
+      "target": "1a3777f7f528",
+      "status": "PASS"
+    },
+    {
+      "check": "Total Row Count Match",
+      "source": "13",
+      "target": "13",
+      "status": "PASS"
+    },
+    {
+      "check": "Table-Level Match Ratio",
+      "source": "2/2",
+      "target": "1.00",
+      "status": "PASS"
+    }
+  ]
+}
