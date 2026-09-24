@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Data Migration Agent — High-Level Architecture</title>
+<style>
+  :root {
+    --color-bg: #faf9fc;
+    --color-bg-secondary: #ffffff;
+    --color-bg-tertiary: #f9fafb;
+    --color-surface: #f9fafb;
+    --color-border: rgba(0,0,0,0.12);
+    --color-border-light: rgba(0,0,0,0.06);
+    --color-text: #1a1a1a;
+    --color-text-secondary: #5e5e5e;
+    --color-text-muted: #9ca3af;
+    --color-text-on-primary: #ffffff;
+    --color-primary: #9333ea;
+    --color-primary-bg: #f3e8ff;
+    --color-primary-border: rgba(66,0,219,0.3);
+    --color-info: #3b82f6;
+    --color-info-bg: rgba(59,130,246,0.1);
+    --color-info-dark: #2563eb;
+    --color-success: #22c55e;
+    --color-success-bg: rgba(34,197,94,0.1);
+    --color-success-dark: #16a34a;
+    --font-sans: 'Amazon Ember','Helvetica Neue','Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    --font-mono: 'SF Mono','Monaco','Menlo','Consolas',monospace;
+    --radius-lg: 16px;
+    --radius-md: 10px;
+    --radius-sm: 6px;
+    --radius-pill: 17px;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--color-bg); font-family: var(--font-sans); color: var(--color-text); margin: 0; padding: 28px; }
+  .doc-header { text-align: center; margin-bottom: 8px; }
+  .doc-header h1 { font-size: 24px; margin: 0 0 6px; font-weight: 700; }
+  .doc-header p { color: var(--color-text-secondary); font-size: 14px; margin: 0; }
+  .flow-tag { display: inline-block; margin-top: 12px; font-family: var(--font-mono); font-size: 13px; background: var(--color-primary-bg); color: var(--color-primary); padding: 6px 14px; border-radius: var(--radius-pill); font-weight: 600; }
+  .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted); font-weight: 600; margin: 28px 0 12px; display: flex; align-items: center; gap: 8px; }
+  .layer { background: var(--color-bg-secondary); border: 1px solid var(--color-border-light); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-sm); }
+  .layer.accent { border-left: 4px solid var(--color-primary); }
+  .layer-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .layer-head .ico { font-size: 20px; }
+  .layer-head h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .layer-head .sub { margin-left: auto; font-size: 12px; color: var(--color-text-muted); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .card { background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: var(--radius-md); padding: 12px 14px; transition: all 0.15s ease; }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card .t { font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  .card .d { font-size: 11.5px; color: var(--color-text-secondary); line-height: 1.4; }
+  .db-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: center; }
+  .db-box { text-align: center; padding: 22px 16px; border-radius: var(--radius-lg); border: 2px solid var(--color-border); background: var(--color-surface); }
+  .db-box.src { border-color: var(--color-info); }
+  .db-box.tgt { border-color: var(--color-success); }
+  .db-box .ico { font-size: 30px; }
+  .db-box .name { font-weight: 700; font-size: 15px; margin-top: 6px; }
+  .db-box .role { font-size: 11.5px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .arrow-mid { text-align: center; color: var(--color-primary); font-size: 24px; font-weight: 700; }
+  .arrow-mid .lbl { font-size: 11px; color: var(--color-text-muted); font-weight: 500; display: block; margin-top: 2px; }
+  .agent-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .agent-pill { background: var(--color-primary-bg); color: var(--color-primary); border: 1px solid var(--color-primary-border); border-radius: var(--radius-pill); padding: 7px 13px; font-size: 12.5px; font-weight: 600; }
+  .chev { color: var(--color-text-muted); font-weight: 700; }
+  .cross { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .chip { text-align: center; background: var(--color-bg-tertiary); border: 1px solid var(--color-border-light); border-radius: var(--radius-md); padding: 9px 6px; font-size: 12px; font-weight: 500; }
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; counter-reset: p; }
+  .phase { position: relative; background: var(--color-surface); border: 1px solid var(--color-border-light); border-radius: var(--radius-md); padding: 14px 8px 10px; text-align: center; font-size: 12px; font-weight: 600; }
+  .phase::before { counter-increment: p; content: counter(p); position: absolute; top: -9px; left: 50%; transform: translateX(-50%); width: 20px; height: 20px; border-radius: 50%; background: var(--color-primary); color: var(--color-text-on-primary); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+  .down-arrow { text-align: center; color: var(--color-text-muted); font-size: 18px; margin: 2px 0; }
+  .footer { text-align: center; font-size: 11px; color: var(--color-text-muted); margin-top: 24px; }
+  .card-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; justify-content: center; }
+  .card-item { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--radius-md); border: 1px solid var(--color-border-light); background: var(--color-surface); font-size: 12.5px; }
+  .card-item .code { font-family: var(--font-mono); font-weight: 700; font-size: 13px; padding: 2px 8px; border-radius: var(--radius-sm); }
+  .card-item.now .code { background: var(--color-success-bg); color: var(--color-success-dark); }
+  .card-item.future { border-style: dashed; opacity: 0.9; }
+  .card-item.future .code { background: var(--color-info-bg); color: var(--color-info-dark); }
+  .badge-now { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-success-dark); }
+  .badge-future { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-info-dark); }
+  .card-desc { color: var(--color-text-secondary); }
+</style>
+</head>
+<body>
+  <div class="doc-header">
+    <h1>AI Data Migration Agent — High-Level Architecture</h1>
+    <p>Multi-agent AI framework with LangGraph orchestration · Oracle → Azure SQL</p>
+    <span class="flow-tag">Oracle Source → AI Engine (GPT-4o-mini + LangGraph) → Migration Studio → Azure SQL Target</span>
+  </div>
+
+  <div class="section-title">▸ End-to-End Data Flow</div>
+  <div class="layer">
+    <div class="db-row">
+      <div class="db-box src"><div class="ico">🗄️</div><div class="name">Oracle</div><div class="role">Source Database</div></div>
+      <div class="arrow-mid">→<span class="lbl">AI Engine</span></div>
+      <div class="db-box tgt"><div class="ico">☁️</div><div class="name">Azure SQL</div><div class="role">Target Database</div></div>
+    </div>
+    <div class="section-title" style="margin:20px 0 8px;">Source → Target Mapping Cardinalities</div>
+    <div class="card-legend">
+      <div class="card-item now"><span class="code">1-1</span><span class="card-desc">One source → one target</span><span class="badge-now">● Now</span></div>
+      <div class="card-item now"><span class="code">2-1</span><span class="card-desc">Two sources → one target (merge)</span><span class="badge-now">● Now</span></div>
+      <div class="card-item future"><span class="code">2-2</span><span class="card-desc">Two sources → two targets</span><span class="badge-future">◇ Future</span></div>
+      <div class="card-item future"><span class="code">1-2</span><span class="card-desc">One source → two targets (split)</span><span class="badge-future">◇ Future</span></div>
+    </div>
+  </div>
+
+  <div class="down-arrow">▼</div>
+
+  <div class="section-title">▸ AI Engine — Multi-Agent Layer (GPT-4o-mini)</div>
+  <div class="layer accent">
+    <div class="layer-head"><span class="ico">🤖</span><h3>AI Engine</h3><span class="sub">Orchestrated by LangGraph</span></div>
+    <div class="agent-chain">
+      <span class="agent-pill">Schema Agent</span><span class="chev">›</span>
+      <span class="agent-pill">Datatype Agent</span><span class="chev">›</span>
+      <span class="agent-pill">Mapping Agent</span><span class="chev">›</span>
+      <span class="agent-pill">SQL Generator Agent</span><span class="chev">›</span>
+      <span class="agent-pill">Validation Agent</span>
+    </div>
+  </div>
+
+  <div class="down-arrow">▼</div>
+
+  <div class="section-title">▸ Migration Studio — Control Plane</div>
+  <div class="layer">
+    <div class="layer-head"><span class="ico">🎛️</span><h3>Migration Studio</h3><span class="sub">Orchestration &amp; Management</span></div>
+    <div class="cards">
+      <div class="card"><div class="t">Connection Manager</div><div class="d">Manages source &amp; target DB connections</div></div>
+      <div class="card"><div class="t">Metadata Store</div><div class="d">Schemas, mappings, rules, logs</div></div>
+      <div class="card"><div class="t">Approval Center</div><div class="d">Human-in-the-loop review &amp; approval</div></div>
+      <div class="card"><div class="t">Execution Manager</div><div class="d">Runs migrations, monitors progress</div></div>
+      <div class="card"><div class="t">Monitoring &amp; Alerts</div><div class="d">Real-time alerts, logs, notifications</div></div>
+      <div class="card"><div class="t">Reporting</div><div class="d">Reports, metrics, audit logs (PDF)</div></div>
+    </div>
+  </div>
+
+  <div class="down-arrow">▼</div>
+
+  <div class="section-title">▸ Data &amp; Integration Layer</div>
+  <div class="layer">
+    <div class="layer-head"><span class="ico">🔌</span><h3>Data &amp; Integration</h3></div>
+    <div class="cards">
+      <div class="card"><div class="t">Secure Connectivity</div><div class="d">VPN, Private Link, TLS encryption</div></div>
+      <div class="card"><div class="t">Data Extractors</div><div class="d">Schema, profiling, sampling</div></div>
+      <div class="card"><div class="t">Data Loaders</div><div class="d">Bulk, batch, incremental</div></div>
+      <div class="card"><div class="t">Audit &amp; Lineage</div><div class="d">Track changes &amp; lineage graph</div></div>
+      <div class="card"><div class="t">File Storage</div><div class="d">Scripts, reports, backups</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">▸ Cross-Cutting Concerns</div>
+  <div class="layer">
+    <div class="cross">
+      <div class="chip">🔒 Security<br><small>RBAC · Vault · Secrets</small></div>
+      <div class="chip">📈 Observability<br><small>Logs · Metrics · Tracing</small></div>
+      <div class="chip">🛡️ Resilience<br><small>Retries · Checkpoints</small></div>
+      <div class="chip">⚡ Scalability<br><small>Autoscale · Parallel</small></div>
+      <div class="chip">📋 Governance<br><small>Policies · Compliance</small></div>
+      <div class="chip">💰 Cost Optimization<br><small>Tagging · Usage</small></div>
+    </div>
+  </div>
+
+  <div class="section-title">▸ 9-Phase LangGraph Workflow</div>
+  <div class="layer">
+    <div class="phases">
+      <div class="phase">Connect</div>
+      <div class="phase">Discover</div>
+      <div class="phase">Analyze</div>
+      <div class="phase">Map</div>
+      <div class="phase">Approve</div>
+      <div class="phase">Generate</div>
+      <div class="phase">Migrate</div>
+      <div class="phase">Validate</div>
+      <div class="phase">Report</div>
+    </div>
+  </div>
+
+  <div class="footer">© 2026 DXC Technology Company. All rights reserved. — DXC Internal</div>
+</body>
+</html>
