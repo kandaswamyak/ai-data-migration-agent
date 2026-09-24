@@ -1,0 +1,35 @@
+You are a database migration specialist.
+
+Source database: {source_db}
+Target database: Azure SQL Database
+
+Analyze the following source column and recommend the safest Azure SQL datatype.
+
+Source Column:
+- Table: {table_name}
+- Column: {column_name}
+- Data Type: {data_type}
+- Precision: {precision}
+- Scale: {scale}
+- Length: {length}
+- Nullable: {nullable}
+
+Consider:
+- Datatype compatibility between the source and Azure SQL
+- Precision and scale preservation (do not reduce without justification)
+- Length and character encoding (Unicode requirements)
+- Potential data loss risks
+- Implicit conversion issues
+- Performance implications on Azure SQL
+
+Respond in this exact JSON format:
+{
+    "source_type": "<full source type with precision/scale>",
+    "target_type": "<recommended Azure SQL type>",
+    "status": "<Compatible|Warning|Error>",
+    "risk": "<Low|Medium|High>",
+    "confidence": <0.0 to 1.0>,
+    "reason": "<brief explanation>"
+}
+
+Do not include any text outside the JSON.

@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://contoso.com/schemas/migration-result.schema.json",
+  "title": "Migration Result",
+  "description": "Schema for the final result of a migration execution. Includes per-table outcomes, validation results, and an overall pass/fail determination.",
+  "type": "object",
+  "required": [
+    "planId",
+    "executionId",
+    "status",
+    "startedAt",
+    "completedAt",
+    "tablesProcessed",
+    "validationResults",
+    "overallResult"
+  ],
+  "properties": {
+    "planId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The migration plan this result belongs to."
+    },
+    "executionId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique execution identifier."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "COMPLETED",
+        "FAILED",
+        "VALIDATION_FAILED",
+        "CANCELLED"
+      ],
+      "description": "Final status of the execution."
+    },
+    "pipelineRunId": {
+      "type": "string",
+      "description": "Azure Data Factory pipeline run ID (if applicable)."
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when execution began."
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when execution finished."
+    },
+    "totalDuration": {
+      "type": "string",
+      "description": "Human-readable total duration (e.g. '1h 45m 12s')."
+    },
+    "tablesProcessed": {
+      "type": "array",
+      "description": "Per-table migration results.",
+      "items": {
+        "type": "object",
+        "required": [
+          "tableName",
+          "rowsCopied",
+          "duration",
+          "status"
+        ],
+        "properties": {
+          "tableName": {
+            "type": "string",
+            "description": "Fully-qualified table name."
+          },
+          "rowsCopied": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of rows successfully copied."
+          },
+          "sourceRowCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total rows in the source table."
+          },
+          "duration": {
+            "type": "string",
+            "description": "Time taken to copy this table (e.g. '3m 22s')."
+          },
+          "status": {
+            "type": "string",
+            "enum": ["SUCCESS", "FAILED", "SKIPPED", "PARTIAL"],
+            "description": "Outcome for this table."
+          },
+          "errors": {
+            "type": "array",
+            "description": "Errors encountered while processing this table.",
+            "items": {
+              "type": "object",
+              "required": ["errorCode", "message"],
+              "properties": {
+                "errorCode": { "type": "string" },
+                "message": { "type": "string" },
+                "rowNumber": {
+                  "type": "integer",
+                  "description": "Approximate row number where the error occurred."
+                },
+                "column": {
+                  "type": "string",
+                  "description": "Column that caused the error (if identifiable)."
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "throughputRowsPerSec": {
+            "type": "number",
+            "description": "Average rows per second for this table."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "validationResults": {
+      "type": "array",
+      "description": "Post-migration validation check results.",
+      "items": {
+        "type": "object",
+        "required": [
+          "tableName",
+          "checkType",
+          "passed"
+        ],
+        "properties": {
+          "tableName": {
+            "type": "string"
+          },
+          "checkType": {
+            "type": "string",
+            "enum": [
+              "ROW_COUNT",
+              "NULL_COUNT",
+              "DUPLICATE_CHECK",
+              "TRUNCATION_CHECK",
+              "OVERFLOW_CHECK",
+              "SCALE_LOSS_CHECK",
+              "MIN_MAX_AVG",
+              "STRING_LENGTH",
+              "CHECKSUM",
+              "REFERENTIAL_INTEGRITY",
+              "SCHEMA_COMPARE",
+              "CUSTOM"
+            ],
+            "description": "Type of validation check."
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the check passed."
+          },
+          "sourceValue": {
+            "type": "string",
+            "description": "Observed value on source (stringified)."
+          },
+          "targetValue": {
+            "type": "string",
+            "description": "Observed value on target (stringified)."
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional context or explanation."
+          },
+          "column": {
+            "type": "string",
+            "description": "Specific column tested (if applicable)."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "overallResult": {
+      "type": "string",
+      "enum": ["PASSED", "FAILED"],
+      "description": "Aggregate pass/fail across all validations."
+    },
+    "failedCheckCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of validation checks that failed."
+    },
+    "totalRowsCopied": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Sum of all rows copied across all tables."
+    },
+    "reportUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the detailed migration report in Azure Blob Storage."
+    },
+    "reportBlobPath": {
+      "type": "string",
+      "description": "Azure Blob Storage path to the report JSON."
+    },
+    "summary": {
+      "type": "string",
+      "description": "AI-generated human-readable summary of the migration result."
+    }
+  },
+  "additionalProperties": false
+}

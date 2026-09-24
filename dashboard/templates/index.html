@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Data Migration Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app-shell">
+
+<!-- ============================================================
+     LEFT STEP RAIL
+     ============================================================ -->
+<nav class="top-nav" id="stepRail">
+    <div class="nav-brand">
+        <span class="nav-logo">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>
+            </svg>
+        </span>
+        <div class="nav-brand-text">
+            <h1>Migration Agent</h1>
+            <span class="badge">POC v1.0</span>
+        </div>
+    </div>
+    <div class="nav-steps" id="navSteps">
+        <div class="nav-section">Discover</div>
+        <div class="nav-step active" data-step="0" onclick="goToStep(0)" title="Source">
+            <span class="step-num"><span>1</span></span> <span class="nav-step-label">Source Connection</span>
+            <span class="step-meta" id="metaSource"></span>
+        </div>
+        <div class="nav-step" data-step="1" onclick="goToStep(1)" title="Schema">
+            <span class="step-num"><span>2</span></span> <span class="nav-step-label">Schema Discovery</span>
+            <span class="step-meta" id="metaSchema"></span>
+        </div>
+        <div class="nav-step" data-step="2" onclick="goToStep(2)" title="Analysis">
+            <span class="step-num"><span>3</span></span> <span class="nav-step-label">Datatype Analysis</span>
+            <span class="step-meta" id="metaAnalysis"></span>
+        </div>
+
+        <div class="nav-section">Plan</div>
+        <div class="nav-step" data-step="3" onclick="goToStep(3)" title="Mapping">
+            <span class="step-num"><span>4</span></span> <span class="nav-step-label">AI Mapping & Review</span>
+            <span class="step-meta" id="metaMapping"></span>
+        </div>
+        <div class="nav-step" data-step="4" onclick="goToStep(4)" title="Approval">
+            <span class="step-num"><span>5</span></span> <span class="nav-step-label">Human Approval</span>
+            <span class="step-meta" id="metaApproval"></span>
+        </div>
+        <div class="nav-step" data-step="5" onclick="goToStep(5)" title="SQL Gen">
+            <span class="step-num"><span>6</span></span> <span class="nav-step-label">SQL / DDL</span>
+            <span class="step-meta" id="metaDDL"></span>
+        </div>
+
+        <div class="nav-section">Execute</div>
+        <div class="nav-step" data-step="6" onclick="goToStep(6)" title="Migration">
+            <span class="step-num"><span>7</span></span> <span class="nav-step-label">Migration</span>
+            <span class="step-meta" id="metaMigration"></span>
+        </div>
+        <div class="nav-step" data-step="7" onclick="goToStep(7)" title="Validation">
+            <span class="step-num"><span>8</span></span> <span class="nav-step-label">Validation</span>
+            <span class="step-meta" id="metaValidation"></span>
+        </div>
+        <div class="nav-step" data-step="8" onclick="goToStep(8)" title="Report">
+            <span class="step-num"><span>9</span></span> <span class="nav-step-label">Report</span>
+            <span class="step-meta" id="metaReport"></span>
+        </div>
+    </div>
+    <div class="rail-foot">
+        <span class="rail-foot-text" id="railFootText">Last run --:--</span>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg>
+        </button>
+        <button class="icon-btn" onclick="toggleRail()" title="Collapse sidebar" aria-label="Collapse sidebar">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+    </div>
+</nav>
+
+<div class="app-main">
+
+<!-- ============================================================
+     TOPBAR
+     ============================================================ -->
+<header class="topbar">
+    <div class="crumb" id="crumb">Discover / <b>Source</b></div>
+    <div class="spacer"></div>
+    <div class="conn-pill"><span class="dot" id="srcDot"></span> Source <b id="srcName">not connected</b></div>
+    <span class="conn-arrow">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </span>
+    <div class="conn-pill" id="tgtPill" onclick="refreshTargetStatus()" title="Click to test target connectivity" style="cursor:pointer"><span class="dot" id="tgtDot"></span> Target <b id="tgtName">Azure SQL</b></div>
+    <button class="btn btn-outline btn-sm" onclick="rescanUiState()"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></span>Rescan</button>
+    <button class="btn btn-primary btn-sm" onclick="goToStep(6)">Run migration</button>
+</header>
+
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="main-content">
+
+    <div class="status-banner" id="statusBanner">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" style="margin-top:1px"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+        <div>
+            <b id="statusBannerTitle">Target unreachable - running in dry-run mode</b>
+            <p id="statusBannerText">Azure SQL handshake failed (08001). Check firewall or connect through VPN/private route.</p>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-sm" onclick="refreshTargetStatus()">Diagnose</button>
+    </div>
+
+    <!-- ========== STEP 1: SOURCE CONNECTION ========== -->
+    <div class="step-panel active" id="step-0">
+        <div class="card mockup-preview-card">
+            <div class="card-header">
+                <div>
+                    <h2>Delta Plan</h2>
+                    <p class="card-subtitle">Comparing source fingerprint and watermark against target objects</p>
+                </div>
+                <div>
+                    <button class="btn btn-outline btn-sm">Export</button>
+                    <button class="btn btn-primary btn-sm" style="margin-left: 8px;">Approve selected</button>
+                </div>
+            </div>
+
+            <div class="delta-toolbar">
+                <div class="delta-search">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+                    <input id="deltaSearchInput" placeholder="Filter objects..." oninput="renderDeltaPreview()">
+                </div>
+                <div class="delta-chips" id="deltaChips">
+                    <button class="delta-chip on" data-mode="all" onclick="setDeltaFilter('all')">All</button>
+                    <button class="delta-chip" data-mode="new" onclick="setDeltaFilter('new')">New</button>
+                    <button class="delta-chip" data-mode="changed" onclick="setDeltaFilter('changed')">Changed</button>
+                    <button class="delta-chip" data-mode="unchanged" onclick="setDeltaFilter('unchanged')">Unchanged</button>
+                    <button class="delta-chip" data-mode="blocked" onclick="setDeltaFilter('blocked')">Blocked</button>
+                </div>
+                <div class="spacer"></div>
+                <span class="step-indicator">Mode: <strong id="deltaModeLabel">Incremental</strong></span>
+            </div>
+
+            <div id="deltaPreviewTable"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Source Database Connection</h2>
+                    <p class="card-subtitle">Connect to your source database to begin the migration analysis</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Source Database Type</label>
+                <select class="form-control" id="sourceType" onchange="toggleSourceFields()">
+                    <option value="Oracle (Real)">Oracle</option>
+                    <option value="SQL Server">SQL Server</option>
+                </select>
+            </div>
+
+            <div id="oracleFields" class="hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Host</label>
+                        <input type="text" class="form-control" id="oraHost" value="localhost">
+                    </div>
+                    <div class="form-group">
+                        <label>Port</label>
+                        <input type="number" class="form-control" id="oraPort" value="1521">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Service Name</label>
+                        <input type="text" class="form-control" id="oraService" value="FREEPDB1">
+                    </div>
+                    <div class="form-group">
+                        <label>SID (optional)</label>
+                        <input type="text" class="form-control" id="oraSID" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" class="form-control" id="oraUser" value="poc_migration">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" class="form-control" id="oraPass" value="Poc2026migrate">
+                    </div>
+                </div>
+            </div>
+
+            
+            <div id="sqlFields" class="hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Server</label>
+                        <input type="text" class="form-control" id="sqlServer" value="localhost">
+                    </div>
+                    <div class="form-group">
+                        <label>Database</label>
+                        <input type="text" class="form-control" id="sqlDatabase" value="MigrationDemo">
+                    </div>
+                </div>
+            </div>
+
+<div id="connectStatus"></div>
+
+            <button class="btn btn-primary" id="btnConnect" onclick="connectSource()">
+                <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>Connect to Database
+            </button>
+        </div>
+
+        <div class="bottom-nav">
+            <div></div>
+            <span class="step-indicator">Step 1 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(1)">Next: Schema →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 2: SCHEMA DISCOVERY ========== -->
+    <div class="step-panel" id="step-1">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Schema Discovery</h2>
+                    <p class="card-subtitle">AI agent discovers tables, columns, and data types from the source database</p>
+                </div>
+                <button class="btn btn-primary" id="btnDiscoverSchema" onclick="discoverSchema()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Discover Schema
+                </button>
+            </div>
+
+            <div id="schemaLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI Agent analyzing schema...</span>
+            </div>
+
+            <div id="schemaMetrics" class="metrics-row hidden"></div>
+            <div id="schemaTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(0)">← Back: Source</button>
+            <span class="step-indicator">Step 2 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(2)">Next: Analysis →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 3: AI DATATYPE ANALYSIS ========== -->
+    <div class="step-panel" id="step-2">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>AI Datatype Analysis</h2>
+                    <p class="card-subtitle">AI agent analyzes each column for Azure SQL compatibility</p>
+                </div>
+                <button class="btn btn-primary" id="btnAnalyze" onclick="runAnalysis()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5a2 2 0 0 1 5 0v1.2a5.5 5.5 0 0 1 3.4 5.1v2.2a2.2 2.2 0 0 0 .6 1.5l1.1 1.1a1 1 0 0 1-.7 1.7H5.1a1 1 0 0 1-.7-1.7l1.1-1.1a2.2 2.2 0 0 0 .6-1.5V8.8a5.5 5.5 0 0 1 3.4-5.1z"/><path d="M9 17a3 3 0 0 0 6 0"/></svg></span>Run AI Analysis
+                </button>
+            </div>
+
+            <div id="analysisLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI analyzing datatypes... this may take a moment</span>
+            </div>
+            <div id="analysisProgress" class="hidden">
+                <div class="progress-bar"><div class="fill" style="width: 0%"></div></div>
+            </div>
+
+            <div id="analysisMetrics" class="metrics-row hidden"></div>
+            <div id="analysisTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(1)">← Back: Schema</button>
+            <span class="step-indicator">Step 3 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(3)">Next: Mapping →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 4: AI MAPPING ========== -->
+    <div class="step-panel" id="step-3">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>AI Column Mapping & Review</h2>
+                    <p class="card-subtitle">AI generates source → target mappings with risk assessment</p>
+                </div>
+                <button class="btn btn-primary" id="btnMapping" onclick="generateMapping()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>Generate Mapping
+                </button>
+            </div>
+
+            <div id="mappingLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI generating mappings...</span>
+            </div>
+
+            <div id="mappingMetrics" class="metrics-row hidden"></div>
+            <div id="mappingTable" class="hidden">
+                <div class="table-container"></div>
+            </div>
+
+            <!-- AI Risk Recommendation Section (appears after mapping) -->
+            <div id="aiReviewSection" class="hidden" style="margin-top: 20px;">
+                <div style="border: 2px solid #7c3aed; border-radius: 12px; padding: 16px; background: var(--bg-card, #faf5ff);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h3 style="margin: 0; color: #7c3aed;">🤖 AI Risk Review</h3>
+                        <button class="btn btn-sm" onclick="generateAllAIRecommendations()" style="color: #7c3aed; border-color: #7c3aed; background: transparent;">Regenerate</button>
+                    </div>
+                    <p class="card-subtitle" style="margin-bottom: 12px;">AI compatibility analysis for medium and high risk mappings — helps data architects decide approval</p>
+                    <div id="aiRecommendationResults"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(2)">← Back: Analysis</button>
+            <span class="step-indicator">Step 4 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(4)">Next: Approval →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 5: HUMAN APPROVAL ========== -->
+    <div class="step-panel" id="step-5">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Human Approval Gate</h2>
+                    <p class="card-subtitle">Review and approve mappings before migration execution</p>
+                </div>
+                <div>
+                    <div style="display: inline-block; position: relative;">
+                        <button class="btn btn-success btn-sm" onclick="approveAll()" style="border-radius: 6px 0 0 6px;"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Approve All</button><button class="btn btn-success btn-sm" onclick="toggleApproveDropdown(event)" style="border-radius: 0 6px 6px 0; border-left: 1px solid rgba(255,255,255,0.3); padding: 6px 8px;" title="Approve by risk level">▾</button>
+                        <div id="approveDropdown" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; background:var(--bg-card,#fff); border:1px solid var(--border,#e5e7eb); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:50; min-width:200px; overflow:hidden;">
+                            <div style="padding:4px;">
+                                <button class="btn btn-sm" onclick="approveByRisk('all');hideApproveDropdown()" style="width:100%; text-align:left; border:none; padding:8px 12px; border-radius:6px; font-size:13px;">✓ Approve All</button>
+                                <button class="btn btn-sm" onclick="approveByRisk('low');hideApproveDropdown()" style="width:100%; text-align:left; border:none; padding:8px 12px; border-radius:6px; font-size:13px;">🟢 Approve Low Risk</button>
+                                <button class="btn btn-sm" onclick="approveByRisk('medium');hideApproveDropdown()" style="width:100%; text-align:left; border:none; padding:8px 12px; border-radius:6px; font-size:13px;">🟡 Approve Medium Risk</button>
+                                <button class="btn btn-sm" onclick="approveByRisk('high');hideApproveDropdown()" style="width:100%; text-align:left; border:none; padding:8px 12px; border-radius:6px; font-size:13px;">🔴 Approve High Risk</button>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="unselectAll()" style="margin-left: 8px;">Unselect All</button>
+                </div>
+            </div>
+
+            <div id="approvalMetrics" class="metrics-row"></div>
+            <div id="approvalTable">
+                <div class="table-container"></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(3)"> ← Back: Mapping</button>
+            <span class="step-indicator">Step 5 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(5)">Next: SQL Gen →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 6: SQL/DDL GENERATOR ========== -->
+    <div class="step-panel" id="step-4">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>SQL / DDL Generator</h2>
+                    <p class="card-subtitle">AI generates CREATE TABLE DDL for Azure SQL Database</p>
+                </div>
+                <button class="btn btn-primary" id="btnDDL" onclick="generateDDL()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg></span>Generate DDL
+                </button>
+            </div>
+
+            <div id="ddlLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>AI generating DDL statements...</span>
+            </div>
+
+            <div id="ddlContent" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(4)"> ← Back: Approval</button>
+            <span class="step-indicator">Step 6 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(6)">Next: Migration →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 7: MIGRATION ========== -->
+    <div class="step-panel" id="step-6">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Migration Execution</h2>
+                    <p class="card-subtitle">Execute the approved migration plan (Dry Run mode)</p>
+                </div>
+            </div>
+
+            <div id="migrationStatus"></div>
+
+            <div class="form-row" style="margin-bottom: 12px;">
+                <div class="form-group" style="max-width: 320px;">
+                    <label>Migration Mode</label>
+                    <select class="form-control" id="migrationMode">
+                        <option value="append">Append (skip duplicates)</option>
+                        <option value="incremental">Incremental CDC (ORA_ROWSCN)</option>
+                        <option value="truncate_reload">Truncate/Reload (delete + reload)</option>
+                        <option value="upsert">Upsert (stage + merge)</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display:flex;align-items:flex-end;">
+                    <button class="btn btn-outline" id="btnPrecheck" onclick="runPreMigrationCheck()"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Run Pre-Migration Check</button>
+                </div>
+            </div>
+
+            <div id="preMigrationResult" class="hidden"></div>
+
+            <div id="migrationLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Executing migration dry run...</span>
+            </div>
+
+            <div id="migrationResult" class="hidden"></div>
+
+            <button class="btn btn-success" id="btnMigrate" onclick="executeMigration()">
+                <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-1 9-9a2.1 2.1 0 0 0-3-3l-9 9-1 6z"/><path d="M14 6l4 4"/></svg></span>Execute Migration
+            </button>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(5)"> ← Back: SQL Gen</button>
+            <span class="step-indicator">Step 7 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(7)">Next: Validation →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 8: VALIDATION ========== -->
+    <div class="step-panel" id="step-7">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Post-Migration Validation</h2>
+                    <p class="card-subtitle">Row counts, primary keys, checksums, NULL analysis, aggregates, string lengths &amp; column-level comparison</p>
+                </div>
+                <button class="btn btn-primary" id="btnValidate" onclick="runValidation()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Run Validation
+                </button>
+            </div>
+
+            <div id="validationLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Running comprehensive validation (row counts, PKs, checksums, NULLs, aggregates, string lengths)...</span>
+            </div>
+
+            <div id="validationResult" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(6)">← Back: Migration</button>
+            <span class="step-indicator">Step 8 of 9</span>
+            <button class="btn btn-primary" onclick="goToStep(8)">Next: Report →</button>
+        </div>
+    </div>
+
+    <!-- ========== STEP 9: REPORT ========== -->
+    <div class="step-panel" id="step-8">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Migration Report</h2>
+                    <p class="card-subtitle">Executive summary of migration, validation, and risk analysis</p>
+                </div>
+                <button class="btn btn-outline btn-sm" id="btnDownloadReport" onclick="downloadReport()" style="display:none;">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></span>Download Report
+                </button>
+            </div>
+
+            <div id="reportLoading" class="loading-overlay">
+                <div class="spinner"></div>
+                <span>Generating report...</span>
+            </div>
+
+            <div id="reportContent" class="hidden"></div>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(7)">← Back: Validation</button>
+            <span class="step-indicator">Step 9 of 9</span>
+            <div></div>
+        </div>
+    </div>
+
+</div>
+
+</div><!-- /.app-main -->
+</div><!-- /.app-shell -->
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
+<script>
+// State tracking
+let currentStep = 0;
+const steps = document.querySelectorAll('.step-panel');
+const navSteps = document.querySelectorAll('.nav-step');
+const completedSteps = new Set();
+let uiStateCache = null;
+let deltaFilterMode = 'all';
+let deltaData = null;  // Real delta plan data from backend
+
+const STEP_GROUPS = [
+    ['Discover', 'Source'], ['Discover', 'Schema'], ['Discover', 'Analysis'],
+    ['Plan', 'Mapping'], ['Plan', 'Approval'], ['Plan', 'SQL Gen'],
+    ['Execute', 'Migration'], ['Execute', 'Validation'], ['Execute', 'Report']
+];
+
+// ============================================================
+// APPEARANCE
+// ============================================================
+function toggleTheme() {
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('mig-theme', next); } catch (e) { /* storage unavailable */ }
+}
+
+function toggleRail() {
+    const rail = document.getElementById('stepRail');
+    rail.classList.toggle('collapsed');
+    try { localStorage.setItem('mig-rail', rail.classList.contains('collapsed') ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+}
+
+(function restoreAppearance() {
+    try {
+        const t = localStorage.getItem('mig-theme');
+        if (t) document.documentElement.dataset.theme = t;
+        if (localStorage.getItem('mig-rail') === '1') {
+            document.getElementById('stepRail').classList.add('collapsed');
+        }
+    } catch (e) { /* storage unavailable */ }
+})();
+
+function setConnStatus(which, ok, name) {
+    const dot = document.getElementById(which === 'source' ? 'srcDot' : 'tgtDot');
+    const label = document.getElementById(which === 'source' ? 'srcName' : 'tgtName');
+    if (dot) dot.className = 'dot ' + (ok ? 'ok' : 'bad');
+    if (label && name) label.textContent = name;
+}
+
+function updateStatusBanner(kind, title, text) {
+    const box = document.getElementById('statusBanner');
+    const t = document.getElementById('statusBannerTitle');
+    const p = document.getElementById('statusBannerText');
+    if (!box || !t || !p) return;
+    box.classList.remove('ok', 'bad');
+    if (kind === 'ok') box.classList.add('ok');
+    if (kind === 'bad') box.classList.add('bad');
+    t.textContent = title;
+    p.textContent = text;
+}
+
+function updateDashboardStats(state) {
+    const schemaCount = state?.schema_count || 0;
+    const mappingCount = state?.mapping_count || 0;
+    const pending = Math.max(0, mappingCount - (state?.approved_count || (state?.all_approved ? mappingCount : 0)));
+
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(value);
+    };
+
+    setText('metaSchema', schemaCount > 0 ? schemaCount : '');
+    setText('metaAnalysis', state?.analysis_count > 0 ? state.analysis_count : '');
+    setText('metaMapping', mappingCount > 0 ? mappingCount : '');
+    setText('metaApproval', pending > 0 ? pending : (mappingCount > 0 ? 'ok' : ''));
+    setText('metaDDL', state?.ddl_count > 0 ? state.ddl_count : '');
+    setText('metaMigration', state?.migration_executed ? 'ok' : '');
+    setText('metaValidation', state?.validation_count > 0 ? state.validation_count : '');
+    setText('metaReport', state?.report_generated ? 'ok' : '');
+
+    const approvalStep = navSteps[4];
+    if (approvalStep) {
+        approvalStep.classList.toggle('blocked', pending > 0 && mappingCount > 0);
+    }
+}
+
+function setDeltaFilter(mode) {
+    deltaFilterMode = mode;
+    document.querySelectorAll('.delta-chip').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+    renderDeltaPreview();
+}
+
+function buildDeltaRows(state) {
+    return deltaData || [];
+}
+
+function renderDeltaPreview() {
+    const host = document.getElementById('deltaPreviewTable');
+    if (!host) return;
+    const rows = buildDeltaRows(uiStateCache || {});
+    const query = (document.getElementById('deltaSearchInput')?.value || '').trim().toLowerCase();
+    const filtered = rows.filter(r => {
+        if (deltaFilterMode !== 'all' && r.state !== deltaFilterMode) return false;
+        if (!query) return true;
+        return String(r.object).toLowerCase().includes(query);
+    });
+
+    const fmt = n => Number(n || 0).toLocaleString();
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Object</th><th>State</th><th class="num">Source rows</th><th class="num">Target rows</th><th class="num">Delta</th><th>Action</th></tr></thead><tbody>`;
+
+    filtered.forEach(r => {
+        html += `<tr>
+            <td><strong>${r.object}</strong></td>
+            <td><span class="state-pill ${r.state}">${r.state}</span></td>
+            <td class="num">${fmt(r.sourceRows)}</td>
+            <td class="num">${fmt(r.targetRows)}</td>
+            <td class="num">${fmt(r.delta)}</td>
+            <td>${r.action}</td>
+        </tr>`;
+    });
+
+    if (!filtered.length) {
+        html += '<tr><td colspan="6" style="text-align:center;color:var(--text-faint);padding:18px;">No objects match this filter.</td></tr>';
+    }
+
+    html += '</tbody></table></div>';
+    host.innerHTML = html;
+}
+
+function stampLastRun() {
+    const el = document.getElementById('railFootText');
+    if (!el) return;
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    el.textContent = `Last run ${hh}:${mm}`;
+}
+
+async function rescanUiState() {
+    await loadState();
+    await refreshTargetStatus();
+    await fetchDeltaPlan();
+    stampLastRun();
+    showAlert('', 'info', 'UI state refreshed from current backend state.');
+}
+
+async function fetchDeltaPlan() {
+    try {
+        const response = await apiCall('/api/delta');
+        if (response.success && response.delta_plan) {
+            deltaData = response.delta_plan;
+            renderDeltaPreview();
+        }
+    } catch (e) {
+        deltaData = [];
+        renderDeltaPreview();
+        console.warn('Delta fetch failed; no measured delta data available', e);
+    }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function goToStep(index) {
+    // Hide all
+    steps.forEach(s => s.classList.remove('active'));
+    navSteps.forEach(n => { n.classList.remove('active'); });
+
+    // Show target
+    steps[index].classList.add('active');
+    navSteps[index].classList.add('active');
+    currentStep = index;
+
+    const crumb = document.getElementById('crumb');
+    if (crumb && STEP_GROUPS[index]) {
+        crumb.innerHTML = STEP_GROUPS[index][0] + ' / <b>' + STEP_GROUPS[index][1] + '</b>';
+    }
+
+    // Mark completed
+    completedSteps.forEach(i => navSteps[i].classList.add('completed'));
+
+    // Auto-load data for specific steps
+    if (index === 0) fetchDeltaPlan();    // Step 1: Delta Plan / Source
+    if (index === 4) loadApprovalData();  // Step 5: Approval
+    if (index === 8) loadReport();        // Step 9: Report
+
+    updateDashboardStats();
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function markComplete(index) {
+    completedSteps.add(index);
+    navSteps[index].classList.add('completed');
+    updateDashboardStats();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+const TOAST_TITLES = { success: 'Success', error: 'Failed', info: 'Info', warning: 'Warning' };
+
+// Signature kept for existing callers; the container argument is no longer used.
+function showAlert(container, type, message) {
+    const host = document.getElementById('toasts');
+    if (!host) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'toast ' + (type || 'info');
+    toast.innerHTML = `
+        <span class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</span>
+        <div class="toast-body"><b>${TOAST_TITLES[type] || 'Info'}</b>${message}</div>
+        <button class="toast-close" aria-label="Dismiss">&times;</button>`;
+
+    const remove = () => toast.remove();
+    toast.querySelector('.toast-close').addEventListener('click', remove);
+    host.appendChild(toast);
+
+    // Errors stay until dismissed so the detail can be read.
+    if (type !== 'error') setTimeout(remove, 6000);
+}
+
+const TOAST_ICONS = {
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5M12 16h.01"/><circle cx="12" cy="12" r="9"/></svg>',
+    warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2.2" stroke-linecap="round"><path d="M12 11v5M12 8h.01"/><circle cx="12" cy="12" r="9"/></svg>'
+};
+
+function skeletonRows(count) {
+    let html = '<div class="skeleton-stack"><div class="skeleton-row head">'
+        + '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>';
+    for (let i = 0; i < count; i++) {
+        const w = [92, 74, 86, 64, 80][i % 5];
+        html += `<div class="skeleton-row">
+            <div class="skeleton" style="width:${w}%"></div>
+            <div class="skeleton" style="width:${w - 12}%"></div>
+            <div class="skeleton" style="width:60%"></div>
+            <div class="skeleton" style="width:40%"></div>
+        </div>`;
+    }
+    return html + '</div>';
+}
+
+function showToast(msg, type) {
+    const colors = { success: '#059669', error: '#dc2626', info: '#2563eb', warning: '#d97706' };
+    const icons = { success: '✓', error: '✕', info: 'ℹ', warning: '⚠' };
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+        background: ${colors[type] || colors.info}; color: white;
+        padding: 12px 20px; border-radius: 8px; font-size: 14px;
+        font-weight: 500; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: flex; align-items: center; gap: 8px;
+        animation: fadeIn 0.3s ease;
+    `;
+    toast.innerHTML = `<span>${icons[type] || ''}</span> ${msg}`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function showLoading(id, show) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (show) {
+        if (!el.dataset.enhanced) {
+            el.innerHTML = '<div class="loading-head">' + el.innerHTML + '</div>' + skeletonRows(5);
+            el.dataset.enhanced = '1';
+        }
+        el.classList.add('active');
+    } else {
+        el.classList.remove('active');
+    }
+}
+
+const EMPTY_STATES = {
+    schemaTable: ['Nothing discovered yet', 'Run Discover Schema to pull tables, columns and data types from the source.'],
+    analysisTable: ['No analysis yet', 'Run AI Analysis to check every column for Azure SQL compatibility.'],
+    mappingTable: ['No mappings yet', 'Generate the AI column mapping to see proposed source-to-target pairs.'],
+    approvalTable: ['Nothing to approve', 'Mappings appear here once analysis and mapping have been generated.'],
+    ddlContent: ['No DDL generated', 'Generate SQL to preview the CREATE TABLE statements for the target.'],
+    migrationResult: ['Migration not run', 'Execute the migration to see per-table row counts and errors.'],
+    validationResult: ['Not validated', 'Run validation to compare source and target row counts and checksums.'],
+    reportContent: ['No report yet', 'The summary report is generated after migration and validation complete.']
+};
+
+const EMPTY_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>';
+
+function renderEmptyStates() {
+    Object.keys(EMPTY_STATES).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const [title, text] = EMPTY_STATES[id];
+        el.innerHTML = `<div class="empty-state">
+            <span class="empty-icon">${EMPTY_ICON}</span>
+            <b>${title}</b><span>${text}</span>
+        </div>`;
+        el.classList.remove('hidden');
+    });
+}
+
+function buildMetrics(data) {
+    return data.map(m => `
+        <div class="metric-card ${m.cls || ''}">
+            <div class="label">${m.label}</div>
+            <div class="value">${m.value}</div>
+        </div>
+    `).join('');
+}
+
+function riskBadge(risk) {
+    const cls = (risk || '').toLowerCase();
+    return `<span class="badge-status badge-${cls}">${risk || 'N/A'}</span>`;
+}
+
+function statusBadge(status) {
+    const s = (status || '').toLowerCase();
+    const cls = s.includes('pass') || s.includes('compatible') || s.includes('approved') ? 'pass'
+        : s.includes('review') || s.includes('pending') ? 'medium'
+        : 'fail';
+    return `<span class="badge-status badge-${cls}">${status}</span>`;
+}
+
+async function apiCall(url, options = {}) {
+    try {
+        const resp = await fetch(url, {
+            headers: { 'Content-Type': 'application/json' },
+            ...options
+        });
+        if (!resp.ok) {
+            return { success: false, error: `HTTP ${resp.status}: ${resp.statusText}` };
+        }
+        return await resp.json();
+    } catch (err) {
+        console.error('API call failed:', url, err);
+        const hint = 'Unable to reach backend API. Ensure Flask app is running at http://localhost:5000 and Python env has required packages.';
+        return { success: false, error: `${err.message || 'Network error'}. ${hint}` };
+    }
+}
+
+// ============================================================
+// STEP 1: CONNECT
+// ============================================================
+function toggleSourceFields() {
+    const type = document.getElementById('sourceType').value;
+    const oracleFields = document.getElementById('oracleFields');
+    const sqlFields = document.getElementById('sqlFields');
+    oracleFields.classList.add('hidden');
+    sqlFields.classList.add('hidden');
+    if (type === 'Oracle (Real)') oracleFields.classList.remove('hidden');
+    else if (type === 'SQL Server') sqlFields.classList.remove('hidden');
+    // Clear previous connection status
+    document.getElementById('connectStatus').innerHTML = '';
+}
+
+
+function clearAllTabData() {
+    // Clear all tab content when source changes
+    const divsToClear = [
+        'schemaMetrics', 'schemaTable',
+        'analysisMetrics', 'analysisTable', 'analysisProgress',
+        'mappingMetrics', 'mappingTable',
+        'ddlContent',
+        'approvalMetrics', 'approvalTable',
+        'migrationStatus', 'migrationResult',
+        'validationResult',
+        'reportContent'
+    ];
+    divsToClear.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerHTML = '';
+        }
+    });
+    renderEmptyStates();
+    // Hide download/email buttons
+    const btnDl = document.getElementById('btnDownloadReport');
+    const btnEm = document.getElementById('btnEmailReport');
+    if (btnDl) btnDl.style.display = 'none';
+    if (btnEm) btnEm.style.display = 'none';
+}
+
+async function connectSource() {
+    const type = document.getElementById('sourceType').value;
+    const btn = document.getElementById('btnConnect');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Connecting...';
+
+    const payload = { source_type: type };
+    if (type === 'Oracle (Real)') {
+        payload.host = document.getElementById('oraHost').value;
+        payload.port = document.getElementById('oraPort').value;
+        payload.service_name = document.getElementById('oraService').value;
+        payload.sid = document.getElementById('oraSID').value;
+        payload.username = document.getElementById('oraUser').value;
+        payload.password = document.getElementById('oraPass').value;
+    } else if (type === 'SQL Server') {
+        payload.server = document.getElementById('sqlServer').value;
+        payload.database = document.getElementById('sqlDatabase').value;
+    }
+
+    const res = await apiCall('/api/connect', { method: 'POST', body: JSON.stringify(payload) });
+
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg></span>Connect to Database';
+
+    if (res.success) {
+        const tableCount = res.table_count || (Array.isArray(res.tables) ? res.tables.length : 0);
+        const tableNames = Array.isArray(res.tables) ? res.tables.join(', ') : '';
+        let msg = `✅ Connected! Found <strong>${tableCount}</strong> table(s)`;
+        if (tableCount > 0 && tableNames && !tableNames.includes('Not connected')) {
+            msg += `: ${tableNames}`;
+        }
+        if (res.message) msg += `<br><em>${res.message}</em>`;
+        showAlert('connectStatus', 'success', msg);
+        setConnStatus('source', true, type);
+        // Reset all step checkmarks (fresh start)
+        completedSteps.clear();
+        navSteps.forEach(n => n.classList.remove('completed'));
+        clearAllTabData();
+        markComplete(0);
+        updateStatusBanner('ok', 'Source connected', `Connected using ${type}. Continue to Schema Discovery.`);
+        await loadState();
+        stampLastRun();
+    } else {
+        showAlert('connectStatus', 'error', `❌ ${res.error}`);
+        setConnStatus('source', false, type);
+        updateStatusBanner('bad', 'Source connection failed', 'Review credentials or host details, then try again.');
+    }
+}
+
+// ============================================================
+// STEP 2: SCHEMA DISCOVERY
+// ============================================================
+let discoveredSchemaRows = [];
+let selectedSchemaObjects = new Set();
+let schemaPage = 0;
+const schemaPageSize = 100;
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[character]));
+}
+
+function renderSchemaPage() {
+    const table = document.getElementById('schemaTable');
+    const hasMultiSchema = discoveredSchemaRows.some(r => r.schema_name);
+    const totalPages = Math.max(1, Math.ceil(discoveredSchemaRows.length / schemaPageSize));
+    schemaPage = Math.min(schemaPage, totalPages - 1);
+    const start = schemaPage * schemaPageSize;
+    const pageRows = discoveredSchemaRows.slice(start, start + schemaPageSize);
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Load</th>${hasMultiSchema ? '<th>Schema</th>' : ''}<th>Table</th><th>Column</th><th>Data Type</th><th>Nullable</th></tr></thead><tbody>`;
+    const seenTables = new Set();
+    discoveredSchemaRows.slice(0, start).forEach(r => {
+        const previousTable = r.table_name || r.TABLE_NAME || '';
+        const previousSchema = r.schema_name || '';
+        seenTables.add(previousSchema ? previousSchema + '.' + previousTable : previousTable);
+    });
+    pageRows.forEach(r => {
+        const tableName = r.table_name || r.TABLE_NAME || '';
+        const schemaName = r.schema_name || '';
+        const qualifiedName = schemaName ? schemaName + '.' + tableName : tableName;
+        const showSelector = !seenTables.has(qualifiedName);
+        seenTables.add(qualifiedName);
+        html += `<tr>
+            <td>${showSelector ? `<input type="checkbox" class="schema-table-select" value="${escapeHtml(qualifiedName)}" ${selectedSchemaObjects.has(qualifiedName) ? 'checked' : ''} onchange="toggleSchemaObject(this)" aria-label="Select ${escapeHtml(qualifiedName)} for migration">` : ''}</td>
+            ${hasMultiSchema ? `<td><span style="color: var(--text-muted, #6b7280); font-size: 12px;">${escapeHtml(schemaName)}</span></td>` : ''}
+            <td><strong>${escapeHtml(tableName)}</strong></td>
+            <td>${escapeHtml(r.column_name || r.COLUMN_NAME || '')}</td>
+            <td><code>${escapeHtml(r.data_type || r.DATA_TYPE || r.FULL_DATA_TYPE || '')}</code></td>
+            <td>${escapeHtml(r.nullable || r.IS_NULLABLE || r.NULLABLE || 'Y')}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    html += `<div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="selectSchemaObjects()">Use selected objects</button>
+        <button class="btn btn-outline" onclick="changeSchemaPage(-1)" ${schemaPage === 0 ? 'disabled' : ''}>Previous</button>
+        <span class="card-subtitle">Page ${schemaPage + 1} of ${totalPages} (${start + 1}-${Math.min(start + schemaPageSize, discoveredSchemaRows.length)} of ${discoveredSchemaRows.length} columns)</span>
+        <button class="btn btn-outline" onclick="changeSchemaPage(1)" ${schemaPage >= totalPages - 1 ? 'disabled' : ''}>Next</button>
+        <span id="selectedObjectsStatus" class="card-subtitle">${selectedSchemaObjects.size} object(s) selected</span>
+    </div>`;
+    table.innerHTML = html;
+}
+
+function toggleSchemaObject(input) {
+    if (input.checked) selectedSchemaObjects.add(input.value);
+    else selectedSchemaObjects.delete(input.value);
+    const status = document.getElementById('selectedObjectsStatus');
+    if (status) status.textContent = `${selectedSchemaObjects.size} object(s) selected`;
+}
+
+function changeSchemaPage(delta) {
+    schemaPage += delta;
+    renderSchemaPage();
+}
+
+async function discoverSchema() {
+    const btn = document.getElementById('btnDiscoverSchema');
+    btn.disabled = true;
+    showLoading('schemaLoading', true);
+    document.getElementById('schemaMetrics').classList.add('hidden');
+    document.getElementById('schemaTable').classList.add('hidden');
+
+    const res = await apiCall('/api/discover_schema', { method: 'POST', body: JSON.stringify({}) });
+
+    showLoading('schemaLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const schema = res.schema || res.data || [];
+        discoveredSchemaRows = schema;
+        schemaPage = 0;
+        const hasMultiSchema = schema.some(r => r.schema_name);
+        const tableSet = new Set(schema.map(r => {
+            const sn = r.schema_name || '';
+            const tn = r.table_name || r.TABLE_NAME || '';
+            return sn ? sn + '.' + tn : tn;
+        }));
+        const tableCount = tableSet.size;
+        const colCount = schema.length;
+        const schemaSet = new Set(schema.map(r => r.schema_name || '').filter(Boolean));
+        selectedSchemaObjects = tableSet;
+
+        document.getElementById('schemaMetrics').classList.remove('hidden');
+        document.getElementById('schemaMetrics').innerHTML = buildMetrics([
+            ...(schemaSet.size > 0 ? [{ label: 'Schemas', value: schemaSet.size, cls: '' }] : []),
+            { label: 'Tables', value: tableCount, cls: 'success' },
+            { label: 'Columns', value: colCount, cls: '' },
+        ]);
+
+        const table = document.getElementById('schemaTable');
+        table.classList.remove('hidden');
+        renderSchemaPage();
+        markComplete(1);
+    } else {
+        showAlert('schemaTable', 'error', res.error);
+        document.getElementById('schemaTable').classList.remove('hidden');
+    }
+}
+
+async function selectSchemaObjects() {
+    const tables = [...selectedSchemaObjects];
+    const res = await apiCall('/api/select_objects', {
+        method: 'POST',
+        body: JSON.stringify({ tables })
+    });
+    const status = document.getElementById('selectedObjectsStatus');
+    if (res.success) {
+        if (status) status.textContent = `${res.selected_tables.length} object(s) selected for DDL and load`;
+        showAlert('', 'success', `Selected objects: ${res.selected_tables.join(', ')}`);
+        fetchDeltaPlan();
+    } else {
+        if (status) status.textContent = res.error || 'Selection failed';
+        showAlert('', 'error', res.error || 'Unable to select objects');
+    }
+}
+
+// ============================================================
+// STEP 3: AI ANALYSIS
+// ============================================================
+async function runAnalysis() {
+    const btn = document.getElementById('btnAnalyze');
+    btn.disabled = true;
+    showLoading('analysisLoading', true);
+    document.getElementById('analysisMetrics').classList.add('hidden');
+    document.getElementById('analysisTable').classList.add('hidden');
+    const progressEl = document.getElementById('analysisProgress');
+    if (progressEl) {
+        progressEl.classList.remove('hidden');
+        // Restore progress bar if it was cleared
+        if (!progressEl.querySelector('.fill')) {
+            progressEl.innerHTML = '<div class="progress-bar"><div class="fill" style="width:0%;height:100%;background:#6c63ff;transition:width 0.5s;border-radius:4px;"></div></div>';
+        }
+    }
+
+    // Animate progress
+    const fill = document.querySelector('#analysisProgress .fill');
+    if (fill) {
+        fill.style.width = '30%';
+        setTimeout(() => { if (fill) fill.style.width = '60%'; }, 1000);
+        setTimeout(() => { if (fill) fill.style.width = '85%'; }, 2500);
+    }
+
+    const res = await apiCall('/api/analyze', { method: 'POST', body: '{}' });
+
+    if (fill) fill.style.width = '100%';
+    if (progressEl) setTimeout(() => progressEl.classList.add('hidden'), 500);
+    showLoading('analysisLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const data = res.analysis || res.data || [];
+        const total = data.length;
+        const compatible = data.filter(r => (r.status || '').toLowerCase() === 'compatible').length;
+        const issues = total - compatible;
+
+        document.getElementById('analysisMetrics').classList.remove('hidden');
+        document.getElementById('analysisMetrics').innerHTML = buildMetrics([
+            { label: 'Total Columns', value: total, cls: '' },
+            { label: 'Compatible', value: compatible, cls: 'success' },
+            { label: 'Issues', value: issues, cls: issues > 0 ? 'warning' : 'success' },
+        ]);
+
+        const table = document.getElementById('analysisTable');
+        table.classList.remove('hidden');
+        let html = `<div class="table-container"><table>
+            <thead><tr><th>Table</th><th>Column</th><th>Source</th><th>Target</th><th>Status</th><th>Risk</th><th>Confidence</th></tr></thead><tbody>`;
+        data.forEach(r => {
+            const rawConf = r.confidence || 1; const conf = ((rawConf > 1 ? rawConf : rawConf * 100)).toFixed(0) + '%';
+            html += `<tr>
+                <td><strong>${r.table}</strong></td>
+                <td>${r.column}</td>
+                <td><code>${r.source_type || r.source || ''}</code></td>
+                <td><code>${r.target_type || r.target || ''}</code></td>
+                <td>${statusBadge(r.status)}</td>
+                <td>${riskBadge(r.risk)}</td>
+                <td>${conf}</td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+        table.innerHTML = html;
+        markComplete(2);
+    } else {
+        showAlert('analysisTable', 'error', res.error);
+        document.getElementById('analysisTable').classList.remove('hidden');
+    }
+}
+
+// ============================================================
+// STEP 4: AI MAPPING
+// ============================================================
+async function generateMapping() {
+    const btn = document.getElementById('btnMapping');
+    btn.disabled = true;
+    showLoading('mappingLoading', true);
+    document.getElementById('mappingMetrics').classList.add('hidden');
+    document.getElementById('mappingTable').classList.add('hidden');
+
+    const res = await apiCall('/api/generate_mapping', { method: 'POST', body: '{}' });
+
+    showLoading('mappingLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const mappings = res.mappings || res.data || [];
+        const total = mappings.length;
+        const approved = mappings.filter(m => m.approved).length;
+        const pending = total - approved;
+
+        document.getElementById('mappingMetrics').classList.remove('hidden');
+        document.getElementById('mappingMetrics').innerHTML = buildMetrics([
+            { label: 'Total Mappings', value: total, cls: '' },
+            { label: 'Auto-Approved', value: approved, cls: 'success' },
+            { label: 'Pending Review', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+        ]);
+
+        renderMappingTable(mappings);
+        markComplete(3);
+
+        generateAllAIRecommendations();
+    } else {
+        showAlert('mappingTable', 'error', res.error);
+        document.getElementById('mappingTable').classList.remove('hidden');
+    }
+}
+
+function renderMappingTable(data) {
+    const table = document.getElementById('mappingTable');
+    table.classList.remove('hidden');
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Source Table</th><th>Source Col</th><th>Source Type</th><th>Target Type</th><th>Risk</th><th>Status</th></tr></thead><tbody>`;
+    (data || []).forEach(m => {
+        const approved = m.approved ? '<span class="badge-status badge-pass">✓ Approved</span>' : '<span class="badge-status badge-medium">Pending</span>';
+        html += `<tr>
+            <td><strong>${m.source_table || m.table || ''}</strong></td>
+            <td>${m.source_column || m.column || ''}</td>
+            <td><code>${m.source_type || ''}</code></td>
+            <td><code>${m.target_type || ''}</code></td>
+            <td>${riskBadge(m.risk_level || m.risk || 'Low')}</td>
+            <td>${approved}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    table.innerHTML = html;
+}
+
+// ============================================================
+// STEP 5: DDL GENERATION
+// ============================================================
+async function generateDDL() {
+    const btn = document.getElementById('btnDDL');
+    btn.disabled = true;
+    showLoading('ddlLoading', true);
+    document.getElementById('ddlContent').classList.add('hidden');
+
+    const unchangedTables = (deltaData || [])
+        .filter(r => r.state === 'unchanged')
+        .map(r => r.object);
+    const res = await apiCall('/api/generate_ddl', { method: 'POST', body: JSON.stringify({ unchanged_tables: unchangedTables }) });
+
+    showLoading('ddlLoading', false);
+    btn.disabled = false;
+
+    if (res.success) {
+        const ddlEl = document.getElementById('ddlContent');
+        ddlEl.classList.remove('hidden');
+        const statements = res.statements || res.ddl || [];
+        const createCount = res.create_count || 0;
+        const alterCount = res.alter_count || 0;
+        const noChangeCount = res.no_change_count || 0;
+        const actionDetails = res.ddl_action_details || [];
+        const skippedNote = (res.skipped_unchanged && res.skipped_unchanged.length)
+            ? `<p class="card-subtitle">Skipped ${res.skipped_unchanged.length} unchanged table(s): ${res.skipped_unchanged.join(', ')}</p>`
+            : '';
+        let infoBanner = '';
+        if (res.target_reachable === false) {
+            infoBanner = '<div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #92400e;">⚠️ <strong>Target Azure SQL not reachable</strong> — generating CREATE TABLE statements for all tables. Connect the target database for smart ALTER/No-Change detection.</div>';
+        } else if (noChangeCount > 0 && createCount === 0 && alterCount === 0) {
+            infoBanner = '<div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #1e40af;">ℹ️ All tables already exist in the target with matching columns — no DDL changes needed.</div>';
+        } else if (noChangeCount > 0) {
+            infoBanner = `<div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #1e40af;">ℹ️ ${noChangeCount} table(s) already exist in the target with all columns — only new/changed tables have DDL generated.</div>`;
+        }
+        let html = `${infoBanner}${skippedNote}<div class="metrics-row" style="margin-bottom: 20px">
+            ${buildMetrics([
+                { label: 'Total Tables', value: statements.length || res.count || 0, cls: 'success' },
+                { label: 'CREATE', value: createCount, cls: createCount > 0 ? 'success' : '' },
+                { label: 'ALTER', value: alterCount, cls: alterCount > 0 ? 'warning' : '' },
+                { label: 'No Change', value: noChangeCount, cls: '' },
+            ])}
+        </div>`;
+
+        statements.forEach((stmt, idx) => {
+            let tableName, ddl;
+            if (typeof stmt === 'string') {
+                const match = stmt.match(/CREATE TABLE \[?dbo\]?\.\[?(\w+)\]?/i);
+                const alterMatch = !match && stmt.match(/ALTER TABLE \[?dbo\]?\.\[?(\w+)\]?/i);
+                const commentMatch = !match && !alterMatch && stmt.match(/-- Table \[(\w+)\]/);
+                tableName = match ? match[1]
+                           : alterMatch ? alterMatch[1]
+                           : commentMatch ? commentMatch[1] : `Table ${idx + 1}`;
+                ddl = stmt.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            } else {
+                tableName = stmt.table_name || 'Unknown';
+                ddl = (stmt.ddl || stmt.sql || JSON.stringify(stmt, null, 2)).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            }
+            const detail = actionDetails[idx] || {};
+            const action = detail.action || 'create';
+            let actionBadge = '';
+            if (action === 'create') {
+                actionBadge = '<span class="badge-status badge-pass" style="margin-left: 8px;">🆕 CREATE</span>';
+            } else if (action === 'alter') {
+                actionBadge = '<span class="badge-status badge-medium" style="margin-left: 8px;">🔧 ALTER</span>';
+            } else if (action === 'no_change') {
+                actionBadge = '<span class="badge-status" style="margin-left: 8px; background: #e5e7eb; color: #555;">✓ No Change</span>';
+            }
+            html += `<h4 style="margin: 16px 0 8px;">📋 ${tableName} ${actionBadge}</h4>
+                     <div class="code-block"><pre>${ddl}</pre></div>`;
+        });
+
+        html += `<button class="btn btn-outline" style="margin-top: 16px;" onclick="downloadDDL()">⬇️ Download DDL</button>`;
+        ddlEl.innerHTML = html;
+        markComplete(5);
+    } else {
+        document.getElementById('ddlContent').classList.remove('hidden');
+        document.getElementById('ddlContent').innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+function downloadDDL() {
+    window.location.href = '/api/download_ddl';
+}
+
+// ============================================================
+// STEP 6: APPROVAL
+// ============================================================
+async function loadApprovalData() {
+    const res = await apiCall('/api/state');
+    if (res.mappings && res.mappings.length > 0) {
+        const mappings = res.mappings;
+        const total = mappings.length;
+        const approved = mappings.filter(m => m.approved).length;
+        const pending = total - approved;
+        const lowCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'low').length;
+        const medCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'medium').length;
+        const highCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'high').length;
+        const metricsEl = document.getElementById('approvalMetrics');
+        if (metricsEl) {
+            metricsEl.classList.remove('hidden');
+            metricsEl.innerHTML = buildMetrics([
+                { label: 'Total', value: total, cls: '' },
+                { label: 'Approved', value: approved, cls: 'success' },
+                { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+                { label: 'Low Risk', value: lowCount, cls: 'success' },
+                { label: 'Medium Risk', value: medCount, cls: 'warning' },
+                { label: 'High Risk', value: highCount, cls: highCount > 0 ? 'fail' : 'success' },
+            ]);
+        }
+        const tableEl = document.getElementById('approvalTable');
+        if (tableEl) tableEl.classList.remove('hidden');
+        renderApprovalTable(mappings);
+        if (pending === 0) markComplete(4);
+    }
+}
+
+async function approveAll() {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'approve_all' }) });
+    if (res.success) {
+        refreshApprovalView(res);
+        markComplete(4);
+        showToast('All mappings approved', 'success');
+    } else {
+        showToast(res.error || 'Failed to approve', 'error');
+    }
+}
+
+async function unselectAll() {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'unselect_all' }) });
+    if (res.success) {
+        refreshApprovalView(res);
+        showToast('All mappings unselected', 'info');
+    } else {
+        showToast(res.error || 'Failed to unselect', 'error');
+    }
+}
+
+async function generateAllAIRecommendations() {
+    const section = document.getElementById('aiReviewSection');
+    const resultsEl = document.getElementById('aiRecommendationResults');
+    section.classList.remove('hidden');
+    resultsEl.innerHTML = '<div style="text-align:center;padding:20px;color:#7c3aed;"><div class="spinner" style="margin:0 auto 8px;"></div>Analyzing risk mappings with AI...</div>';
+
+    try {
+        // Fetch full mappings list to calculate low risk count
+        try {
+            const stateRes = await apiCall('/api/state');
+            window._allMappings = stateRes.mappings || [];
+        } catch(e) { window._allMappings = []; }
+
+        const res = await apiCall('/api/ai_risk_recommendation', { method: 'POST', body: JSON.stringify({}) });
+        if (res.success && res.recommendations && res.recommendations.length > 0) {
+            showAIRecommendationPanel(res.recommendations);
+        } else {
+            resultsEl.innerHTML = '<div style="padding:12px;text-align:center;color:#6b7280;">All mappings are low risk — no medium or high risk items to review.</div>';
+        }
+    } catch (err) {
+        resultsEl.innerHTML = `<div class="alert alert-error">AI analysis failed: ${err.message}</div>`;
+    }
+}
+
+function showAIRecommendationPanel(recs) {
+    const resultsEl = document.getElementById('aiRecommendationResults');
+
+    // Risk counts
+    const highRisk = recs.filter(r => (r.risk || '').toLowerCase() === 'high');
+    const medRisk = recs.filter(r => (r.risk || '').toLowerCase() === 'medium');
+    const approveCount = recs.filter(r => r.ai_recommendation === 'approve').length;
+    const rejectCount = recs.length - approveCount;
+
+    const totalMappings = window._allMappings ? window._allMappings.length : 0;
+    const lowRiskCount = totalMappings - recs.length;
+
+    // Group by table name
+    const tableGroups = {};
+    recs.forEach(rec => {
+        const tbl = rec.table || 'UNKNOWN';
+        if (!tableGroups[tbl]) tableGroups[tbl] = [];
+        tableGroups[tbl].push(rec);
+    });
+    const tableNames = Object.keys(tableGroups).sort();
+
+    let html = '';
+
+    // Metrics row (always visible)
+    html += `<div class="metrics-row" style="margin-bottom: 12px;">
+        ${buildMetrics([
+            { label: 'Total Mappings', value: totalMappings || recs.length, cls: '' },
+            { label: 'Low Risk (Auto-approved)', value: lowRiskCount, cls: 'success' },
+            { label: 'High Risk', value: highRisk.length, cls: highRisk.length > 0 ? 'fail' : 'success' },
+            { label: 'Medium Risk', value: medRisk.length, cls: medRisk.length > 0 ? 'warning' : 'success' },
+            { label: 'AI Approve', value: approveCount, cls: 'success' },
+            { label: 'AI Reject', value: rejectCount, cls: rejectCount > 0 ? 'fail' : 'success' },
+        ])}
+    </div>`;
+
+    // Filter row + action buttons
+    html += `<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <select id="aiFilterTable" onchange="filterAIDetails()" style="font-size: 12px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border, #d1d5db);">
+                <option value="all">All Tables (${tableNames.length})</option>
+                ${tableNames.map(t => `<option value="${t}">${t} (${tableGroups[t].length})</option>`).join('')}
+            </select>
+            <select id="aiFilterRisk" onchange="filterAIDetails()" style="font-size: 12px; padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border, #d1d5db);">
+                <option value="all">All Risk Levels</option>
+                <option value="high">🔴 High Risk Only</option>
+                <option value="medium">🟡 Medium Risk Only</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-outline" id="aiDetailsToggleBtn" onclick="toggleAIDetails()" style="font-size: 12px; color: #7c3aed; border-color: #7c3aed;">
+                ▼ Show Details (${recs.length} mappings)
+            </button>
+            <button class="btn btn-sm btn-outline" onclick="downloadRiskReportExcel()" style="font-size: 12px; color: #059669; border-color: #059669;">
+                📄 Download Excel Report
+            </button>
+        </div>
+    </div>`;
+
+    // Detail panel (hidden by default) — table accordion
+    html += '<div id="aiDetailsPanel" style="display: none;">';
+
+    tableNames.forEach((tbl, idx) => {
+        const cols = tableGroups[tbl];
+        const tblHigh = cols.filter(r => (r.risk || '').toLowerCase() === 'high').length;
+        const tblMed = cols.filter(r => (r.risk || '').toLowerCase() === 'medium').length;
+        const riskSummary = [
+            tblHigh > 0 ? `<span style="color:#dc2626;">🔴${tblHigh}</span>` : '',
+            tblMed > 0 ? `<span style="color:#d97706;">🟡${tblMed}</span>` : ''
+        ].filter(Boolean).join(' ');
+
+        // First table with high risk auto-expanded; others collapsed
+        const isExpanded = (idx === 0 && tblHigh > 0);
+
+        html += `<div class="ai-table-group" data-table="${tbl}" style="margin-bottom: 8px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; overflow: hidden;">
+            <div onclick="toggleTableAccordion('aiTblBody_${idx}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-page, #f9fafb); cursor: pointer; user-select: none;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="ai-tbl-arrow" id="aiTblArrow_${idx}" style="font-size: 11px; transition: transform 0.2s;">${isExpanded ? '▼' : '▶'}</span>
+                    <strong style="font-size: 14px;">${tbl}</strong>
+                    <span style="font-size: 12px; color: var(--text-muted, #6b7280);">(${cols.length} columns)</span>
+                </div>
+                <div style="display: flex; gap: 8px; font-size: 12px;">${riskSummary}</div>
+            </div>
+            <div id="aiTblBody_${idx}" style="display: ${isExpanded ? 'block' : 'none'}; padding: 8px 14px 12px;">
+                ${renderRecommendationCards(cols)}
+            </div>
+        </div>`;
+    });
+
+    html += '</div>';
+
+    window._aiRiskRecs = recs;
+    resultsEl.innerHTML = html;
+}
+
+function toggleTableAccordion(bodyId) {
+    const body = document.getElementById(bodyId);
+    const arrowId = bodyId.replace('aiTblBody_', 'aiTblArrow_');
+    const arrow = document.getElementById(arrowId);
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        if (arrow) arrow.textContent = '▼';
+    } else {
+        body.style.display = 'none';
+        if (arrow) arrow.textContent = '▶';
+    }
+}
+
+function filterAIDetails() {
+    const tblFilter = document.getElementById('aiFilterTable').value;
+    const riskFilter = document.getElementById('aiFilterRisk').value;
+    const groups = document.querySelectorAll('.ai-table-group');
+    groups.forEach(g => {
+        const tbl = g.getAttribute('data-table');
+        const matchTable = (tblFilter === 'all' || tbl === tblFilter);
+        g.style.display = matchTable ? 'block' : 'none';
+
+        // Filter cards within visible tables
+        if (matchTable && riskFilter !== 'all') {
+            g.querySelectorAll('.ai-rec-card').forEach(card => {
+                const cardRisk = (card.getAttribute('data-risk') || '').toLowerCase();
+                card.style.display = (cardRisk === riskFilter) ? 'block' : 'none';
+            });
+        } else if (matchTable) {
+            g.querySelectorAll('.ai-rec-card').forEach(card => card.style.display = 'block');
+        }
+    });
+
+    // Auto-expand the detail panel if filters are active
+    const panel = document.getElementById('aiDetailsPanel');
+    if ((tblFilter !== 'all' || riskFilter !== 'all') && panel.style.display === 'none') {
+        panel.style.display = 'block';
+        const btn = document.getElementById('aiDetailsToggleBtn');
+        if (btn) btn.innerHTML = '▲ Hide Details';
+    }
+}
+
+function renderRecommendationCards(recs) {
+    let html = '';
+    recs.forEach(rec => {
+        const recColor = rec.ai_recommendation === 'approve' ? '#059669' : '#dc2626';
+        const recLabel = rec.ai_recommendation === 'approve' ? '✅ Safe to Approve' : '⚠️ Needs Review';
+        const bgColor = rec.ai_recommendation === 'approve' ? 'var(--bg-card, #f0fdf4)' : 'var(--bg-card, #fef2f2)';
+        html += `<div class="ai-rec-card" data-risk="${(rec.risk || '').toLowerCase()}" style="background: ${bgColor}; border-radius: 8px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${recColor};">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong>${rec.column}</strong>
+                <span style="color: ${recColor}; font-weight: 600; font-size: 13px;">${recLabel}</span>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted, #555); margin-bottom: 4px;">
+                <code>${rec.source_type}</code> → <code>${rec.target_type}</code>
+                ${riskBadge(rec.risk)}
+            </div>`;
+        if (rec.compatibility_issues && rec.compatibility_issues.length) {
+            html += '<div style="font-size: 12px; margin-top: 6px;">';
+            rec.compatibility_issues.forEach(issue => {
+                html += `<div style="color: #b45309; margin-bottom: 2px;">⚡ ${issue}</div>`;
+            });
+            html += '</div>';
+        }
+        html += `<div style="font-size: 12px; color: var(--text-primary, #374151); margin-top: 6px; background: var(--bg-page, #f0fdf4); padding: 6px 8px; border-radius: 6px;">
+            💡 <strong>Solution:</strong> ${rec.ai_solution}
+        </div>`;
+        if (rec.reasoning) {
+            html += `<div style="font-size: 11px; color: var(--text-muted, #6b7280); margin-top: 4px; font-style: italic;">
+                📋 ${rec.reasoning}
+            </div>`;
+        }
+        html += `<div style="margin-top: 8px; display: flex; gap: 8px;">
+            <button class="btn btn-sm btn-success" onclick="setApproval(${rec.index}, true)" style="font-size: 12px;">✓ Approve</button>
+            <button class="btn btn-sm btn-outline" onclick="setApproval(${rec.index}, false)" style="font-size: 12px; color: #dc2626; border-color: #dc2626;">✗ Reject</button>
+        </div></div>`;
+    });
+    return html;
+}
+
+// ── AI Details toggle (expand/collapse) ──
+function toggleAIDetails() {
+    const panel = document.getElementById('aiDetailsPanel');
+    const btn = document.getElementById('aiDetailsToggleBtn');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.innerHTML = '▲ Hide Details';
+    } else {
+        panel.style.display = 'none';
+        const count = (window._aiRiskRecs || []).length;
+        btn.innerHTML = `▼ Show Details (${count} mappings)`;
+    }
+}
+
+// ── Download AI Risk Report as Excel ──
+function downloadRiskReportExcel() {
+    const recs = window._aiRiskRecs;
+    if (!recs || recs.length === 0) {
+        showToast('No risk recommendations to export', 'error');
+        return;
+    }
+
+    // Include low risk mappings (auto-approved, not in recs) from full mappings state
+    const allMappings = window._allMappings || [];
+    const recIndices = new Set(recs.map(r => r.index));
+    const lowRiskRows = allMappings
+        .map((m, i) => ({ ...m, index: i }))
+        .filter(m => !recIndices.has(m.index))
+        .map(m => [
+            csvEscape(m.source_table || ''), csvEscape(m.source_column || ''),
+            csvEscape(m.source_type || ''), csvEscape(m.target_type || ''),
+            csvEscape('Low'), csvEscape('auto-approved'),
+            csvEscape(''), csvEscape('No issues detected — auto-approved'), csvEscape('')
+        ].join(','));
+
+    // Build CSV content (Excel-compatible with UTF-8 BOM)
+    const headers = ['Table', 'Column', 'Source Type', 'Target Type', 'Risk Level', 'AI Recommendation', 'Compatibility Issues', 'AI Solution', 'Reasoning'];
+    const csvRows = [headers.join(',')];
+
+    recs.forEach(rec => {
+        const issues = (rec.compatibility_issues || []).join('; ');
+        const row = [
+            csvEscape(rec.table || ''),
+            csvEscape(rec.column || ''),
+            csvEscape(rec.source_type || ''),
+            csvEscape(rec.target_type || ''),
+            csvEscape(rec.risk || ''),
+            csvEscape(rec.ai_recommendation || ''),
+            csvEscape(issues),
+            csvEscape(rec.ai_solution || ''),
+            csvEscape(rec.reasoning || '')
+        ];
+        csvRows.push(row.join(','));
+    });
+
+    // Append low risk rows
+    lowRiskRows.forEach(r => csvRows.push(r));
+
+    const BOM = '\uFEFF';
+    const csvContent = BOM + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AI_Risk_Review_Report_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Risk report downloaded — open in Excel to filter & review', 'success');
+}
+
+function csvEscape(val) {
+    const s = String(val || '');
+    if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+
+// ── Approval dropdown: approve by risk level ──
+function toggleApproveDropdown(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('approveDropdown');
+    dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+
+function hideApproveDropdown() {
+    document.getElementById('approveDropdown').style.display = 'none';
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    const dd = document.getElementById('approveDropdown');
+    if (dd && !dd.parentElement.contains(e.target)) {
+        dd.style.display = 'none';
+    }
+});
+
+async function approveByRisk(level) {
+    const action = level === 'all' ? 'approve_all' : 'approve_by_risk';
+    const body = level === 'all' ? { action: 'approve_all' } : { action: 'approve_by_risk', risk_level: level };
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify(body) });
+    if (res.success) {
+        refreshApprovalView(res);
+        showToast(level === 'all' ? 'All mappings approved' : `All ${level} risk mappings approved`, 'success');
+    } else {
+        showToast(res.error || 'Failed to approve', 'error');
+    }
+}
+
+function refreshApprovalView(res) {
+    const mappings = res.mappings || res.data || [];
+    window._lastApprovalMappings = mappings;  // Cache for download
+    const total = mappings.length;
+    const approved = mappings.filter(m => m.approved).length;
+    const pending = total - approved;
+    const lowCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'low').length;
+    const medCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'medium').length;
+    const highCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'high').length;
+    document.getElementById('approvalMetrics').innerHTML = buildMetrics([
+        { label: 'Total', value: total, cls: '' },
+        { label: 'Approved', value: approved, cls: 'success' },
+        { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+        { label: 'Low Risk', value: lowCount, cls: 'success' },
+        { label: 'Medium Risk', value: medCount, cls: 'warning' },
+        { label: 'High Risk', value: highCount, cls: highCount > 0 ? 'fail' : 'success' },
+    ]);
+    renderApprovalTable(mappings);
+    if (pending === 0) markComplete(4);
+}
+
+function renderApprovalTable(data) {
+    const table = document.getElementById('approvalTable');
+    const riskRank = { high: 0, medium: 1, low: 2 };
+    const rows = (data || []).map((m, i) => ({ ...m, _idx: i }));
+    rows.sort((a, b) => (riskRank[(a.risk_level || a.risk || '').toLowerCase()] ?? 3) - (riskRank[(b.risk_level || b.risk || '').toLowerCase()] ?? 3));
+
+    let html = `<div class="table-container"><table>
+        <thead><tr><th>Approve</th><th>Table</th><th>Column</th><th>Source → Target</th><th>Risk</th><th>Status</th></tr></thead><tbody>`;
+    rows.forEach((m) => {
+        const checked = m.approved ? 'checked' : '';
+        const approved = m.approved ? '<span class="badge-status badge-pass">✓ Approved</span>' : '<span class="badge-status badge-medium">Pending</span>';
+        html += `<tr>
+            <td><input type="checkbox" ${checked} onchange="setApproval(${m._idx}, this.checked)" aria-label="Approve mapping"></td>
+            <td><strong>${m.source_table || m.table || ''}</strong></td>
+            <td>${m.source_column || m.column || ''}</td>
+            <td><code>${m.source_type || ''}</code> → <code>${m.target_type || ''}</code></td>
+            <td>${riskBadge(m.risk_level || m.risk || 'Low')}</td>
+            <td>${approved}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div>';
+    table.innerHTML = html;
+}
+
+async function toggleApproval(index) {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ action: 'toggle', index }) });
+    if (res.success) refreshApprovalView(res);
+}
+
+async function setApproval(index, approved) {
+    const res = await apiCall('/api/approve_mapping', { method: 'POST', body: JSON.stringify({ index, approved }) });
+    if (res.success) refreshApprovalView(res);
+}
+
+// ============================================================
+// STEP 7: MIGRATION
+// ============================================================
+async function executeMigration() {
+    const btn = document.getElementById('btnMigrate');
+    const mode = (document.getElementById('migrationMode')?.value || 'append');
+    btn.disabled = true;
+    showLoading('migrationLoading', true);
+    document.getElementById('migrationResult').classList.add('hidden');
+
+    const res = await apiCall('/api/execute_migration', { method: 'POST', body: JSON.stringify({ migration_mode: mode }) });
+
+    showLoading('migrationLoading', false);
+    btn.disabled = false;
+
+    const result = document.getElementById('migrationResult');
+    result.classList.remove('hidden');
+
+    if (res.success) {
+        let modeLabel = res.mode === 'live' ? '🟢 LIVE' : '🔵 DRY RUN';
+        let alertClass = res.errors && res.errors.length ? 'alert-warning' : 'alert-success';
+        let icon = res.mode === 'live' ? '🎉' : '✅';
+        let errHtml = '';
+        if (res.errors && res.errors.length) {
+            errHtml = '<div style="margin-top:10px;padding:8px;background:rgba(245,158,11,0.1);border-radius:6px;">' +
+                '<strong>⚠️ Warnings:</strong><ul style="margin:4px 0;">' +
+                res.errors.map(e => `<li>${e}</li>`).join('') + '</ul></div>';
+        }
+
+        result.innerHTML = `<div class="alert ${alertClass}">
+            ${icon} <strong>${modeLabel} — Migration Complete!</strong><br>
+            ${res.message}<br>
+            <small>Mode: ${res.migration_mode || mode} | Tables: ${res.tables_migrated} | Columns: ${res.columns_migrated}${res.skipped ? ' | Skipped: ' + res.skipped : ''}${res.rows_migrated !== undefined ? ' | Rows Inserted: ' + res.rows_migrated : ''}${res.rows_updated !== undefined ? ' | Rows Updated: ' + res.rows_updated : ''}${res.duplicate_rows_skipped !== undefined ? ' | Duplicate Skipped: ' + res.duplicate_rows_skipped : ''}</small>
+            ${errHtml}
+        </div>`;
+        markComplete(6);
+    } else {
+        result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+async function runPreMigrationCheck() {
+    const btn = document.getElementById('btnPrecheck');
+    const mode = (document.getElementById('migrationMode')?.value || 'append');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Running...';
+    const res = await apiCall('/api/pre_migration_check', {
+        method: 'POST',
+        body: JSON.stringify({ migration_mode: mode })
+    });
+    btn.disabled = false;
+    btn.innerHTML = '<span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Run Pre-Migration Check';
+
+    const el = document.getElementById('preMigrationResult');
+    el.classList.remove('hidden');
+
+    if (!res.success) {
+        el.innerHTML = `<div class="alert alert-error">❌ ${res.error || 'Pre-migration check failed'}</div>`;
+        return;
+    }
+
+    const allPass = !!res.ready;
+    const checks = res.checks || [];
+    let html = `<div class="alert ${allPass ? 'alert-success' : 'alert-warning'}" style="margin-bottom:10px;">`
+        + `${allPass ? '✅ Ready' : '⚠️ Review Required'} for mode <strong>${res.migration_mode}</strong></div>`;
+    html += `<div class="table-container"><table><thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead><tbody>`;
+    checks.forEach(c => {
+        const ok = (c.status || '').toUpperCase() === 'PASS';
+        html += `<tr><td>${c.check}</td><td>${ok ? '✅ PASS' : '❌ FAIL'}</td><td>${c.detail || ''}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+    if (res.estimated_row_volume !== undefined) {
+        html += `<div class="alert alert-success" style="margin-top:10px;">`
+            + `<strong>Capacity Recommendation:</strong> Estimated rows ${res.estimated_row_volume}. `
+            + `Suggested batch size ${res.batch_size_recommendation || 5000}. `
+            + `${res.index_strategy_recommendation || ''}`
+            + `</div>`;
+    }
+    el.innerHTML = html;
+}
+
+// ============================================================
+// STEP 8: VALIDATION
+// ============================================================
+// STEP 8: ENHANCED VALIDATION
+// ============================================================
+async function runValidation() {
+    const btn = document.getElementById('btnValidate');
+    btn.disabled = true;
+    showLoading('validationLoading', true);
+    document.getElementById('validationResult').classList.add('hidden');
+
+    const res = await apiCall('/api/validate');
+
+    showLoading('validationLoading', false);
+    btn.disabled = false;
+
+    const result = document.getElementById('validationResult');
+    result.classList.remove('hidden');
+
+    if (res.success) {
+        // Store for CSV export
+        window._validationResponse = res;
+
+        const checks = res.checks || res.results || [];
+        const passedCount = checks.filter(c => c.status === 'PASS').length;
+        const failedCount = checks.length - passedCount;
+        const allPassed = failedCount === 0;
+        const overallMsg = res.overall || (allPassed ? 'All Validation Checks Passed' : `${failedCount} Check(s) Failed, ${passedCount} Passed`);
+        const summary = res.migration_summary || {};
+        const tableVal = res.table_validation || {};
+        const colDetails = res.column_details || {};
+
+        let html = '';
+
+        // ── Overall alert ──
+        html += `<div class="alert ${allPassed ? 'alert-success' : 'alert-warning'}" style="margin-bottom: 16px;">
+            ${allPassed ? '✅' : '⚠️'} <strong>${overallMsg}</strong>
+        </div>`;
+
+        // ── 1. Migration Summary Metrics ──
+        if (summary && Object.keys(summary).length > 0) {
+            const tblsPassed = summary.tables_passed || 0;
+            const tblsIssues = summary.tables_with_issues || 0;
+            html += `<div class="metrics-row" style="margin-bottom: 16px;">
+                ${buildMetrics([
+                    { label: 'Tables Migrated', value: summary.tables_migrated || '-', cls: '' },
+                    { label: 'Total Rows', value: (summary.total_source_rows || 0) + ' → ' + (summary.total_target_rows || 0), cls: summary.total_source_rows === summary.total_target_rows ? 'success' : 'fail' },
+                    { label: 'Tables Passed', value: tblsPassed, cls: tblsPassed > 0 ? 'success' : '' },
+                    { label: 'Tables with Issues', value: tblsIssues, cls: tblsIssues > 0 ? 'fail' : 'success' },
+                    { label: 'Rejected Rows', value: summary.rejected_rows || 0, cls: (summary.rejected_rows || 0) > 0 ? 'fail' : 'success' },
+                    { label: 'Completion', value: summary.validation_completion || '100%', cls: 'success' },
+                ])}
+            </div>`;
+        }
+
+        // ── Action buttons ──
+        html += `<div style="display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 12px;">
+            <button class="btn btn-sm btn-outline" onclick="downloadValidationReport()" style="font-size: 12px; color: #059669; border-color: #059669;">
+                📄 Download Validation Report
+            </button>
+        </div>`;
+
+        // ── 2. Per-Table Status Matrix ──
+        const tableNames = Object.keys(tableVal).sort();
+        if (tableNames.length > 0) {
+            html += renderTableStatusMatrix(tableVal, tableNames);
+        }
+
+        // ── 3. Table Accordion with Column-Level Details ──
+        if (tableNames.length > 0) {
+            html += '<div style="margin-top: 16px;">';
+            html += '<h4 style="margin-bottom: 8px; color: var(--text-primary, #111);">📋 Table Details</h4>';
+            tableNames.forEach((tbl, idx) => {
+                const tv = tableVal[tbl] || {};
+                const cols = colDetails[tbl] || [];
+                const overallStatus = tv.overall || 'N/A';
+                const checksObj = tv.checks || {};
+                const failCount = Object.values(checksObj).filter(s => s === 'FAIL').length;
+                const passCount = Object.values(checksObj).filter(s => s === 'PASS').length;
+                const statusColor = overallStatus === 'PASS' ? '#059669' : overallStatus === 'FAIL' ? '#dc2626' : '#d97706';
+                const statusIcon = overallStatus === 'PASS' ? '✅' : overallStatus === 'FAIL' ? '❌' : '⚠️';
+                const isExpanded = (overallStatus === 'FAIL' && idx === 0);
+
+                html += `<div class="val-table-group" style="margin-bottom: 8px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; overflow: hidden;">
+                    <div onclick="toggleValAccordion('valTblBody_${idx}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-page, #f9fafb); cursor: pointer; user-select: none;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="valTblArrow_${idx}" style="font-size: 11px;">${isExpanded ? '▼' : '▶'}</span>
+                            <strong style="font-size: 14px;">${tbl}</strong>
+                            <span style="font-size: 12px; color: ${statusColor}; font-weight: 600;">${statusIcon} ${overallStatus}</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted, #6b7280);">
+                            ${cols.length} columns | <span style="color: #059669;">${passCount} passed</span>${failCount > 0 ? ` | <span style="color: #dc2626;">${failCount} failed</span>` : ''}
+                        </div>
+                    </div>
+                    <div id="valTblBody_${idx}" style="display: ${isExpanded ? 'block' : 'none'}; padding: 8px 14px 12px;">
+                        ${renderTableChecksDetail(checksObj)}
+                        ${cols.length > 0 ? renderColumnDetailTable(cols) : '<div style="color: var(--text-muted, #888); font-size: 13px; padding: 8px;">No column-level data available.</div>'}
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+        }
+
+        // ── 4. Flat Check Results (collapsible) ──
+        html += `<div style="margin-top: 16px;">
+            <button class="btn btn-sm btn-outline" onclick="toggleValAllChecks()" id="valAllChecksBtn" style="font-size: 12px; color: #6b7280; border-color: #d1d5db;">
+                ▼ Show All Checks (${checks.length})
+            </button>
+            <div id="valAllChecksPanel" style="display: none; margin-top: 8px;">
+                <div class="table-container"><table>
+                    <thead><tr><th>Check</th><th>Source</th><th>Target</th><th>Status</th></tr></thead><tbody>`;
+        checks.forEach(c => {
+            const isPassed = c.status === 'PASS';
+            const badgeCls = isPassed ? 'badge-pass' : 'badge-fail';
+            const icon = isPassed ? '✓' : '✕';
+            html += `<tr>
+                <td><strong>${c.check}</strong></td>
+                <td>${c.source || '-'}</td>
+                <td>${c.target || '-'}</td>
+                <td><span class="badge-status ${badgeCls}">${icon} ${c.status}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div></div></div>';
+
+        result.innerHTML = html;
+        markComplete(7);
+    } else {
+        result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+// ── Per-Table Status Matrix ──
+function renderTableStatusMatrix(tableVal, tableNames) {
+    const allCheckNames = new Set();
+    tableNames.forEach(tbl => {
+        const checks = (tableVal[tbl] || {}).checks || {};
+        Object.keys(checks).forEach(k => allCheckNames.add(k));
+    });
+    const checkNames = Array.from(allCheckNames);
+
+    let html = '<h4 style="margin: 12px 0 8px; color: var(--text-primary, #111);">🧪 Validation Matrix</h4>';
+    html += '<div class="table-container"><table style="font-size: 13px;">';
+
+    html += '<thead><tr><th style="text-align: left;">Validation</th>';
+    tableNames.forEach(tbl => {
+        html += `<th style="text-align: center; max-width: 140px; word-break: break-all;">${tbl}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+
+    checkNames.forEach(check => {
+        html += `<tr><td style="font-weight: 500;">${check}</td>`;
+        tableNames.forEach(tbl => {
+            const status = ((tableVal[tbl] || {}).checks || {})[check] || 'N/A';
+            html += `<td style="text-align: center;">${valStatusIcon(status)}</td>`;
+        });
+        html += '</tr>';
+    });
+
+    html += '<tr style="border-top: 2px solid var(--border, #d1d5db); font-weight: 700;"><td>Overall</td>';
+    tableNames.forEach(tbl => {
+        const overall = (tableVal[tbl] || {}).overall || 'N/A';
+        html += `<td style="text-align: center;">${valStatusIcon(overall)}</td>`;
+    });
+    html += '</tr></tbody></table></div>';
+    return html;
+}
+
+function valStatusIcon(status) {
+    if (status === 'PASS') return '<span style="color: #059669;">✅</span>';
+    if (status === 'FAIL') return '<span style="color: #dc2626;">❌</span>';
+    if (status === 'WARN' || status === 'WARNING') return '<span style="color: #d97706;">⚠️</span>';
+    return '<span style="color: #9ca3af;">—</span>';
+}
+
+function renderTableChecksDetail(checksObj) {
+    const keys = Object.keys(checksObj);
+    if (keys.length === 0) return '';
+    let html = '<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;">';
+    keys.forEach(k => {
+        const s = checksObj[k];
+        const color = s === 'PASS' ? '#059669' : s === 'FAIL' ? '#dc2626' : '#d97706';
+        const bg = s === 'PASS' ? '#f0fdf4' : s === 'FAIL' ? '#fef2f2' : '#fffbeb';
+        const icon = s === 'PASS' ? '✓' : s === 'FAIL' ? '✕' : '⚠';
+        html += `<span style="font-size: 11px; padding: 3px 8px; border-radius: 12px; background: ${bg}; color: ${color}; border: 1px solid ${color}20; font-weight: 500;">${icon} ${k}</span>`;
+    });
+    html += '</div>';
+    return html;
+}
+
+function renderColumnDetailTable(cols) {
+    const hasNull = cols.some(c => c.null_src !== undefined && c.null_src !== null);
+    const hasDistinct = cols.some(c => c.distinct_src !== undefined && c.distinct_src !== null);
+    const hasMinMax = cols.some(c => (c.min_src !== undefined && c.min_src !== null) || (c.max_src !== undefined && c.max_src !== null));
+    const hasSum = cols.some(c => c.sum_src !== undefined && c.sum_src !== null);
+    const hasMaxLen = cols.some(c => c.maxlen_src !== undefined && c.maxlen_src !== null);
+
+    let html = '<div class="table-container"><table style="font-size: 12px;">';
+    html += '<thead><tr><th>Column</th>';
+    if (hasNull) html += '<th>NULL Src</th><th>NULL Tgt</th><th>Status</th>';
+    if (hasDistinct) html += '<th>Distinct Src</th><th>Distinct Tgt</th><th>Status</th>';
+    if (hasMinMax) html += '<th>Min Src</th><th>Min Tgt</th><th>Max Src</th><th>Max Tgt</th><th>Status</th>';
+    if (hasSum) html += '<th>SUM Src</th><th>SUM Tgt</th><th>Status</th>';
+    if (hasMaxLen) html += '<th>MaxLen Src</th><th>MaxLen Tgt</th><th>Status</th>';
+    html += '</tr></thead><tbody>';
+
+    cols.forEach(c => {
+        html += `<tr><td><strong>${c.column || ''}</strong></td>`;
+        if (hasNull) {
+            html += `<td>${fmtVal(c.null_src)}</td><td>${fmtVal(c.null_tgt)}</td><td>${valStatusIcon(c.null_status || 'N/A')}</td>`;
+        }
+        if (hasDistinct) {
+            html += `<td>${fmtVal(c.distinct_src)}</td><td>${fmtVal(c.distinct_tgt)}</td><td>${valStatusIcon(c.distinct_status || 'N/A')}</td>`;
+        }
+        if (hasMinMax) {
+            html += `<td>${fmtVal(c.min_src)}</td><td>${fmtVal(c.min_tgt)}</td><td>${fmtVal(c.max_src)}</td><td>${fmtVal(c.max_tgt)}</td><td>${valStatusIcon(c.minmax_status || 'N/A')}</td>`;
+        }
+        if (hasSum) {
+            html += `<td>${fmtVal(c.sum_src)}</td><td>${fmtVal(c.sum_tgt)}</td><td>${valStatusIcon(c.sum_status || 'N/A')}</td>`;
+        }
+        if (hasMaxLen) {
+            html += `<td>${fmtVal(c.maxlen_src)}</td><td>${fmtVal(c.maxlen_tgt)}</td><td>${valStatusIcon(c.maxlen_status || 'N/A')}</td>`;
+        }
+        html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    return html;
+}
+
+function fmtVal(v) {
+    if (v === null || v === undefined || v === '') return '<span style="color: #9ca3af;">—</span>';
+    return String(v);
+}
+
+function toggleValAccordion(bodyId) {
+    const body = document.getElementById(bodyId);
+    const arrowId = bodyId.replace('valTblBody_', 'valTblArrow_');
+    const arrow = document.getElementById(arrowId);
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        if (arrow) arrow.textContent = '▼';
+    } else {
+        body.style.display = 'none';
+        if (arrow) arrow.textContent = '▶';
+    }
+}
+
+function toggleValAllChecks() {
+    const panel = document.getElementById('valAllChecksPanel');
+    const btn = document.getElementById('valAllChecksBtn');
+    if (panel.style.display === 'none') {
+        panel.style.display = 'block';
+        btn.textContent = '▲ Hide All Checks';
+    } else {
+        panel.style.display = 'none';
+        const count = (window._validationResponse?.results || []).length;
+        btn.textContent = `▼ Show All Checks (${count})`;
+    }
+}
+
+function downloadValidationReport() {
+    const res = window._validationResponse;
+    if (!res) { showToast('No validation data to export. Run validation first.', 'error'); return; }
+
+    const csvRows = [];
+    const checks = res.results || [];
+    const colDetails = res.column_details || {};
+    const tableVal = res.table_validation || {};
+    const summary = res.migration_summary || {};
+
+    csvRows.push('MIGRATION VALIDATION REPORT');
+    csvRows.push(`Generated:,${new Date().toISOString()}`);
+    csvRows.push('');
+    csvRows.push('MIGRATION SUMMARY');
+    csvRows.push(`Tables Migrated:,${summary.tables_migrated || '-'}`);
+    csvRows.push(`Total Source Rows:,${summary.total_source_rows || '-'}`);
+    csvRows.push(`Total Target Rows:,${summary.total_target_rows || '-'}`);
+    csvRows.push(`Tables Passed:,${summary.tables_passed || '-'}`);
+    csvRows.push(`Tables with Issues:,${summary.tables_with_issues || '-'}`);
+    csvRows.push(`Rejected Rows:,${summary.rejected_rows || 0}`);
+    csvRows.push('');
+
+    csvRows.push('PER-TABLE VALIDATION STATUS');
+    const tableNames = Object.keys(tableVal).sort();
+    if (tableNames.length > 0) {
+        const allCheckNames = new Set();
+        tableNames.forEach(tbl => { Object.keys((tableVal[tbl] || {}).checks || {}).forEach(k => allCheckNames.add(k)); });
+        csvRows.push(['Validation', ...tableNames].join(','));
+        Array.from(allCheckNames).forEach(check => {
+            const row = [csvEscape(check)];
+            tableNames.forEach(tbl => { row.push(((tableVal[tbl] || {}).checks || {})[check] || 'N/A'); });
+            csvRows.push(row.join(','));
+        });
+        const overallRow = ['Overall'];
+        tableNames.forEach(tbl => overallRow.push((tableVal[tbl] || {}).overall || 'N/A'));
+        csvRows.push(overallRow.join(','));
+    }
+    csvRows.push('');
+
+    csvRows.push('ALL VALIDATION CHECKS');
+    csvRows.push('Check,Source,Target,Status');
+    checks.forEach(c => { csvRows.push([csvEscape(c.check), csvEscape(c.source || ''), csvEscape(c.target || ''), c.status].join(',')); });
+    csvRows.push('');
+
+    csvRows.push('COLUMN-LEVEL DETAILS');
+    tableNames.forEach(tbl => {
+        const cols = colDetails[tbl] || [];
+        if (cols.length === 0) return;
+        csvRows.push('');
+        csvRows.push(`Table:,${tbl}`);
+        csvRows.push('Column,NULL Src,NULL Tgt,NULL Status,Distinct Src,Distinct Tgt,Distinct Status,Min Src,Min Tgt,Max Src,Max Tgt,MinMax Status,SUM Src,SUM Tgt,SUM Status,MaxLen Src,MaxLen Tgt,MaxLen Status');
+        cols.forEach(c => {
+            csvRows.push([
+                csvEscape(c.column || ''), c.null_src ?? '', c.null_tgt ?? '', c.null_status || '',
+                c.distinct_src ?? '', c.distinct_tgt ?? '', c.distinct_status || '',
+                csvEscape(String(c.min_src ?? '')), csvEscape(String(c.min_tgt ?? '')),
+                csvEscape(String(c.max_src ?? '')), csvEscape(String(c.max_tgt ?? '')), c.minmax_status || '',
+                csvEscape(String(c.sum_src ?? '')), csvEscape(String(c.sum_tgt ?? '')), c.sum_status || '',
+                c.maxlen_src ?? '', c.maxlen_tgt ?? '', c.maxlen_status || ''
+            ].join(','));
+        });
+    });
+
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Validation_Report_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Validation report downloaded — open in Excel to review', 'success');
+}
+
+// ============================================================
+// STEP 9: REPORT
+
+async function loadReport() {
+    showLoading('reportLoading', true);
+    document.getElementById('reportContent').classList.add('hidden');
+
+    // Fetch report and validation data in parallel
+    const [res, valRes] = await Promise.all([apiCall('/api/report'), apiCall('/api/validate_summary')]);
+
+    showLoading('reportLoading', false);
+
+    if (res.success) {
+        const rpt = res.report;
+        const summary = rpt.summary || rpt;
+        const status = rpt.status || summary.status || 'IN PROGRESS';
+        const reportEl = document.getElementById('reportContent');
+        reportEl.classList.remove('hidden');
+
+        // ── Validation summary from last run (if available) ──
+        const valData = (valRes && valRes.success) ? valRes : (window._validationResponse || null);
+        const migSummary = valData?.migration_summary || {};
+        const tableVal = valData?.table_validation || {};
+        const valPassed = valData?.all_passed;
+        const valOverall = valData?.overall || '';
+
+        // ── Status label ──
+        const finalStatus = valPassed === true ? 'COMPLETE' : valPassed === false ? 'REVIEW' : status;
+        const statusCls = finalStatus === 'COMPLETE' ? 'success' : 'warning';
+
+        let html = `<div class="metrics-row" style="margin-bottom: 16px;">
+            ${buildMetrics([
+                { label: 'Source', value: summary.source || 'N/A', cls: '' },
+                { label: 'Target', value: 'Azure SQL', cls: '' },
+                { label: 'Tables', value: migSummary.tables_migrated || summary.tables, cls: 'success' },
+                { label: 'Columns', value: (rpt.approved_count || summary.columns) + (rpt.skipped_count ? '/' + summary.columns : ''), cls: '' },
+                { label: 'Total Rows', value: (migSummary.total_source_rows != null ? migSummary.total_source_rows + ' → ' + migSummary.total_target_rows : 'N/A'), cls: migSummary.total_source_rows === migSummary.total_target_rows ? 'success' : 'warning' },
+                { label: 'Status', value: finalStatus, cls: statusCls },
+            ])}
+        </div>`;
+
+        // ── Validation Matrix in Report (if available) ──
+        const tableNames = Object.keys(tableVal).sort();
+        if (tableNames.length > 0) {
+            html += `<div class="card" style="margin-top: 0; padding: 16px 20px;">
+                <h3 style="margin-bottom: 10px;">🧪 Validation Summary</h3>
+                <p style="color: var(--text-muted, #6b7280); font-size: 13px; margin-bottom: 10px;">${valOverall}</p>
+                ${typeof renderTableStatusMatrix === 'function' ? renderTableStatusMatrix(tableVal, tableNames) : ''}
+            </div>`;
+        }
+
+        if (rpt.executive_summary) {
+            // Simple markdown-to-html conversion for display
+            let summaryHtml = rpt.executive_summary
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/## (.*?)\n/g, '<h4>$1</h4>')
+                .replace(/### (.*?)\n/g, '<h5>$1</h5>')
+                .replace(/^- (.*)/gm, '<li>$1</li>')
+                .replace(/^\d+\. (.*)/gm, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+                .replace(/\n/g, '<br>');
+            html += `<div class="card" style="margin-top: 16px; padding: 20px;">
+                <h3 style="margin-bottom: 12px;">📝 Executive Summary</h3>
+                <div style="color: var(--text-muted); line-height: 1.8;">${summaryHtml}</div>
+            </div>`;
+        }
+
+        // Skipped Columns section
+        if (rpt.skipped_columns && rpt.skipped_columns.length > 0) {
+            let skippedHtml = `<div class="card" style="margin-top: 16px; padding: 20px; border-left: 4px solid #f59e0b;">
+                <h3 style="margin-bottom: 12px;">⚠️ Skipped Columns (${rpt.skipped_count})</h3>
+                <p style="color: var(--text-muted); margin-bottom: 12px;">The following columns were not approved and skipped during migration:</p>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead><tr style="border-bottom: 2px solid var(--border-color);">
+                        <th style="text-align: left; padding: 8px;">Column</th>
+                        <th style="text-align: left; padding: 8px;">Details</th>
+                    </tr></thead><tbody>`;
+            rpt.skipped_columns.forEach(col => {
+                skippedHtml += `<tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 8px; font-family: monospace;">${col}</td>
+                    <td style="padding: 8px;"><span class="badge badge-warning">Skipped</span></td>
+                </tr>`;
+            });
+            skippedHtml += `</tbody></table>
+                <p style="color: var(--text-muted); margin-top: 12px; font-size: 0.9em;">
+                    These columns require manual review before migration.
+                </p>
+            </div>`;
+            html += skippedHtml;
+        }
+
+
+
+        reportEl.innerHTML = html;
+        markComplete(8);
+        document.getElementById('btnDownloadReport').style.display = 'inline-block';
+        
+    }
+}
+
+// ============================================================
+// Load state on page open (refresh persistence)
+// ============================================================
+async function loadState() {
+    try {
+        const res = await apiCall('/api/state');
+        uiStateCache = res;
+        completedSteps.clear();
+        navSteps.forEach(n => n.classList.remove('completed'));
+        clearAllTabData();
+        if (res.source_type) markComplete(0);
+        if (res.schema_count > 0) markComplete(1);
+        if (res.analysis_count > 0) markComplete(2);
+        if (res.mapping_count > 0) markComplete(3);
+        if (res.ddl_count > 0) markComplete(5);
+        if (res.all_approved) markComplete(4);
+        if (res.migration_executed) markComplete(6);
+        if (res.validation_count > 0) markComplete(7);
+        if (res.source_type) setConnStatus('source', true, res.source_type);
+        updateDashboardStats(res);
+        renderDeltaPreview();
+        stampLastRun();
+    } catch (e) {}
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+    // Don't auto-restore checkmarks on page load
+    // Checkmarks will appear as user completes steps in this session
+    // If you want to resume a previous session, click "Resume" (optional)
+    renderEmptyStates();
+    updateDashboardStats();
+    fetchDeltaPlan();
+    renderDeltaPreview();
+    stampLastRun();
+    toggleSourceFields();
+});
+
+// Probe is blocking and slow, so it only runs when the user clicks the target pill.
+async function refreshTargetStatus() {
+    const foot = document.getElementById('railFootText');
+    if (foot) foot.textContent = 'Checking target...';
+    try {
+        const res = await apiCall('/api/test_azure_sql');
+        setConnStatus('target', !!res.success, res.database || 'Azure SQL');
+        if (foot) foot.textContent = res.success ? 'Target online' : 'Target offline';
+        if (res.success) {
+            updateStatusBanner('ok', 'Target connectivity healthy', `Connected to ${res.server || 'Azure SQL'} / ${res.database || 'database'}.`);
+        } else {
+            updateStatusBanner('bad', 'Target connectivity issue', (res.error || 'Unable to connect to Azure SQL.').slice(0, 180));
+        }
+        stampLastRun();
+    } catch (e) {
+        setConnStatus('target', false, 'Azure SQL');
+        if (foot) foot.textContent = 'Target offline';
+        updateStatusBanner('bad', 'Target connectivity issue', 'Unable to reach the connectivity endpoint from the browser.');
+        stampLastRun();
+    }
+}
+
+// Download report as JSON file
+async function downloadReport() {
+    const res = await apiCall('/api/report');
+    const blob = new Blob([JSON.stringify(res, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'migration_report.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+function emailReport() {
+    const subject = encodeURIComponent('AI Data Migration Report - ' + new Date().toLocaleDateString());
+    const body = encodeURIComponent('Hi,\n\nPlease find the AI Data Migration Report.\n\nGenerated: ' + new Date().toLocaleString() + '\n\nRegards,\nAI Migration Agent');
+    window.open('mailto:?subject=' + subject + '&body=' + body);
+}
+
+</script>
+
+</body>
+</html>

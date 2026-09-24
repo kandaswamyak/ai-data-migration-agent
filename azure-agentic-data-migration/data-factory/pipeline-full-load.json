@@ -1,0 +1,343 @@
+{
+  "name": "Pipeline_FullTableLoad",
+  "properties": {
+    "description": "ADF pipeline for full table load migration from Oracle/SQL Server to Azure SQL Database. Supports parameterized source/target, column mapping, batch processing, fault tolerance, and post-copy row count verification.",
+    "activities": [
+      {
+        "name": "LookupSourceRowCount",
+        "description": "Get the total row count from the source table before copying.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": {
+            "value": "@pipeline().parameters.retryCount",
+            "type": "Expression"
+          },
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+              "type": "Expression"
+            },
+            "oracleReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT COUNT(*) AS ROW_COUNT FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable), '')",
+              "type": "Expression"
+            },
+            "sqlReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT COUNT(*) AS ROW_COUNT FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, ']'), '')",
+              "type": "Expression"
+            },
+            "queryTimeout": "00:30:00"
+          },
+          "dataset": {
+            "referenceName": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+              "type": "Expression"
+            },
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.sourceSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.sourceTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "IfSourceHasRows",
+        "description": "Proceed with copy only if the source table contains data.",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "LookupSourceRowCount",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "expression": {
+            "value": "@greater(int(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), 0)",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "CopySourceToTarget",
+              "description": "Full copy from source (Oracle or SQL Server) to Azure SQL Database with column mapping, fault tolerance, incompatible-row redirect, and copy activity logging.",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.04:00:00",
+                "retry": {
+                  "value": "@pipeline().parameters.retryCount",
+                  "type": "Expression"
+                },
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "source": {
+                  "type": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+                    "type": "Expression"
+                  },
+                  "oracleReaderQuery": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT * FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable), '')",
+                    "type": "Expression"
+                  },
+                  "sqlReaderQuery": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT * FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, ']'), '')",
+                    "type": "Expression"
+                  },
+                  "queryTimeout": "04:00:00",
+                  "partitionOption": "None"
+                },
+                "sink": {
+                  "type": "AzureSqlSink",
+                  "preCopyScript": {
+                    "value": "@concat('IF OBJECT_ID(''[', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, ']'', ''U'') IS NOT NULL TRUNCATE TABLE [', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, ']')",
+                    "type": "Expression"
+                  },
+                  "writeBatchSize": {
+                    "value": "@pipeline().parameters.batchSize",
+                    "type": "Expression"
+                  },
+                  "writeBatchTimeout": "00:30:00",
+                  "sqlWriterUseTableLock": true,
+                  "disableMetricsCollection": false,
+                  "tableOption": "autoCreate"
+                },
+                "enableStaging": false,
+                "translator": {
+                  "value": "@json(pipeline().parameters.columnMapping)",
+                  "type": "Expression"
+                },
+                "enableSkipIncompatibleRow": true,
+                "redirectIncompatibleRowSettings": {
+                  "linkedServiceName": {
+                    "referenceName": "LS_AzureBlobStorage",
+                    "type": "LinkedServiceReference"
+                  },
+                  "path": {
+                    "value": "@concat(pipeline().parameters.loggingContainer, '/incompatible-rows/', pipeline().parameters.sourceSchema, '/', pipeline().parameters.sourceTable, '/', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'))",
+                    "type": "Expression"
+                  }
+                },
+                "logSettings": {
+                  "enableCopyActivityLog": true,
+                  "copyActivityLogSettings": {
+                    "logLevel": "Warning",
+                    "enableReliableLogging": true
+                  },
+                  "logLocationSettings": {
+                    "linkedServiceName": {
+                      "referenceName": "LS_AzureBlobStorage",
+                      "type": "LinkedServiceReference"
+                    },
+                    "path": {
+                      "value": "@concat(pipeline().parameters.loggingContainer, '/copy-logs/', pipeline().parameters.sourceSchema, '/', pipeline().parameters.sourceTable, '/', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'))",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              },
+              "inputs": [
+                {
+                  "referenceName": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+                    "type": "Expression"
+                  },
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@pipeline().parameters.sourceSchema",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@pipeline().parameters.sourceTable",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ],
+              "outputs": [
+                {
+                  "referenceName": "DS_AzureSql_Parameterized",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@pipeline().parameters.targetSchema",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@pipeline().parameters.targetTable",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "LookupTargetRowCount",
+              "description": "Verify the row count in the target Azure SQL table after copy completes.",
+              "type": "Lookup",
+              "dependsOn": [
+                {
+                  "activity": "CopySourceToTarget",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.00:30:00",
+                "retry": 2,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "source": {
+                  "type": "AzureSqlSource",
+                  "sqlReaderQuery": {
+                    "value": "@concat('SELECT COUNT(*) AS ROW_COUNT FROM [', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, ']')",
+                    "type": "Expression"
+                  },
+                  "queryTimeout": "00:30:00"
+                },
+                "dataset": {
+                  "referenceName": "DS_AzureSql_Parameterized",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@pipeline().parameters.targetSchema",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@pipeline().parameters.targetTable",
+                      "type": "Expression"
+                    }
+                  }
+                },
+                "firstRowOnly": true
+              }
+            },
+            {
+              "name": "SetMigrationResultMetadata",
+              "description": "Build a JSON result object with source/target counts, rows read/copied/skipped, duration, throughput, and match status.",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "LookupTargetRowCount",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "migrationResult",
+                "value": {
+                  "value": "@concat('{', '\"pipelineRunId\": \"', pipeline().RunId, '\",', '\"sourceType\": \"', pipeline().parameters.sourceType, '\",', '\"sourceTable\": \"', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, '\",', '\"targetTable\": \"', pipeline().parameters.targetSchema, '.', pipeline().parameters.targetTable, '\",', '\"sourceRowCount\": ', string(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), ',', '\"targetRowCount\": ', string(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT), ',', '\"rowsRead\": ', string(activity('CopySourceToTarget').output.rowsRead), ',', '\"rowsCopied\": ', string(activity('CopySourceToTarget').output.rowsCopied), ',', '\"rowsSkipped\": ', string(activity('CopySourceToTarget').output.rowsSkipped), ',', '\"copyDurationSeconds\": ', string(activity('CopySourceToTarget').output.copyDuration), ',', '\"throughputKBps\": ', string(activity('CopySourceToTarget').output.throughput), ',', '\"migrationTimestamp\": \"', utcNow(), '\",', '\"rowCountMatch\": ', if(equals(int(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), int(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT)), 'true', 'false'), '}')",
+                  "type": "Expression"
+                }
+              }
+            }
+          ],
+          "ifFalseActivities": [
+            {
+              "name": "SetEmptySourceResult",
+              "description": "Record that the source table was empty — nothing to migrate.",
+              "type": "SetVariable",
+              "dependsOn": [],
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "migrationResult",
+                "value": {
+                  "value": "@concat('{', '\"pipelineRunId\": \"', pipeline().RunId, '\",', '\"sourceType\": \"', pipeline().parameters.sourceType, '\",', '\"sourceTable\": \"', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, '\",', '\"targetTable\": \"', pipeline().parameters.targetSchema, '.', pipeline().parameters.targetTable, '\",', '\"sourceRowCount\": 0,', '\"targetRowCount\": 0,', '\"status\": \"Skipped_EmptySource\",', '\"migrationTimestamp\": \"', utcNow(), '\"', '}')",
+                  "type": "Expression"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "sourceType": {
+        "type": "string",
+        "defaultValue": "SQLServer"
+      },
+      "sourceConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "sourceSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "sourceTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "targetTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "columnMapping": {
+        "type": "string",
+        "defaultValue": "{\"type\": \"TabularTranslator\", \"mappings\": []}"
+      },
+      "batchSize": {
+        "type": "int",
+        "defaultValue": 10000
+      },
+      "retryCount": {
+        "type": "int",
+        "defaultValue": 3
+      },
+      "loggingContainer": {
+        "type": "string",
+        "defaultValue": "adf-migration-logs"
+      }
+    },
+    "variables": {
+      "migrationResult": {
+        "type": "String"
+      }
+    },
+    "folder": {
+      "name": "DataMigration/FullLoad"
+    },
+    "annotations": [
+      "DataMigration",
+      "FullLoad",
+      "POC"
+    ]
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}

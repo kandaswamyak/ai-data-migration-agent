@@ -1,0 +1,432 @@
+{
+  "_comment": "=== SIMULATED SAMPLE DATA — NOT A REAL MIGRATION PLAN ===",
+  "_purpose": "Demonstrates the migration-plan.schema.json format with table mappings, risk levels, and DDL for an Oracle HR schema migration to Azure SQL Database.",
+  "planId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "AWAITING_APPROVAL",
+  "sourceDetails": {
+    "sourceType": "Oracle",
+    "host": "oracle-prod.contoso.internal",
+    "port": 1521,
+    "database": "ORCL",
+    "schema": "HR",
+    "version": "Oracle Database 19c Enterprise Edition Release 19.0.0.0.0",
+    "characterSet": "AL32UTF8"
+  },
+  "targetDetails": {
+    "server": "migpoc-sql-abc123def.database.windows.net",
+    "database": "hr-migrated",
+    "schema": "dbo",
+    "serviceTier": "S1",
+    "compatibilityLevel": 160
+  },
+  "tableMappings": [
+    {
+      "sourceTable": "HR.EMPLOYEES",
+      "targetTable": "dbo.EMPLOYEES",
+      "columns": [
+        {
+          "sourceColumn": "EMPLOYEE_ID",
+          "targetColumn": "EMPLOYEE_ID",
+          "sourceDatatype": "NUMBER(6,0)",
+          "targetDatatype": "INT",
+          "conversionNotes": "Safe conversion — NUMBER(6,0) max 999999 fits in INT range.",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "sourceColumn": "FIRST_NAME",
+          "targetColumn": "FIRST_NAME",
+          "sourceDatatype": "VARCHAR2(20)",
+          "targetDatatype": "NVARCHAR(20)",
+          "conversionNotes": "VARCHAR2→NVARCHAR for Unicode support. Length preserved.",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "LAST_NAME",
+          "targetColumn": "LAST_NAME",
+          "sourceDatatype": "VARCHAR2(25)",
+          "targetDatatype": "NVARCHAR(25)",
+          "conversionNotes": "VARCHAR2→NVARCHAR for Unicode support. Length preserved.",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "EMAIL",
+          "targetColumn": "EMAIL",
+          "sourceDatatype": "VARCHAR2(25)",
+          "targetDatatype": "NVARCHAR(25)",
+          "conversionNotes": "VARCHAR2→NVARCHAR. Unique constraint preserved.",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "PHONE_NUMBER",
+          "targetColumn": "PHONE_NUMBER",
+          "sourceDatatype": "VARCHAR2(20)",
+          "targetDatatype": "NVARCHAR(20)",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "HIRE_DATE",
+          "targetColumn": "HIRE_DATE",
+          "sourceDatatype": "DATE",
+          "targetDatatype": "DATETIME2(0)",
+          "conversionNotes": "Oracle DATE includes time component; DATETIME2(0) preserves second-level precision.",
+          "riskLevel": "MEDIUM",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "JOB_ID",
+          "targetColumn": "JOB_ID",
+          "sourceDatatype": "VARCHAR2(10)",
+          "targetDatatype": "NVARCHAR(10)",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "SALARY",
+          "targetColumn": "SALARY",
+          "sourceDatatype": "NUMBER(8,2)",
+          "targetDatatype": "DECIMAL(8,2)",
+          "conversionNotes": "Direct numeric mapping. Precision and scale preserved exactly.",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "COMMISSION_PCT",
+          "targetColumn": "COMMISSION_PCT",
+          "sourceDatatype": "NUMBER(2,2)",
+          "targetDatatype": "DECIMAL(2,2)",
+          "conversionNotes": "Direct mapping. Values range 0.00–0.99.",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "MANAGER_ID",
+          "targetColumn": "MANAGER_ID",
+          "sourceDatatype": "NUMBER(6,0)",
+          "targetDatatype": "INT",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "DEPARTMENT_ID",
+          "targetColumn": "DEPARTMENT_ID",
+          "sourceDatatype": "NUMBER(4,0)",
+          "targetDatatype": "SMALLINT",
+          "conversionNotes": "NUMBER(4,0) max 9999 fits in SMALLINT range (–32768 to 32767).",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        }
+      ],
+      "riskLevel": "MEDIUM",
+      "estimatedRows": 107,
+      "constraints": [
+        {
+          "constraintName": "PK_EMPLOYEES",
+          "constraintType": "PRIMARY KEY",
+          "definition": "PRIMARY KEY CLUSTERED (EMPLOYEE_ID)"
+        },
+        {
+          "constraintName": "UK_EMPLOYEES_EMAIL",
+          "constraintType": "UNIQUE",
+          "definition": "UNIQUE NONCLUSTERED (EMAIL)"
+        },
+        {
+          "constraintName": "FK_EMPLOYEES_DEPARTMENT",
+          "constraintType": "FOREIGN KEY",
+          "definition": "FOREIGN KEY (DEPARTMENT_ID) REFERENCES dbo.DEPARTMENTS (DEPARTMENT_ID)"
+        },
+        {
+          "constraintName": "FK_EMPLOYEES_MANAGER",
+          "constraintType": "FOREIGN KEY",
+          "definition": "FOREIGN KEY (MANAGER_ID) REFERENCES dbo.EMPLOYEES (EMPLOYEE_ID)"
+        }
+      ],
+      "indexes": [
+        {
+          "indexName": "IX_EMPLOYEES_DEPARTMENT_ID",
+          "columns": ["DEPARTMENT_ID"],
+          "isUnique": false,
+          "isClustered": false
+        },
+        {
+          "indexName": "IX_EMPLOYEES_MANAGER_ID",
+          "columns": ["MANAGER_ID"],
+          "isUnique": false,
+          "isClustered": false
+        }
+      ],
+      "migrationStrategy": "BULK_COPY"
+    },
+    {
+      "sourceTable": "HR.DEPARTMENTS",
+      "targetTable": "dbo.DEPARTMENTS",
+      "columns": [
+        {
+          "sourceColumn": "DEPARTMENT_ID",
+          "targetColumn": "DEPARTMENT_ID",
+          "sourceDatatype": "NUMBER(4,0)",
+          "targetDatatype": "SMALLINT",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "sourceColumn": "DEPARTMENT_NAME",
+          "targetColumn": "DEPARTMENT_NAME",
+          "sourceDatatype": "VARCHAR2(30)",
+          "targetDatatype": "NVARCHAR(30)",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "MANAGER_ID",
+          "targetColumn": "MANAGER_ID",
+          "sourceDatatype": "NUMBER(6,0)",
+          "targetDatatype": "INT",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "LOCATION_ID",
+          "targetColumn": "LOCATION_ID",
+          "sourceDatatype": "NUMBER(4,0)",
+          "targetDatatype": "SMALLINT",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        }
+      ],
+      "riskLevel": "LOW",
+      "estimatedRows": 27,
+      "constraints": [
+        {
+          "constraintName": "PK_DEPARTMENTS",
+          "constraintType": "PRIMARY KEY",
+          "definition": "PRIMARY KEY CLUSTERED (DEPARTMENT_ID)"
+        }
+      ],
+      "indexes": [],
+      "migrationStrategy": "BULK_COPY"
+    },
+    {
+      "sourceTable": "HR.JOB_HISTORY",
+      "targetTable": "dbo.JOB_HISTORY",
+      "columns": [
+        {
+          "sourceColumn": "EMPLOYEE_ID",
+          "targetColumn": "EMPLOYEE_ID",
+          "sourceDatatype": "NUMBER(6,0)",
+          "targetDatatype": "INT",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "sourceColumn": "START_DATE",
+          "targetColumn": "START_DATE",
+          "sourceDatatype": "DATE",
+          "targetDatatype": "DATETIME2(0)",
+          "conversionNotes": "Oracle DATE→DATETIME2. Time component may contain midnight values; verify.",
+          "riskLevel": "MEDIUM",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "sourceColumn": "END_DATE",
+          "targetColumn": "END_DATE",
+          "sourceDatatype": "DATE",
+          "targetDatatype": "DATETIME2(0)",
+          "conversionNotes": "Oracle DATE→DATETIME2. Same considerations as START_DATE.",
+          "riskLevel": "MEDIUM",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "JOB_ID",
+          "targetColumn": "JOB_ID",
+          "sourceDatatype": "VARCHAR2(10)",
+          "targetDatatype": "NVARCHAR(10)",
+          "riskLevel": "LOW",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "sourceColumn": "DEPARTMENT_ID",
+          "targetColumn": "DEPARTMENT_ID",
+          "sourceDatatype": "NUMBER(4,0)",
+          "targetDatatype": "SMALLINT",
+          "riskLevel": "LOW",
+          "nullable": true,
+          "isPrimaryKey": false
+        }
+      ],
+      "riskLevel": "HIGH",
+      "estimatedRows": 10,
+      "constraints": [
+        {
+          "constraintName": "PK_JOB_HISTORY",
+          "constraintType": "PRIMARY KEY",
+          "definition": "PRIMARY KEY CLUSTERED (EMPLOYEE_ID, START_DATE)"
+        },
+        {
+          "constraintName": "FK_JOB_HISTORY_EMPLOYEE",
+          "constraintType": "FOREIGN KEY",
+          "definition": "FOREIGN KEY (EMPLOYEE_ID) REFERENCES dbo.EMPLOYEES (EMPLOYEE_ID)"
+        },
+        {
+          "constraintName": "FK_JOB_HISTORY_DEPARTMENT",
+          "constraintType": "FOREIGN KEY",
+          "definition": "FOREIGN KEY (DEPARTMENT_ID) REFERENCES dbo.DEPARTMENTS (DEPARTMENT_ID)"
+        },
+        {
+          "constraintName": "CK_JOB_HISTORY_DATES",
+          "constraintType": "CHECK",
+          "definition": "CHECK (END_DATE > START_DATE)"
+        }
+      ],
+      "indexes": [
+        {
+          "indexName": "IX_JOB_HISTORY_EMPLOYEE_ID",
+          "columns": ["EMPLOYEE_ID"],
+          "isUnique": false,
+          "isClustered": false
+        },
+        {
+          "indexName": "IX_JOB_HISTORY_DEPARTMENT_ID",
+          "columns": ["DEPARTMENT_ID"],
+          "isUnique": false,
+          "isClustered": false
+        }
+      ],
+      "migrationStrategy": "BULK_COPY"
+    }
+  ],
+  "overallRiskLevel": "HIGH",
+  "estimatedRowCounts": {
+    "EMPLOYEES": 107,
+    "DEPARTMENTS": 27,
+    "JOB_HISTORY": 10
+  },
+  "estimatedDuration": "0h 15m",
+  "ddlStatements": [
+    {
+      "order": 1,
+      "objectName": "dbo.DEPARTMENTS",
+      "objectType": "TABLE",
+      "sql": "CREATE TABLE [dbo].[DEPARTMENTS] (\n  [DEPARTMENT_ID] SMALLINT NOT NULL,\n  [DEPARTMENT_NAME] NVARCHAR(30) NOT NULL,\n  [MANAGER_ID] INT NULL,\n  [LOCATION_ID] SMALLINT NULL,\n  CONSTRAINT [PK_DEPARTMENTS] PRIMARY KEY CLUSTERED ([DEPARTMENT_ID])\n);",
+      "dependsOn": []
+    },
+    {
+      "order": 2,
+      "objectName": "dbo.EMPLOYEES",
+      "objectType": "TABLE",
+      "sql": "CREATE TABLE [dbo].[EMPLOYEES] (\n  [EMPLOYEE_ID] INT NOT NULL,\n  [FIRST_NAME] NVARCHAR(20) NULL,\n  [LAST_NAME] NVARCHAR(25) NOT NULL,\n  [EMAIL] NVARCHAR(25) NOT NULL,\n  [PHONE_NUMBER] NVARCHAR(20) NULL,\n  [HIRE_DATE] DATETIME2(0) NOT NULL,\n  [JOB_ID] NVARCHAR(10) NOT NULL,\n  [SALARY] DECIMAL(8,2) NULL,\n  [COMMISSION_PCT] DECIMAL(2,2) NULL,\n  [MANAGER_ID] INT NULL,\n  [DEPARTMENT_ID] SMALLINT NULL,\n  CONSTRAINT [PK_EMPLOYEES] PRIMARY KEY CLUSTERED ([EMPLOYEE_ID]),\n  CONSTRAINT [UK_EMPLOYEES_EMAIL] UNIQUE NONCLUSTERED ([EMAIL])\n);",
+      "dependsOn": ["dbo.DEPARTMENTS"]
+    },
+    {
+      "order": 3,
+      "objectName": "dbo.JOB_HISTORY",
+      "objectType": "TABLE",
+      "sql": "CREATE TABLE [dbo].[JOB_HISTORY] (\n  [EMPLOYEE_ID] INT NOT NULL,\n  [START_DATE] DATETIME2(0) NOT NULL,\n  [END_DATE] DATETIME2(0) NOT NULL,\n  [JOB_ID] NVARCHAR(10) NOT NULL,\n  [DEPARTMENT_ID] SMALLINT NULL,\n  CONSTRAINT [PK_JOB_HISTORY] PRIMARY KEY CLUSTERED ([EMPLOYEE_ID], [START_DATE]),\n  CONSTRAINT [CK_JOB_HISTORY_DATES] CHECK ([END_DATE] > [START_DATE])\n);",
+      "dependsOn": ["dbo.EMPLOYEES", "dbo.DEPARTMENTS"]
+    },
+    {
+      "order": 4,
+      "objectName": "FK_EMPLOYEES_DEPARTMENT",
+      "objectType": "CONSTRAINT",
+      "sql": "ALTER TABLE [dbo].[EMPLOYEES] ADD CONSTRAINT [FK_EMPLOYEES_DEPARTMENT] FOREIGN KEY ([DEPARTMENT_ID]) REFERENCES [dbo].[DEPARTMENTS] ([DEPARTMENT_ID]);",
+      "dependsOn": ["dbo.EMPLOYEES", "dbo.DEPARTMENTS"]
+    },
+    {
+      "order": 5,
+      "objectName": "FK_EMPLOYEES_MANAGER",
+      "objectType": "CONSTRAINT",
+      "sql": "ALTER TABLE [dbo].[EMPLOYEES] ADD CONSTRAINT [FK_EMPLOYEES_MANAGER] FOREIGN KEY ([MANAGER_ID]) REFERENCES [dbo].[EMPLOYEES] ([EMPLOYEE_ID]);",
+      "dependsOn": ["dbo.EMPLOYEES"]
+    },
+    {
+      "order": 6,
+      "objectName": "FK_JOB_HISTORY_EMPLOYEE",
+      "objectType": "CONSTRAINT",
+      "sql": "ALTER TABLE [dbo].[JOB_HISTORY] ADD CONSTRAINT [FK_JOB_HISTORY_EMPLOYEE] FOREIGN KEY ([EMPLOYEE_ID]) REFERENCES [dbo].[EMPLOYEES] ([EMPLOYEE_ID]);",
+      "dependsOn": ["dbo.JOB_HISTORY", "dbo.EMPLOYEES"]
+    },
+    {
+      "order": 7,
+      "objectName": "FK_JOB_HISTORY_DEPARTMENT",
+      "objectType": "CONSTRAINT",
+      "sql": "ALTER TABLE [dbo].[JOB_HISTORY] ADD CONSTRAINT [FK_JOB_HISTORY_DEPARTMENT] FOREIGN KEY ([DEPARTMENT_ID]) REFERENCES [dbo].[DEPARTMENTS] ([DEPARTMENT_ID]);",
+      "dependsOn": ["dbo.JOB_HISTORY", "dbo.DEPARTMENTS"]
+    },
+    {
+      "order": 8,
+      "objectName": "IX_EMPLOYEES_DEPARTMENT_ID",
+      "objectType": "INDEX",
+      "sql": "CREATE NONCLUSTERED INDEX [IX_EMPLOYEES_DEPARTMENT_ID] ON [dbo].[EMPLOYEES] ([DEPARTMENT_ID]);",
+      "dependsOn": ["dbo.EMPLOYEES"]
+    },
+    {
+      "order": 9,
+      "objectName": "IX_EMPLOYEES_MANAGER_ID",
+      "objectType": "INDEX",
+      "sql": "CREATE NONCLUSTERED INDEX [IX_EMPLOYEES_MANAGER_ID] ON [dbo].[EMPLOYEES] ([MANAGER_ID]);",
+      "dependsOn": ["dbo.EMPLOYEES"]
+    },
+    {
+      "order": 10,
+      "objectName": "IX_JOB_HISTORY_EMPLOYEE_ID",
+      "objectType": "INDEX",
+      "sql": "CREATE NONCLUSTERED INDEX [IX_JOB_HISTORY_EMPLOYEE_ID] ON [dbo].[JOB_HISTORY] ([EMPLOYEE_ID]);",
+      "dependsOn": ["dbo.JOB_HISTORY"]
+    },
+    {
+      "order": 11,
+      "objectName": "IX_JOB_HISTORY_DEPARTMENT_ID",
+      "objectType": "INDEX",
+      "sql": "CREATE NONCLUSTERED INDEX [IX_JOB_HISTORY_DEPARTMENT_ID] ON [dbo].[JOB_HISTORY] ([DEPARTMENT_ID]);",
+      "dependsOn": ["dbo.JOB_HISTORY"]
+    }
+  ],
+  "warnings": [
+    {
+      "severity": "WARNING",
+      "table": "HR.EMPLOYEES",
+      "column": "HIRE_DATE",
+      "message": "Oracle DATE includes time component. Verify no sub-second precision is lost when mapping to DATETIME2(0)."
+    },
+    {
+      "severity": "WARNING",
+      "table": "HR.JOB_HISTORY",
+      "column": "START_DATE",
+      "message": "Composite primary key uses DATE column. Ensure time components are consistent across source rows to avoid duplicate key violations."
+    },
+    {
+      "severity": "INFO",
+      "table": "HR.EMPLOYEES",
+      "message": "Self-referencing FK (MANAGER_ID→EMPLOYEE_ID) detected. Data will be loaded with FK disabled, then re-enabled after bulk copy."
+    },
+    {
+      "severity": "INFO",
+      "message": "All VARCHAR2 columns mapped to NVARCHAR for full Unicode support. Storage will approximately double for ASCII-only data."
+    }
+  ],
+  "createdAt": "2026-09-03T10:30:00Z",
+  "createdBy": "migration-agent@contoso.com"
+}

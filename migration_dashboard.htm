@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="snowflake-source" content="cortex-agent-authored" />
+  <title>Migration Agent - Approval Dashboard</title>
+  <script type="application/json" id="snowflake-report-metadata">
+  {
+    "generated": "2026-07-25",
+    "intent": "AI-Powered Data Migration Agent - Phase tracking, agent interaction, validation comparison, and approval workflow",
+    "sections": [
+      { "id": "phase-tracker", "title": "Phase Tracker", "dataSources": [], "producerNotes": "Interactive phase progress tracker for the 6-phase migration pipeline" },
+      { "id": "agent-chat", "title": "Agent Interaction", "dataSources": [], "producerNotes": "Simulated AI agent chat for migration queries and commands" },
+      { "id": "validation-compare", "title": "Validation Comparison", "dataSources": [], "producerNotes": "Source vs target data comparison for approval decision" },
+      { "id": "approval-panel", "title": "Approval Panel", "dataSources": [], "producerNotes": "Human-in-the-loop approval gate with status tracking" }
+    ]
+  }
+  </script>
+  <script src="/libs/chart.js@4.4.4/chart.umd.js"></script>
+  <script src="/libs/mermaid@10.9.6/mermaid.min.js"></script>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, system-ui, 'Segoe UI', sans-serif;
+      color: light-dark(#1f2937, #e5e7eb);
+      background: light-dark(#f8fafc, #0f172a);
+      line-height: 1.5;
+    }
+
+    /* Layout */
+    .header {
+      background: light-dark(#1e40af, #1e3a5f);
+      color: #fff;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+    .header .status-badge {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge-pending { background: #f59e0b; color: #000; }
+    .badge-approved { background: #10b981; color: #fff; }
+    .badge-rejected { background: #ef4444; color: #fff; }
+    .badge-changes { background: #f97316; color: #fff; }
+
+    .main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px; max-width: 1400px; margin: 0 auto; }
+    .full-width { grid-column: 1 / -1; }
+
+    .card {
+      background: light-dark(#ffffff, #1e293b);
+      border: 1px solid light-dark(#e2e8f0, #334155);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 12px 16px;
+      background: light-dark(#f1f5f9, #0f172a);
+      border-bottom: 1px solid light-dark(#e2e8f0, #334155);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .card-body { padding: 16px; }
+
+    /* Phase Tracker */
+    .phases { display: flex; gap: 8px; flex-wrap: wrap; }
+    .phase-item {
+      flex: 1;
+      min-width: 140px;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .phase-item:hover { border-color: #3b82f6; }
+    .phase-item.active { border-color: #3b82f6; background: light-dark(#eff6ff, #1e3a5f); }
+    .phase-item.completed { background: light-dark(#ecfdf5, #064e3b); }
+    .phase-item.in-progress { background: light-dark(#fef3c7, #78350f); }
+    .phase-item.pending { background: light-dark(#f1f5f9, #1e293b); }
+    .phase-num { font-size: 1.5rem; font-weight: 700; }
+    .phase-name { font-size: 0.75rem; margin-top: 4px; }
+    .phase-status { font-size: 0.65rem; margin-top: 2px; opacity: 0.7; }
+
+    /* Agent Chat */
+    .chat-container { height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .chat-msg {
+      max-width: 85%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .chat-agent { align-self: flex-start; background: light-dark(#e0f2fe, #0c4a6e); }
+    .chat-user { align-self: flex-end; background: light-dark(#dbeafe, #1e3a5f); }
+    .chat-input-row { display: flex; gap: 8px; margin-top: 12px; }
+    .chat-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid light-dark(#d1d5db, #4b5563);
+      border-radius: 6px;
+      background: light-dark(#fff, #0f172a);
+      color: inherit;
+      font-size: 0.85rem;
+    }
+    .chat-send {
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .chat-send:hover { background: #2563eb; }
+
+    /* Validation Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid light-dark(#e2e8f0, #334155); }
+    th { font-weight: 600; background: light-dark(#f8fafc, #0f172a); }
+    .pass { color: #10b981; font-weight: 600; }
+    .fail { color: #ef4444; font-weight: 600; }
+
+    /* Approval Panel */
+    .approval-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-approve { background: #10b981; color: #fff; }
+    .btn-reject { background: #ef4444; color: #fff; }
+    .btn-changes { background: #f59e0b; color: #000; }
+    .btn-disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .approval-log { margin-top: 16px; font-size: 0.82rem; }
+    .log-entry { padding: 6px 0; border-bottom: 1px solid light-dark(#e2e8f0, #334155); }
+    .log-time { opacity: 0.6; font-size: 0.75rem; }
+
+    .comment-box {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid light-dark(#d1d5db, #4b5563);
+      border-radius: 6px;
+      background: light-dark(#fff, #0f172a);
+      color: inherit;
+      font-size: 0.85rem;
+      resize: vertical;
+      min-height: 60px;
+      margin-top: 12px;
+    }
+
+    /* KPIs */
+    .kpi-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .kpi {
+      flex: 1;
+      min-width: 100px;
+      padding: 12px;
+      background: light-dark(#f8fafc, #0f172a);
+      border-radius: 6px;
+      text-align: center;
+    }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; color: light-dark(#1e40af, #60a5fa); }
+    .kpi-label { font-size: 0.7rem; opacity: 0.7; margin-top: 2px; }
+
+    /* Mermaid */
+    .mermaid { text-align: center; margin: 12px 0; }
+
+    /* Progress bar */
+    .progress-bar { height: 8px; background: light-dark(#e2e8f0, #334155); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; background: #10b981; transition: width 0.5s; }
+
+    /* Phase detail */
+    .phase-detail { margin-top: 12px; padding: 12px; background: light-dark(#f8fafc, #0f172a); border-radius: 6px; font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>AI Migration Agent - Approval Dashboard</h1>
+    <span class="status-badge badge-pending" id="globalStatus">PENDING APPROVAL</span>
+  </div>
+
+  <div class="main">
+
+    <!-- PHASE TRACKER -->
+    <div class="card full-width" id="phase-tracker">
+      <div class="card-header">Phase Tracker - Migration Pipeline</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-value" id="kpi-tables">5</div><div class="kpi-label">Tables</div></div>
+          <div class="kpi"><div class="kpi-value" id="kpi-columns">42</div><div class="kpi-label">Columns</div></div>
+          <div class="kpi"><div class="kpi-value" id="kpi-rows">24</div><div class="kpi-label">Rows</div></div>
+          <div class="kpi"><div class="kpi-value" id="kpi-confidence">95%</div><div class="kpi-label">Confidence</div></div>
+          <div class="kpi"><div class="kpi-value" id="kpi-validation">100%</div><div class="kpi-label">Validation</div></div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="overallProgress" style="width: 0%"></div></div>
+        <div class="phases" id="phasesContainer"></div>
+        <div class="phase-detail" id="phaseDetail">Click a phase to see details</div>
+      </div>
+    </div>
+
+    <!-- AGENT INTERACTION -->
+    <div class="card" id="agent-chat">
+      <div class="card-header">Agent Interaction</div>
+      <div class="card-body">
+        <div class="chat-container" id="chatContainer"></div>
+        <div class="chat-input-row">
+          <input type="text" class="chat-input" id="chatInput" placeholder="Ask the migration agent..." />
+          <button class="chat-send" id="chatSendBtn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- VALIDATION COMPARISON -->
+    <div class="card" id="validation-compare">
+      <div class="card-header">Validation Comparison (Source vs Target)</div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr><th>Table</th><th>Check</th><th>Source</th><th>Target</th><th>Status</th></tr>
+          </thead>
+          <tbody id="validationTable"></tbody>
+        </table>
+        <div style="margin-top: 16px;">
+          <canvas id="validationChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE DIAGRAM -->
+    <div class="card full-width">
+      <div class="card-header">Migration Pipeline Flow</div>
+      <div class="card-body">
+        <pre class="mermaid">
+flowchart LR
+  A[Discovery] --> B[Mapping]
+  B --> C[Approval]
+  C -->|Approved| D[Execution]
+  C -->|Rejected| E[Rework]
+  D --> F[Validation]
+  F -->|Pass| G[Report]
+  F -->|Fail| D
+  E --> B
+        </pre>
+      </div>
+    </div>
+
+    <!-- APPROVAL PANEL -->
+    <div class="card full-width" id="approval-panel">
+      <div class="card-header">Approval Panel - Human-in-the-Loop Gate</div>
+      <div class="card-body">
+        <div class="kpi-row">
+          <div class="kpi"><div class="kpi-value pass">18</div><div class="kpi-label">Checks Passed</div></div>
+          <div class="kpi"><div class="kpi-value fail" id="failedChecks">0</div><div class="kpi-label">Checks Failed</div></div>
+          <div class="kpi"><div class="kpi-value">LOW</div><div class="kpi-label">Risk Level</div></div>
+          <div class="kpi"><div class="kpi-value">5</div><div class="kpi-label">Tables Ready</div></div>
+        </div>
+
+        <textarea class="comment-box" id="approvalComments" placeholder="Add review comments (optional)..."></textarea>
+
+        <div class="approval-actions">
+          <button class="btn btn-approve" id="btnApprove">Approve Migration</button>
+          <button class="btn btn-reject" id="btnReject">Reject</button>
+          <button class="btn btn-changes" id="btnChanges">Request Changes</button>
+        </div>
+
+        <div class="approval-log" id="approvalLog">
+          <strong>Approval History</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Initialize Mermaid
+    mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });
+
+    // --- PHASE DATA ---
+    const phases = [
+      { id: 1, name: 'Discovery', status: 'completed', detail: 'Schema crawled: 5 tables, 42 columns. PII detected in 2 columns (EMAIL, PHONE). Dependency graph built.' },
+      { id: 2, name: 'Mapping', status: 'completed', detail: 'Source-to-target mappings generated. 95% avg confidence. DDL and transformation SQL created for all 5 tables.' },
+      { id: 3, name: 'Approval', status: 'in-progress', detail: 'Migration plan submitted for review. Risk: LOW. Awaiting human approval before execution.' },
+      { id: 4, name: 'Execution', status: 'pending', detail: 'Blocked until approval. Will create target tables and load data in dependency order (CUSTOMERS > PRODUCTS > ORDERS > ORDER_ITEMS > AUDIT_LOG).' },
+      { id: 5, name: 'Validation', status: 'pending', detail: 'Will run: row counts, checksums, null checks, duplicate checks, FK integrity, sample comparison.' },
+      { id: 6, name: 'Reporting', status: 'pending', detail: 'Will generate: executive summary, table results, validation scorecard, recommendations, sign-off records.' },
+    ];
+
+    // --- RENDER PHASES ---
+    const phasesContainer = document.getElementById('phasesContainer');
+    const phaseDetail = document.getElementById('phaseDetail');
+
+    function renderPhases() {
+      phasesContainer.innerHTML = '';
+      phases.forEach(function(p) {
+        const div = document.createElement('div');
+        div.className = 'phase-item ' + p.status;
+        div.innerHTML = '<div class="phase-num">' + p.id + '</div><div class="phase-name">' + p.name + '</div><div class="phase-status">' + p.status.replace('-', ' ').toUpperCase() + '</div>';
+        div.addEventListener('click', function() {
+          document.querySelectorAll('.phase-item').forEach(function(el) { el.classList.remove('active'); });
+          div.classList.add('active');
+          phaseDetail.textContent = 'Phase ' + p.id + ' (' + p.name + '): ' + p.detail;
+        });
+        phasesContainer.appendChild(div);
+      });
+      // Update progress
+      const completed = phases.filter(function(p) { return p.status === 'completed'; }).length;
+      document.getElementById('overallProgress').style.width = Math.round((completed / phases.length) * 100) + '%';
+    }
+    renderPhases();
+
+    // --- VALIDATION DATA ---
+    const validations = [
+      { table: 'CUSTOMERS', check: 'Row Count', source: '5', target: '5', pass: true },
+      { table: 'PRODUCTS', check: 'Row Count', source: '5', target: '5', pass: true },
+      { table: 'ORDERS', check: 'Row Count', source: '5', target: '5', pass: true },
+      { table: 'ORDER_ITEMS', check: 'Row Count', source: '7', target: '7', pass: true },
+      { table: 'AUDIT_LOG', check: 'Row Count', source: '2', target: '2', pass: true },
+      { table: 'CUSTOMERS', check: 'Checksum', source: 'a3f2...', target: 'a3f2...', pass: true },
+      { table: 'ORDERS', check: 'Checksum', source: 'b7c1...', target: 'b7c1...', pass: true },
+      { table: 'CUSTOMERS', check: 'PK Duplicates', source: '0', target: '0', pass: true },
+      { table: 'ORDERS', check: 'FK Integrity', source: '0 orphans', target: '0 orphans', pass: true },
+      { table: 'ORDER_ITEMS', check: 'FK Integrity', source: '0 orphans', target: '0 orphans', pass: true },
+    ];
+
+    const vtable = document.getElementById('validationTable');
+    validations.forEach(function(v) {
+      const row = document.createElement('tr');
+      row.innerHTML = '<td>' + v.table + '</td><td>' + v.check + '</td><td>' + v.source + '</td><td>' + v.target + '</td><td class="' + (v.pass ? 'pass' : 'fail') + '">' + (v.pass ? 'PASS' : 'FAIL') + '</td>';
+      vtable.appendChild(row);
+    });
+
+    // Validation chart
+    const passCount = validations.filter(function(v) { return v.pass; }).length;
+    const failCount = validations.length - passCount;
+    new Chart(document.getElementById('validationChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Passed', 'Failed'],
+        datasets: [{ data: [passCount, failCount], backgroundColor: ['#10b981', '#ef4444'] }],
+      },
+      options: { responsive: false, plugins: { legend: { position: 'right' } } },
+    });
+
+    // --- AGENT CHAT ---
+    const chatContainer = document.getElementById('chatContainer');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+
+    const agentResponses = {
+      'status': 'Migration is in Phase 3 (Approval). All discovery and mapping steps are complete. 5 tables mapped with 95% average confidence. Awaiting your approval to proceed with execution.',
+      'risk': 'Overall risk: LOW. CUSTOMERS table has MEDIUM risk due to PII columns (EMAIL, PHONE). Mitigation: Apply dynamic data masking post-migration.',
+      'tables': 'Tables to migrate: CUSTOMERS (5 rows), PRODUCTS (5 rows), ORDERS (5 rows), ORDER_ITEMS (7 rows), AUDIT_LOG (2 rows). Load order respects FK dependencies.',
+      'validate': 'All 10 validation checks passed: 5 row count matches, 2 checksum matches, 1 duplicate check, 2 FK integrity checks. No data quality issues detected.',
+      'approve': 'To approve, click the "Approve Migration" button below. This will unlock Phase 4 (Execution) and begin the data migration pipeline.',
+      'mapping': 'All 42 columns mapped with auto-generated rules. Average confidence: 95%. 2 columns flagged for review (VARIANT types in AUDIT_LOG). Datatype conversions use SQL Server to Snowflake rules.',
+      'help': 'Available commands: status, risk, tables, validate, approve, mapping, compare, timeline. Or ask any question about the migration.',
+      'compare': 'Source-to-target comparison shows 100% match across all tables. Row counts identical. Checksums verified. No orphan records in FK relationships.',
+      'timeline': 'Phase 1 (Discovery): Complete. Phase 2 (Mapping): Complete. Phase 3 (Approval): In Progress. Phases 4-6 await your approval.',
+    };
+
+    function addMessage(text, type) {
+      const msg = document.createElement('div');
+      msg.className = 'chat-msg ' + type;
+      msg.textContent = text;
+      chatContainer.appendChild(msg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // Initial agent message
+    addMessage('Hello! I\'m your Migration Agent. I\'ve completed discovery and mapping for 5 tables (42 columns). All validations pass. Type "status", "risk", "tables", or ask me anything about this migration.', 'chat-agent');
+
+    function handleChat() {
+      const text = chatInput.value.trim();
+      if (!text) return;
+      addMessage(text, 'chat-user');
+      chatInput.value = '';
+
+      var response = null;
+      var lowerText = text.toLowerCase();
+      var keys = Object.keys(agentResponses);
+      for (var i = 0; i < keys.length; i++) {
+        if (lowerText.indexOf(keys[i]) !== -1) {
+          response = agentResponses[keys[i]];
+          break;
+        }
+      }
+      if (!response) {
+        response = 'I understand your question about "' + text + '". Based on the current migration state: all 5 tables have been mapped successfully with 95% confidence. The migration is ready for your approval. Would you like me to provide more details on any specific table or validation check?';
+      }
+
+      setTimeout(function() { addMessage(response, 'chat-agent'); }, 500);
+    }
+
+    chatSendBtn.addEventListener('click', handleChat);
+    chatInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') handleChat();
+    });
+
+    // --- APPROVAL LOGIC ---
+    var approvalStatus = 'PENDING_APPROVAL';
+    const approvalLog = document.getElementById('approvalLog');
+    const globalStatusEl = document.getElementById('globalStatus');
+
+    function addLogEntry(action, comments) {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry';
+      const now = new Date().toLocaleString();
+      entry.innerHTML = '<span class="log-time">' + now + '</span> - <strong>' + action + '</strong> by AMUTHA' + (comments ? ' - "' + comments + '"' : '');
+      approvalLog.appendChild(entry);
+    }
+
+    function updateApprovalUI(status) {
+      approvalStatus = status;
+      globalStatusEl.textContent = status.replace(/_/g, ' ');
+      globalStatusEl.className = 'status-badge';
+      if (status === 'APPROVED') {
+        globalStatusEl.classList.add('badge-approved');
+        phases[2].status = 'completed';
+        phases[3].status = 'completed';
+        phases[4].status = 'completed';
+        phases[5].status = 'completed';
+        renderPhases();
+        addMessage('Migration APPROVED! Executing pipeline... All phases completed successfully.', 'chat-agent');
+      } else if (status === 'REJECTED') {
+        globalStatusEl.classList.add('badge-rejected');
+        phases[2].status = 'completed';
+        phases[2].detail = 'REJECTED - Migration will not proceed.';
+        renderPhases();
+        addMessage('Migration REJECTED. The pipeline will not execute. Please review the rejection comments and resubmit after addressing concerns.', 'chat-agent');
+      } else if (status === 'CHANGES_REQUESTED') {
+        globalStatusEl.classList.add('badge-changes');
+        phases[2].detail = 'Changes requested - returning to mapping phase for modifications.';
+        renderPhases();
+        addMessage('Changes requested. Returning to Phase 2 (Mapping) for modifications. Please specify what needs to change.', 'chat-agent');
+      }
+    }
+
+    document.getElementById('btnApprove').addEventListener('click', function() {
+      var comments = document.getElementById('approvalComments').value;
+      addLogEntry('APPROVED', comments);
+      updateApprovalUI('APPROVED');
+      document.getElementById('approvalComments').value = '';
+    });
+
+    document.getElementById('btnReject').addEventListener('click', function() {
+      var comments = document.getElementById('approvalComments').value;
+      if (!comments) {
+        document.getElementById('approvalComments').placeholder = 'Please provide a reason for rejection...';
+        document.getElementById('approvalComments').focus();
+        return;
+      }
+      addLogEntry('REJECTED', comments);
+      updateApprovalUI('REJECTED');
+      document.getElementById('approvalComments').value = '';
+    });
+
+    document.getElementById('btnChanges').addEventListener('click', function() {
+      var comments = document.getElementById('approvalComments').value;
+      addLogEntry('CHANGES REQUESTED', comments);
+      updateApprovalUI('CHANGES_REQUESTED');
+      document.getElementById('approvalComments').value = '';
+    });
+  </script>
+
+</body>
+</html>

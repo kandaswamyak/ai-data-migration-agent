@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "baseName": {
+      "value": "migpoc"
+    },
+    "location": {
+      "value": "eastus2"
+    },
+    "sqlAdminLogin": {
+      "value": "<REPLACE_WITH_SQL_ADMIN_USERNAME>"
+    },
+    "sqlAdminPassword": {
+      "value": "<REPLACE_WITH_SQL_ADMIN_PASSWORD>"
+    },
+    "sqlSkuName": {
+      "value": "S1"
+    },
+    "openAiSkuName": {
+      "value": "S0"
+    },
+    "gptCapacity": {
+      "value": 10
+    },
+    "storageSkuName": {
+      "value": "Standard_LRS"
+    },
+    "logAnalyticsSkuName": {
+      "value": "PerGB2018"
+    },
+    "tags": {
+      "value": {
+        "project": "ai-data-migration",
+        "environment": "poc",
+        "owner": "<REPLACE_WITH_OWNER_EMAIL>",
+        "costCenter": "<REPLACE_WITH_COST_CENTER>"
+      }
+    }
+  }
+}

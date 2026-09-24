@@ -1,0 +1,495 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "defaultValue": {}
+    },
+    "openai_endpoint": {
+      "type": "String",
+      "defaultValue": "https://aoai-datamigration-poc.openai.azure.com"
+    },
+    "openai_deployment": {
+      "type": "String",
+      "defaultValue": "gpt-4o"
+    },
+    "openai_api_version": {
+      "type": "String",
+      "defaultValue": "2024-06-01"
+    },
+    "keyVaultName": {
+      "type": "String",
+      "defaultValue": "kv-datamigration-poc"
+    },
+    "storageAccountName": {
+      "type": "String",
+      "defaultValue": "stadatamigrationpoc"
+    },
+    "mappingContainerName": {
+      "type": "String",
+      "defaultValue": "mapping-results"
+    }
+  },
+  "triggers": {
+    "manual": {
+      "type": "Request",
+      "kind": "Http",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "migrationId": {
+              "type": "string",
+              "description": "Unique migration identifier"
+            },
+            "sourceDbType": {
+              "type": "string",
+              "enum": [
+                "Oracle",
+                "SQLServer"
+              ],
+              "description": "Source database type"
+            },
+            "targetDbType": {
+              "type": "string",
+              "description": "Target database type (Azure SQL Database)"
+            },
+            "sourceSchema": {
+              "type": "object",
+              "description": "Schema metadata from schema-discovery workflow",
+              "properties": {
+                "tables": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "tableName": {
+                        "type": "string"
+                      },
+                      "rowCount": {
+                        "type": "integer"
+                      },
+                      "columns": {
+                        "type": "array"
+                      },
+                      "constraints": {
+                        "type": "array"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "migrationId",
+            "sourceDbType",
+            "sourceSchema"
+          ]
+        },
+        "method": "POST"
+      }
+    }
+  },
+  "actions": {
+    "Initialize_MappingResults": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "mappingResults",
+            "type": "array",
+            "value": []
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Initialize_OverallRisk": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "overallRiskLevel",
+            "type": "string",
+            "value": "LOW"
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_MappingResults": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_Warnings": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "warnings",
+            "type": "array",
+            "value": []
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_OverallRisk": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Get_OpenAI_Key_From_KeyVault": {
+      "type": "Http",
+      "inputs": {
+        "method": "GET",
+        "uri": "https://@{parameters('keyVaultName')}.vault.azure.net/secrets/openai-api-key?api-version=7.4",
+        "authentication": {
+          "type": "ManagedServiceIdentity",
+          "audience": "https://vault.azure.net"
+        }
+      },
+      "runAfter": {
+        "Initialize_Warnings": [
+          "Succeeded"
+        ]
+      },
+      "runtimeConfiguration": {
+        "secureData": {
+          "properties": [
+            "outputs"
+          ]
+        }
+      }
+    },
+    "For_Each_Table": {
+      "type": "Foreach",
+      "foreach": "@triggerBody()?['sourceSchema']?['tables']",
+      "actions": {
+        "Build_Column_Description": {
+          "type": "Compose",
+          "inputs": "@items('For_Each_Table')?['columns']",
+          "runAfter": {}
+        },
+        "Call_OpenAI_For_Mapping": {
+          "type": "Http",
+          "inputs": {
+            "method": "POST",
+            "uri": "@{parameters('openai_endpoint')}/openai/deployments/@{parameters('openai_deployment')}/chat/completions?api-version=@{parameters('openai_api_version')}",
+            "headers": {
+              "Content-Type": "application/json",
+              "api-key": "@{body('Get_OpenAI_Key_From_KeyVault')?['value']}"
+            },
+            "body": {
+              "messages": [
+                {
+                  "role": "system",
+                  "content": "You are a database migration expert. Analyze source database columns and generate target Azure SQL Database datatype mappings.\n\nFor each column, provide:\n1. sourceDataType: the original source type\n2. targetDataType: the recommended Azure SQL target type\n3. riskLevel: LOW, MEDIUM, or HIGH\n4. riskReason: explanation if not LOW\n5. conversionNotes: any special handling needed\n\nRisk Classification Rules:\n- LOW: Direct compatible types (e.g., INT→INT, VARCHAR→VARCHAR with same or larger length, DATE→DATE)\n- MEDIUM: Type conversion required but data should be preserved (e.g., Oracle NUMBER→DECIMAL, CLOB→NVARCHAR(MAX), Oracle DATE→DATETIME2)\n- HIGH: Potential data truncation, precision loss, or unsupported type (e.g., length reduction, Oracle LONG→requires special handling, XMLTYPE→requires conversion, spatial types, user-defined types)\n\nReturn valid JSON array only, no markdown formatting."
+                },
+                {
+                  "role": "user",
+                  "content": "Source database type: @{triggerBody()?['sourceDbType']}\nTarget database type: Azure SQL Database\nTable: @{items('For_Each_Table')?['tableName']}\nRow count: @{items('For_Each_Table')?['rowCount']}\n\nSource columns:\n@{string(outputs('Build_Column_Description'))}\n\nSource constraints:\n@{string(items('For_Each_Table')?['constraints'])}\n\nGenerate the column mapping array with fields: sourceColumn, sourceDataType, sourceLength, sourcePrecision, sourceScale, targetDataType, targetLength, targetPrecision, targetScale, riskLevel, riskReason, conversionNotes, isNullable, isIdentity"
+                }
+              ],
+              "temperature": 0.1,
+              "max_tokens": 4000,
+              "response_format": {
+                "type": "json_object"
+              }
+            }
+          },
+          "runAfter": {
+            "Build_Column_Description": [
+              "Succeeded"
+            ]
+          },
+          "retryPolicy": {
+            "type": "exponential",
+            "count": 3,
+            "interval": "PT10S",
+            "maximumInterval": "PT120S",
+            "minimumInterval": "PT5S"
+          },
+          "runtimeConfiguration": {
+            "secureData": {
+              "properties": [
+                "inputs"
+              ]
+            }
+          }
+        },
+        "Parse_OpenAI_Response": {
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@{body('Call_OpenAI_For_Mapping')?['choices']?[0]?['message']?['content']}",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "columnMappings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sourceColumn": {
+                        "type": "string"
+                      },
+                      "sourceDataType": {
+                        "type": "string"
+                      },
+                      "targetDataType": {
+                        "type": "string"
+                      },
+                      "riskLevel": {
+                        "type": "string"
+                      },
+                      "riskReason": {
+                        "type": "string"
+                      },
+                      "conversionNotes": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Call_OpenAI_For_Mapping": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Determine_Table_Risk": {
+          "type": "Compose",
+          "inputs": {
+            "tableRisk": "@{if(greater(length(intersection(body('Parse_OpenAI_Response')?['columnMappings'], json('[{\"riskLevel\":\"HIGH\"}]'))), 0), 'HIGH', if(greater(length(intersection(body('Parse_OpenAI_Response')?['columnMappings'], json('[{\"riskLevel\":\"MEDIUM\"}]'))), 0), 'MEDIUM', 'LOW'))}"
+          },
+          "runAfter": {
+            "Parse_OpenAI_Response": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Build_Table_Mapping": {
+          "type": "Compose",
+          "inputs": {
+            "tableName": "@{items('For_Each_Table')?['tableName']}",
+            "sourceRowCount": "@{items('For_Each_Table')?['rowCount']}",
+            "columnMappings": "@body('Parse_OpenAI_Response')?['columnMappings']",
+            "tableRiskLevel": "@{if(contains(string(body('Parse_OpenAI_Response')?['columnMappings']), '\"HIGH\"'), 'HIGH', if(contains(string(body('Parse_OpenAI_Response')?['columnMappings']), '\"MEDIUM\"'), 'MEDIUM', 'LOW'))}",
+            "constraintMappings": "@items('For_Each_Table')?['constraints']",
+            "analyzedAt": "@{utcNow()}"
+          },
+          "runAfter": {
+            "Determine_Table_Risk": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Append_Table_Mapping": {
+          "type": "AppendToArrayVariable",
+          "inputs": {
+            "name": "mappingResults",
+            "value": "@outputs('Build_Table_Mapping')"
+          },
+          "runAfter": {
+            "Build_Table_Mapping": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Check_And_Elevate_Risk": {
+          "type": "If",
+          "expression": {
+            "or": [
+              {
+                "equals": [
+                  "@outputs('Build_Table_Mapping')?['tableRiskLevel']",
+                  "HIGH"
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Set_Overall_Risk_HIGH": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "overallRiskLevel",
+                "value": "HIGH"
+              },
+              "runAfter": {}
+            },
+            "Append_High_Risk_Warning": {
+              "type": "AppendToArrayVariable",
+              "inputs": {
+                "name": "warnings",
+                "value": {
+                  "type": "HIGH_RISK_TABLE",
+                  "table": "@{items('For_Each_Table')?['tableName']}",
+                  "message": "Table contains HIGH risk datatype conversions requiring manual review",
+                  "timestamp": "@{utcNow()}"
+                }
+              },
+              "runAfter": {
+                "Set_Overall_Risk_HIGH": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Check_Medium_Risk": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@outputs('Build_Table_Mapping')?['tableRiskLevel']",
+                        "MEDIUM"
+                      ]
+                    },
+                    {
+                      "not": {
+                        "equals": [
+                          "@variables('overallRiskLevel')",
+                          "HIGH"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                "actions": {
+                  "Set_Overall_Risk_MEDIUM": {
+                    "type": "SetVariable",
+                    "inputs": {
+                      "name": "overallRiskLevel",
+                      "value": "MEDIUM"
+                    },
+                    "runAfter": {}
+                  }
+                },
+                "else": {
+                  "actions": {}
+                },
+                "runAfter": {}
+              }
+            }
+          },
+          "runAfter": {
+            "Append_Table_Mapping": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "runAfter": {
+        "Get_OpenAI_Key_From_KeyVault": [
+          "Succeeded"
+        ]
+      },
+      "runtimeConfiguration": {
+        "concurrency": {
+          "repetitions": 3
+        }
+      }
+    },
+    "Build_Final_Mapping_Report": {
+      "type": "Compose",
+      "inputs": {
+        "migrationId": "@{triggerBody()?['migrationId']}",
+        "sourceDbType": "@{triggerBody()?['sourceDbType']}",
+        "targetDbType": "Azure SQL Database",
+        "overallRiskLevel": "@{variables('overallRiskLevel')}",
+        "totalTables": "@{length(triggerBody()?['sourceSchema']?['tables'])}",
+        "tableMappings": "@variables('mappingResults')",
+        "warnings": "@variables('warnings')",
+        "riskSummary": {
+          "highRiskTables": "@{length(filter(variables('mappingResults'), item => equals(item?['tableRiskLevel'], 'HIGH')))}",
+          "mediumRiskTables": "@{length(filter(variables('mappingResults'), item => equals(item?['tableRiskLevel'], 'MEDIUM')))}",
+          "lowRiskTables": "@{length(filter(variables('mappingResults'), item => equals(item?['tableRiskLevel'], 'LOW')))}"
+        },
+        "generatedAt": "@{utcNow()}",
+        "workflowRunId": "@{workflow()?['run']?['name']}"
+      },
+      "runAfter": {
+        "For_Each_Table": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Save_Mapping_To_Storage": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['azureblob']['connectionId']"
+          }
+        },
+        "method": "post",
+        "path": "/v2/datasets/@{parameters('storageAccountName')}/files",
+        "body": "@{outputs('Build_Final_Mapping_Report')}",
+        "headers": {
+          "ReadFileMetadataFromServer": true
+        },
+        "queries": {
+          "folderPath": "/@{parameters('mappingContainerName')}",
+          "name": "mapping-@{triggerBody()?['migrationId']}-@{formatDateTime(utcNow(), 'yyyyMMdd-HHmmss')}.json",
+          "queryParametersSingleEncoded": true
+        }
+      },
+      "runAfter": {
+        "Build_Final_Mapping_Report": [
+          "Succeeded"
+        ]
+      },
+      "retryPolicy": {
+        "type": "fixed",
+        "count": 3,
+        "interval": "PT10S"
+      }
+    },
+    "Success_Response": {
+      "type": "Response",
+      "kind": "Http",
+      "inputs": {
+        "statusCode": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": "@outputs('Build_Final_Mapping_Report')"
+      },
+      "runAfter": {
+        "Save_Mapping_To_Storage": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Error_Response": {
+      "type": "Response",
+      "kind": "Http",
+      "inputs": {
+        "statusCode": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "migrationId": "@{triggerBody()?['migrationId']}",
+          "status": "MAPPING_FAILED",
+          "error": "Mapping and risk analysis failed",
+          "workflowRunId": "@{workflow()?['run']?['name']}",
+          "timestamp": "@{utcNow()}"
+        }
+      },
+      "runAfter": {
+        "For_Each_Table": [
+          "Failed",
+          "TimedOut"
+        ]
+      }
+    }
+  },
+  "outputs": {}
+}

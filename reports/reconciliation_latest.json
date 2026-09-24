@@ -1,0 +1,49 @@
+{
+  "generated_at_utc": "2026-09-24T05:33:50.889123+00:00",
+  "mode": "append",
+  "rows_read": 17,
+  "rows_written": 0,
+  "rows_updated": 0,
+  "duplicates_skipped": 17,
+  "failed_rows": 0,
+  "table_metrics": [
+    {
+      "source_table": "MIGRATION_DEMO_CUSTOMER",
+      "target_table": "MIGRATION_DEMO_CUSTOMER",
+      "rows_read": 5,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 5,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 2.972,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "CUSTOMER",
+      "target_table": "CUSTOMER",
+      "rows_read": 9,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 9,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.099,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "MIGRATION_COMPATIBILITY_TEST",
+      "target_table": "MIGRATION_COMPATIBILITY_TEST",
+      "rows_read": 3,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 3,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.227,
+      "throughput_rps": 0.0
+    }
+  ],
+  "failed_rows_sample": [],
+  "retry_candidates": []
+}

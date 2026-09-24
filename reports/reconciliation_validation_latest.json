@@ -1,0 +1,1795 @@
+{
+  "generated_at_utc": "2026-09-24T05:29:41.266317+00:00",
+  "overall": "Validation mismatches detected",
+  "all_passed": false,
+  "migration_summary": {
+    "tables_migrated": 3,
+    "total_source_rows": 17,
+    "total_target_rows": 17,
+    "tables_passed": 1,
+    "tables_with_issues": 2,
+    "validation_completion": "100%",
+    "total_checks": 127,
+    "checks_passed": 121,
+    "checks_failed": 6,
+    "rejected_rows": 0,
+    "overall_status": "FAIL"
+  },
+  "table_validation": {
+    "CUSTOMER": {
+      "checks_total": 42,
+      "checks_passed": 40,
+      "checks_failed": 2,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "FAIL",
+        "NULL Count: CUSTOMER_ID": "PASS",
+        "Column Count: CUSTOMER_ID": "PASS",
+        "Distinct Values: CUSTOMER_ID": "PASS",
+        "MIN: CUSTOMER_ID": "PASS",
+        "MAX: CUSTOMER_ID": "PASS",
+        "SUM: CUSTOMER_ID": "PASS",
+        "NULL Count: CUSTOMER_NAME": "PASS",
+        "Column Count: CUSTOMER_NAME": "PASS",
+        "Distinct Values: CUSTOMER_NAME": "PASS",
+        "Max String Length: CUSTOMER_NAME": "PASS",
+        "NULL Count: EMAIL": "PASS",
+        "Column Count: EMAIL": "PASS",
+        "Distinct Values: EMAIL": "PASS",
+        "Max String Length: EMAIL": "PASS",
+        "NULL Count: CITY": "PASS",
+        "Column Count: CITY": "PASS",
+        "Distinct Values: CITY": "PASS",
+        "Max String Length: CITY": "PASS",
+        "NULL Count: CREDIT_LIMIT": "PASS",
+        "Column Count: CREDIT_LIMIT": "PASS",
+        "Distinct Values: CREDIT_LIMIT": "PASS",
+        "MIN: CREDIT_LIMIT": "PASS",
+        "MAX: CREDIT_LIMIT": "FAIL",
+        "SUM: CREDIT_LIMIT": "PASS",
+        "NULL Count: IS_ACTIVE": "PASS",
+        "Column Count: IS_ACTIVE": "PASS",
+        "Distinct Values: IS_ACTIVE": "PASS",
+        "Max String Length: IS_ACTIVE": "PASS",
+        "NULL Count: UPDATED_TS": "PASS",
+        "Column Count: UPDATED_TS": "PASS",
+        "Distinct Values: UPDATED_TS": "PASS",
+        "MIN: UPDATED_TS": "PASS",
+        "MAX: UPDATED_TS": "PASS",
+        "NULL Count: PHONE_NUMBER": "PASS",
+        "Column Count: PHONE_NUMBER": "PASS",
+        "Distinct Values: PHONE_NUMBER": "PASS",
+        "Max String Length: PHONE_NUMBER": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 18,
+          "failed": 0
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 20,
+          "failed": 2
+        }
+      }
+    },
+    "MIGRATION_COMPATIBILITY_TEST": {
+      "checks_total": 60,
+      "checks_passed": 56,
+      "checks_failed": 4,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "FAIL",
+        "NULL Count: ID": "PASS",
+        "Column Count: ID": "PASS",
+        "Distinct Values: ID": "PASS",
+        "MIN: ID": "PASS",
+        "MAX: ID": "PASS",
+        "SUM: ID": "PASS",
+        "NULL Count: CUSTOMER_NAME": "PASS",
+        "Column Count: CUSTOMER_NAME": "PASS",
+        "Distinct Values: CUSTOMER_NAME": "PASS",
+        "Max String Length: CUSTOMER_NAME": "PASS",
+        "NULL Count: EMAIL": "PASS",
+        "Column Count: EMAIL": "PASS",
+        "Distinct Values: EMAIL": "PASS",
+        "Max String Length: EMAIL": "PASS",
+        "NULL Count: CREDIT_LIMIT": "PASS",
+        "Column Count: CREDIT_LIMIT": "PASS",
+        "Distinct Values: CREDIT_LIMIT": "PASS",
+        "MIN: CREDIT_LIMIT": "PASS",
+        "MAX: CREDIT_LIMIT": "FAIL",
+        "SUM: CREDIT_LIMIT": "PASS",
+        "NULL Count: SHORT_CODE": "PASS",
+        "Column Count: SHORT_CODE": "PASS",
+        "Distinct Values: SHORT_CODE": "PASS",
+        "Max String Length: SHORT_CODE": "PASS",
+        "NULL Count: LONG_DESCRIPTION": "PASS",
+        "Column Count: LONG_DESCRIPTION": "PASS",
+        "Distinct Values: LONG_DESCRIPTION": "PASS",
+        "Max String Length: LONG_DESCRIPTION": "PASS",
+        "NULL Count: UNICODE_TEXT": "PASS",
+        "Column Count: UNICODE_TEXT": "PASS",
+        "Distinct Values: UNICODE_TEXT": "PASS",
+        "Max String Length: UNICODE_TEXT": "PASS",
+        "NULL Count: CREATED_TIMESTAMP": "PASS",
+        "Column Count: CREATED_TIMESTAMP": "PASS",
+        "Distinct Values: CREATED_TIMESTAMP": "PASS",
+        "MIN: CREATED_TIMESTAMP": "PASS",
+        "MAX: CREATED_TIMESTAMP": "PASS",
+        "NULL Count: FLOAT_VALUE": "PASS",
+        "Column Count: FLOAT_VALUE": "PASS",
+        "Distinct Values: FLOAT_VALUE": "PASS",
+        "MIN: FLOAT_VALUE": "PASS",
+        "MAX: FLOAT_VALUE": "PASS",
+        "SUM: FLOAT_VALUE": "FAIL",
+        "NULL Count: DOUBLE_VALUE": "PASS",
+        "Column Count: DOUBLE_VALUE": "PASS",
+        "Distinct Values: DOUBLE_VALUE": "PASS",
+        "MIN: DOUBLE_VALUE": "PASS",
+        "MAX: DOUBLE_VALUE": "PASS",
+        "SUM: DOUBLE_VALUE": "FAIL",
+        "NULL Count: ACTIVE_FLAG": "PASS",
+        "Column Count: ACTIVE_FLAG": "PASS",
+        "Distinct Values: ACTIVE_FLAG": "PASS",
+        "MIN: ACTIVE_FLAG": "PASS",
+        "MAX: ACTIVE_FLAG": "PASS",
+        "SUM: ACTIVE_FLAG": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 24,
+          "failed": 0
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 30,
+          "failed": 4
+        }
+      }
+    },
+    "MIGRATION_DEMO_CUSTOMER": {
+      "checks_total": 23,
+      "checks_passed": 23,
+      "checks_failed": 0,
+      "status": "PASS",
+      "overall": "PASS",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "PASS",
+        "NULL Count: CUSTOMER_ID": "PASS",
+        "Column Count: CUSTOMER_ID": "PASS",
+        "Distinct Values: CUSTOMER_ID": "PASS",
+        "MIN: CUSTOMER_ID": "PASS",
+        "MAX: CUSTOMER_ID": "PASS",
+        "SUM: CUSTOMER_ID": "PASS",
+        "NULL Count: CUSTOMER_NAME": "PASS",
+        "Column Count: CUSTOMER_NAME": "PASS",
+        "Distinct Values: CUSTOMER_NAME": "PASS",
+        "Max String Length: CUSTOMER_NAME": "PASS",
+        "NULL Count: EMAIL": "PASS",
+        "Column Count: EMAIL": "PASS",
+        "Distinct Values: EMAIL": "PASS",
+        "Max String Length: EMAIL": "PASS",
+        "NULL Count: CITY": "PASS",
+        "Column Count: CITY": "PASS",
+        "Distinct Values: CITY": "PASS",
+        "Max String Length: CITY": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 10,
+          "failed": 0
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 11,
+          "failed": 0
+        }
+      }
+    }
+  },
+  "column_details": {
+    "CUSTOMER": [
+      {
+        "column": "CUSTOMER_ID",
+        "source_column": "CUSTOMER_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 9,
+        "distinct_tgt": 9,
+        "distinct_status": "PASS",
+        "min_src": "1001",
+        "min_tgt": "1001",
+        "max_src": "2005",
+        "max_tgt": "2005",
+        "minmax_status": "PASS",
+        "sum_src": "14029",
+        "sum_tgt": "14029",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CUSTOMER_NAME",
+        "source_column": "CUSTOMER_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 9,
+        "distinct_tgt": 9,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 14,
+        "maxlen_tgt": 14,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "EMAIL",
+        "source_column": "EMAIL",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 8,
+        "distinct_tgt": 8,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 26,
+        "maxlen_tgt": 26,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CITY",
+        "source_column": "CITY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 8,
+        "distinct_tgt": 8,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 9,
+        "maxlen_tgt": 9,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREDIT_LIMIT",
+        "source_column": "CREDIT_LIMIT",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 8,
+        "distinct_tgt": 8,
+        "distinct_status": "PASS",
+        "min_src": "3500.75",
+        "min_tgt": "3500.75",
+        "max_src": "75000",
+        "max_tgt": "75000.00",
+        "minmax_status": "PASS",
+        "sum_src": "136501.75",
+        "sum_tgt": "136501.75",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "IS_ACTIVE",
+        "source_column": "IS_ACTIVE",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 1,
+        "maxlen_tgt": 1,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "UPDATED_TS",
+        "source_column": "UPDATED_TS",
+        "category": "date",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 7,
+        "distinct_tgt": 7,
+        "distinct_status": "PASS",
+        "min_src": "2026-01-15 10:20:45",
+        "min_tgt": "2026-01-15 10:20:45",
+        "max_src": "2026-08-25 16:40:30.933451",
+        "max_tgt": "2026-08-25 16:40:30.933451",
+        "minmax_status": "PASS",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "PHONE_NUMBER",
+        "source_column": "PHONE_NUMBER",
+        "category": "string",
+        "null_src": 9,
+        "null_tgt": 9,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 0,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 0,
+        "maxlen_status": "PASS"
+      }
+    ],
+    "MIGRATION_COMPATIBILITY_TEST": [
+      {
+        "column": "ID",
+        "source_column": "ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "1001",
+        "min_tgt": "1001",
+        "max_src": "1003",
+        "max_tgt": "1003",
+        "minmax_status": "PASS",
+        "sum_src": "3006",
+        "sum_tgt": "3006",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CUSTOMER_NAME",
+        "source_column": "CUSTOMER_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 14,
+        "maxlen_tgt": 14,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "EMAIL",
+        "source_column": "EMAIL",
+        "category": "string",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 23,
+        "maxlen_tgt": 23,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREDIT_LIMIT",
+        "source_column": "CREDIT_LIMIT",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": "50000.25",
+        "min_tgt": "50000.25",
+        "max_src": "9999999999.99",
+        "max_tgt": "9999999999.99",
+        "minmax_status": "PASS",
+        "sum_src": "20000050000.23",
+        "sum_tgt": "20000050000.23",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "SHORT_CODE",
+        "source_column": "SHORT_CODE",
+        "category": "string",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 10,
+        "maxlen_tgt": 10,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "LONG_DESCRIPTION",
+        "source_column": "LONG_DESCRIPTION",
+        "category": "string",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 75,
+        "maxlen_tgt": 75,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "UNICODE_TEXT",
+        "source_column": "UNICODE_TEXT",
+        "category": "string",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 27,
+        "maxlen_tgt": 27,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREATED_TIMESTAMP",
+        "source_column": "CREATED_TIMESTAMP",
+        "category": "date",
+        "null_src": 1,
+        "null_tgt": 1,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": "2026-01-01 00:00:00",
+        "min_tgt": "2026-01-01 00:00:00",
+        "max_src": "2026-09-19 10:30:45.123456",
+        "max_tgt": "2026-09-19 10:30:45.123456",
+        "minmax_status": "PASS",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "FLOAT_VALUE",
+        "source_column": "FLOAT_VALUE",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "3.1415927410125732",
+        "min_tgt": "3.1415927410125732",
+        "max_src": "3.4028234663852886e+38",
+        "max_tgt": "3.4028234663852886e+38",
+        "minmax_status": "PASS",
+        "sum_src": "3.40282347E+038",
+        "sum_tgt": "3.40282e+038",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "DOUBLE_VALUE",
+        "source_column": "DOUBLE_VALUE",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "3.141592653589793",
+        "min_tgt": "3.141592653589793",
+        "max_src": "1.7976931348623157e+308",
+        "max_tgt": "1.7976931348623157e+308",
+        "minmax_status": "PASS",
+        "sum_src": "1.7976931348623157E+308",
+        "sum_tgt": "1.79769e+308",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "ACTIVE_FLAG",
+        "source_column": "ACTIVE_FLAG",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": "0",
+        "min_tgt": "0",
+        "max_src": "1",
+        "max_tgt": "1",
+        "minmax_status": "PASS",
+        "sum_src": "2",
+        "sum_tgt": "2",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ],
+    "MIGRATION_DEMO_CUSTOMER": [
+      {
+        "column": "CUSTOMER_ID",
+        "source_column": "CUSTOMER_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": "1",
+        "min_tgt": "1",
+        "max_src": "5",
+        "max_tgt": "5",
+        "minmax_status": "PASS",
+        "sum_src": "15",
+        "sum_tgt": "15",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CUSTOMER_NAME",
+        "source_column": "CUSTOMER_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 13,
+        "maxlen_tgt": 13,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "EMAIL",
+        "source_column": "EMAIL",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 13,
+        "maxlen_tgt": 13,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CITY",
+        "source_column": "CITY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 9,
+        "maxlen_tgt": 9,
+        "maxlen_status": "PASS"
+      }
+    ]
+  },
+  "mismatched_tables": [
+    "CUSTOMER->CUSTOMER",
+    "MIGRATION_COMPATIBILITY_TEST->MIGRATION_COMPATIBILITY_TEST"
+  ],
+  "checksum_results": [
+    {
+      "table": "CUSTOMER->CUSTOMER",
+      "source_hash": "5cde358367c3b1b922b21ebee3b7e4583afe8c8e0ff9bf3dcf8c233b18effc5b",
+      "target_hash": "5965fd71fc75141f973bb130e19604b7b0da10c9d6ec77b743bf820f9b599041",
+      "status": "FAIL"
+    },
+    {
+      "table": "MIGRATION_COMPATIBILITY_TEST->MIGRATION_COMPATIBILITY_TEST",
+      "source_hash": "3297aeeb80ff242ad6a011f5473c55f2a54934d78fb569b297ad07b19b5c0c8b",
+      "target_hash": "b54559923558982f52b33cc35db90808a83a57c33ce18863ac10a0b45c6f6e48",
+      "status": "FAIL"
+    },
+    {
+      "table": "MIGRATION_DEMO_CUSTOMER->MIGRATION_DEMO_CUSTOMER",
+      "source_hash": "493b2c3c4e683eeff61bd8c47309fcbdeb3d6afaeef453ebf0718beb70898e8e",
+      "target_hash": "493b2c3c4e683eeff61bd8c47309fcbdeb3d6afaeef453ebf0718beb70898e8e",
+      "status": "PASS"
+    }
+  ],
+  "watermark_info": {
+    "CUSTOMER": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 9,
+      "message": "written=9, updated=0, duplicates=0, failed=0"
+    },
+    "MIGRATION_COMPATIBILITY_TEST": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 3,
+      "message": "written=3, updated=0, duplicates=0, failed=0"
+    },
+    "MIGRATION_DEMO_CUSTOMER": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 5,
+      "message": "written=5, updated=0, duplicates=0, failed=0"
+    }
+  },
+  "errors": [],
+  "retry_candidates": [
+    "CUSTOMER->CUSTOMER",
+    "MIGRATION_COMPATIBILITY_TEST->MIGRATION_COMPATIBILITY_TEST"
+  ],
+  "results": [
+    {
+      "check": "Row Count Match (CUSTOMER)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Null PK (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Duplicate PK (CUSTOMER.CUSTOMER_ID)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Checksum Match (CUSTOMER)",
+      "source": "5cde358367c3",
+      "target": "5965fd71fc75",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CUSTOMER_ID)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CUSTOMER_ID)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.CUSTOMER_ID)",
+      "source": "1001",
+      "target": "1001",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.CUSTOMER_ID)",
+      "source": "2005",
+      "target": "2005",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "SUM (CUSTOMER.CUSTOMER_ID)",
+      "source": "14029",
+      "target": "14029",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CUSTOMER_NAME)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CUSTOMER_NAME)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.CUSTOMER_NAME)",
+      "source": "14",
+      "target": "14",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.EMAIL)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.EMAIL)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.EMAIL)",
+      "source": "26",
+      "target": "26",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CITY)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CITY)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CITY)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.CITY)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CREDIT_LIMIT)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CREDIT_LIMIT)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CREDIT_LIMIT)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.CREDIT_LIMIT)",
+      "source": "3500.75",
+      "target": "3500.75",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.CREDIT_LIMIT)",
+      "source": "75000",
+      "target": "75000.00",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "SUM (CUSTOMER.CREDIT_LIMIT)",
+      "source": "136501.75",
+      "target": "136501.75",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.IS_ACTIVE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.IS_ACTIVE)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.IS_ACTIVE)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.IS_ACTIVE)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.UPDATED_TS)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.UPDATED_TS)",
+      "source": "8",
+      "target": "8",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.UPDATED_TS)",
+      "source": "7",
+      "target": "7",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.UPDATED_TS)",
+      "source": "2026-01-15 10:20:45",
+      "target": "2026-01-15 10:20:45",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.UPDATED_TS)",
+      "source": "2026-08-25 16:40:30.933451",
+      "target": "2026-08-25 16:40:30.933451",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.PHONE_NUMBER)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Rejected Rows (CUSTOMER)",
+      "source": "9",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Row Count Match (MIGRATION_COMPATIBILITY_TEST)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Null PK (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Duplicate PK (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Checksum Match (MIGRATION_COMPATIBILITY_TEST)",
+      "source": "3297aeeb80ff",
+      "target": "b54559923558",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "1001",
+      "target": "1001",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "1003",
+      "target": "1003",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "SUM (MIGRATION_COMPATIBILITY_TEST.ID)",
+      "source": "3006",
+      "target": "3006",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.CUSTOMER_NAME)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.CUSTOMER_NAME)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Max String Length (MIGRATION_COMPATIBILITY_TEST.CUSTOMER_NAME)",
+      "source": "14",
+      "target": "14",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.EMAIL)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.EMAIL)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.EMAIL)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Max String Length (MIGRATION_COMPATIBILITY_TEST.EMAIL)",
+      "source": "23",
+      "target": "23",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "50000.25",
+      "target": "50000.25",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "9999999999.99",
+      "target": "9999999999.99",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "SUM (MIGRATION_COMPATIBILITY_TEST.CREDIT_LIMIT)",
+      "source": "20000050000.23",
+      "target": "20000050000.23",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.SHORT_CODE)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.SHORT_CODE)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.SHORT_CODE)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Max String Length (MIGRATION_COMPATIBILITY_TEST.SHORT_CODE)",
+      "source": "10",
+      "target": "10",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.LONG_DESCRIPTION)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.LONG_DESCRIPTION)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.LONG_DESCRIPTION)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Max String Length (MIGRATION_COMPATIBILITY_TEST.LONG_DESCRIPTION)",
+      "source": "75",
+      "target": "75",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.UNICODE_TEXT)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.UNICODE_TEXT)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.UNICODE_TEXT)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Max String Length (MIGRATION_COMPATIBILITY_TEST.UNICODE_TEXT)",
+      "source": "27",
+      "target": "27",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.CREATED_TIMESTAMP)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.CREATED_TIMESTAMP)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.CREATED_TIMESTAMP)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.CREATED_TIMESTAMP)",
+      "source": "2026-01-01 00:00:00",
+      "target": "2026-01-01 00:00:00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.CREATED_TIMESTAMP)",
+      "source": "2026-09-19 10:30:45.123456",
+      "target": "2026-09-19 10:30:45.123456",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "3.1415927410125732",
+      "target": "3.1415927410125732",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "3.4028234663852886e+38",
+      "target": "3.4028234663852886e+38",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "SUM (MIGRATION_COMPATIBILITY_TEST.FLOAT_VALUE)",
+      "source": "3.40282347E+038",
+      "target": "3.40282e+038",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "3.141592653589793",
+      "target": "3.141592653589793",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "1.7976931348623157e+308",
+      "target": "1.7976931348623157e+308",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "SUM (MIGRATION_COMPATIBILITY_TEST.DOUBLE_VALUE)",
+      "source": "1.7976931348623157E+308",
+      "target": "1.79769e+308",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MIN (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "MAX (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "SUM (MIGRATION_COMPATIBILITY_TEST.ACTIVE_FLAG)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Rejected Rows (MIGRATION_COMPATIBILITY_TEST)",
+      "source": "3",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_COMPATIBILITY_TEST"
+    },
+    {
+      "check": "Row Count Match (MIGRATION_DEMO_CUSTOMER)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Null PK (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Duplicate PK (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Checksum Match (MIGRATION_DEMO_CUSTOMER)",
+      "source": "493b2c3c4e68",
+      "target": "493b2c3c4e68",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MIN (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MAX (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "SUM (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "15",
+      "target": "15",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "13",
+      "target": "13",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "13",
+      "target": "13",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "9",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Rejected Rows (MIGRATION_DEMO_CUSTOMER)",
+      "source": "5",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Total Row Count Match",
+      "source": "17",
+      "target": "17",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "_SUMMARY"
+    },
+    {
+      "check": "Table-Level Match Ratio",
+      "source": "3/3",
+      "target": "1.00",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "_SUMMARY"
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://contoso.com/schemas/migration-request.schema.json",
+  "title": "Migration Request",
+  "description": "Schema for a data migration request submitted to the agentic migration system. Specifies source and target connection details, tables to migrate, and migration options.",
+  "type": "object",
+  "required": [
+    "sourceType",
+    "sourceHost",
+    "sourcePort",
+    "sourceDatabase",
+    "sourceSchema",
+    "targetServer",
+    "targetDatabase",
+    "targetSchema",
+    "tables",
+    "migrationMode",
+    "requestedBy"
+  ],
+  "properties": {
+    "sourceType": {
+      "type": "string",
+      "enum": ["Oracle", "SQLServer"],
+      "description": "Type of the source database engine."
+    },
+    "sourceHost": {
+      "type": "string",
+      "description": "Hostname or IP address of the source database server.",
+      "minLength": 1,
+      "examples": ["oracle-prod.contoso.internal", "sqlserver01.contoso.internal"]
+    },
+    "sourcePort": {
+      "type": "integer",
+      "description": "TCP port of the source database listener.",
+      "minimum": 1,
+      "maximum": 65535,
+      "examples": [1521, 1433]
+    },
+    "sourceDatabase": {
+      "type": "string",
+      "description": "Source database name (Oracle SID/Service Name or SQL Server database).",
+      "minLength": 1,
+      "examples": ["ORCL", "AdventureWorks"]
+    },
+    "sourceSchema": {
+      "type": "string",
+      "description": "Schema within the source database to migrate from.",
+      "minLength": 1,
+      "examples": ["HR", "dbo"]
+    },
+    "targetServer": {
+      "type": "string",
+      "description": "Fully-qualified Azure SQL Database server name.",
+      "pattern": "^[a-zA-Z0-9-]+\\.database\\.windows\\.net$",
+      "examples": ["migration-target.database.windows.net"]
+    },
+    "targetDatabase": {
+      "type": "string",
+      "description": "Name of the Azure SQL Database on the target server.",
+      "minLength": 1,
+      "examples": ["hr-migrated"]
+    },
+    "targetSchema": {
+      "type": "string",
+      "description": "Target schema in Azure SQL Database.",
+      "minLength": 1,
+      "default": "dbo",
+      "examples": ["dbo", "hr"]
+    },
+    "tables": {
+      "type": "array",
+      "description": "List of table names to include in the migration. Use [\"*\"] for all tables in the source schema.",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "examples": [["EMPLOYEES", "DEPARTMENTS", "JOB_HISTORY"], ["*"]]
+    },
+    "migrationMode": {
+      "type": "string",
+      "enum": ["full", "incremental"],
+      "description": "Full: truncate-and-reload. Incremental: delta-only based on watermark column."
+    },
+    "incrementalConfig": {
+      "type": "object",
+      "description": "Required when migrationMode is 'incremental'.",
+      "properties": {
+        "watermarkColumn": {
+          "type": "string",
+          "description": "Column used to detect new/changed rows (e.g. LAST_UPDATED)."
+        },
+        "lastWatermarkValue": {
+          "type": "string",
+          "description": "ISO-8601 timestamp or numeric string of the last-synced watermark."
+        }
+      },
+      "required": ["watermarkColumn"]
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "When true, the agent generates and validates the plan but does NOT execute data movement.",
+      "default": false
+    },
+    "requestedBy": {
+      "type": "string",
+      "description": "Email or UPN of the person requesting the migration.",
+      "format": "email",
+      "examples": ["dba-team@contoso.com"]
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["low", "normal", "high", "critical"],
+      "description": "Scheduling priority hint for the migration agent.",
+      "default": "normal"
+    },
+    "notifyOnCompletion": {
+      "type": "array",
+      "description": "Additional email addresses to notify when migration completes.",
+      "items": {
+        "type": "string",
+        "format": "email"
+      }
+    },
+    "tags": {
+      "type": "object",
+      "description": "Free-form key-value tags for categorisation and cost tracking.",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "examples": [{ "project": "HR-Modernization", "costCenter": "IT-4200" }]
+    }
+  },
+  "if": {
+    "properties": { "migrationMode": { "const": "incremental" } }
+  },
+  "then": {
+    "required": ["incrementalConfig"]
+  },
+  "additionalProperties": false
+}
