@@ -1,0 +1,134 @@
+/* ============================================================
+   Landing-page theme override
+   Load AFTER style.css — remaps dashboard palette to:
+     --ink: #071b20   --deep: #082b30   --teal: #0f7472
+     --mint: #b7eed0  --acid: #d9f56a   --paper: #f3f0e8
+   Fonts: Manrope (body) · DM Mono (code)
+   ============================================================ */
+
+/* ---------- Light mode variables ---------- */
+:root {
+    --accent:         #0f7472;
+    --accent-hover:   #0d6160;
+    --accent-soft:    rgba(15, 116, 114, 0.12);
+    --purple:         #0f7472;
+    --navy:           #071b20;
+    --green:          #0f7472;
+    --green-soft:     rgba(183, 238, 208, 0.25);
+
+    --bg:             #f3f0e8;
+    --card:           #ffffff;
+    --surface-2:      #f8f6f0;
+    --rail:           #082b30;
+    --rail-fg:        rgba(243, 240, 232, 0.6);
+    --rail-fg-strong: #f3f0e8;
+    --rail-hover:     rgba(255, 255, 255, 0.08);
+
+    --text:           #071b20;
+    --text-muted:     #3a5a5c;
+    --text-faint:     #6e8e90;
+    --border:         #ddd9ce;
+    --border-strong:  #ccc7b9;
+}
+
+/* ---------- Dark mode variables ---------- */
+[data-theme="dark"] {
+    --accent:         #1a9e9b;
+    --accent-hover:   #22b5b2;
+    --accent-soft:    rgba(15, 116, 114, 0.22);
+    --purple:         #1a9e9b;
+    --green:          #b7eed0;
+    --green-soft:     rgba(183, 238, 208, 0.1);
+
+    --bg:             #071b20;
+    --card:           #0a2429;
+    --surface-2:      #0d2e34;
+    --rail:           #051518;
+
+    --text:           #e4efe6;
+    --text-muted:     #8fb5b4;
+    --text-faint:     #5e8a89;
+    --border:         #163a3e;
+    --border-strong:  #1e4c50;
+}
+
+/* ---------- Fonts ---------- */
+body {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+td.num,
+th.num {
+    font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+td code {
+    font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+.code-block {
+    font-family: 'DM Mono', 'Fira Code', ui-monospace, monospace;
+}
+
+/* ---------- Primary button: dark teal bg ---------- */
+.btn-primary {
+    background: #082b30;
+    border-color: #082b30;
+    color: #f3f0e8;
+}
+
+.btn-primary:hover {
+    background: #0f7472;
+    border-color: #0f7472;
+}
+
+/* ---------- Nav logo gradient: teal → mint ---------- */
+.nav-logo {
+    background: linear-gradient(135deg, #0f7472, #b7eed0);
+}
+
+/* ---------- Active nav-step: acid accent ---------- */
+.nav-step.active {
+    background: rgba(217, 245, 106, 0.14);
+}
+
+.nav-step.active::before {
+    background: #d9f56a;
+}
+
+.nav-step.active .step-num {
+    background: #d9f56a;
+    border-color: #d9f56a;
+    color: #071b20;
+}
+
+/* ---------- Badge-status: teal / mint / acid palette ---------- */
+.badge-pass,
+.badge-low,
+.badge-compatible {
+    background: rgba(183, 238, 208, 0.22);
+    color: #0f7472;
+}
+
+.badge-new {
+    background: rgba(15, 116, 114, 0.12);
+    color: #0f7472;
+}
+
+/* Outline button hover → teal */
+.btn-outline:hover {
+    border-color: #0f7472;
+    color: #0f7472;
+    background: rgba(15, 116, 114, 0.08);
+}
+
+/* Delta-chip active → teal */
+.delta-chip.on {
+    background: #0f7472;
+    border-color: #0f7472;
+}
+
+/* Spinner accent */
+.spinner {
+    border-top-color: #0f7472;
+}
