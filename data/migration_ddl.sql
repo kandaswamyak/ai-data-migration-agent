@@ -1,15 +1,8 @@
--- Generated DDL: 1 table(s), 4 column(s)
--- CREATE: 1, ALTER: 0, No Change: 0
--- Generated at: 2026-09-24 15:16:11
+-- Generated DDL: 1 table(s), 5 column(s)
+-- CREATE: 0, ALTER: 0, No Change: 1
+-- Generated at: 2026-09-24 21:52:42
 
--- Generated DDL for [dbo].[Product]
-CREATE TABLE [dbo].[Product]
-(
-    [ProductID] INT NULL,
-    [ProductName] VARCHAR(100) NULL,
-    [Category] VARCHAR(50) NULL,
-    [Price] DECIMAL(10,2) NULL
-);
+-- Table [employees] already exists in target with all columns. No DDL changes needed.
 
 GO
 

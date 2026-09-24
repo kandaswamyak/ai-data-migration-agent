@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-24T10:04:23.219744+00:00",
+  "generated_at_utc": "2026-09-24T16:39:06.623246+00:00",
   "overall": "Validation completed with warnings",
   "all_passed": false,
   "migration_summary": {
@@ -9,16 +9,16 @@
     "tables_passed": 0,
     "tables_with_issues": 1,
     "validation_completion": "100%",
-    "total_checks": 89,
-    "checks_passed": 81,
+    "total_checks": 84,
+    "checks_passed": 76,
     "checks_failed": 8,
     "rejected_rows": 0,
     "overall_status": "FAIL"
   },
   "table_validation": {
     "MIGRATION_COMPATIBILITY_TEST": {
-      "checks_total": 86,
-      "checks_passed": 79,
+      "checks_total": 81,
+      "checks_passed": 74,
       "checks_failed": 7,
       "status": "FAIL",
       "overall": "FAIL",
@@ -82,14 +82,9 @@
         "NULL Count: CREATED_TZ": "PASS",
         "Column Count: CREATED_TZ": "PASS",
         "Distinct Values: CREATED_TZ": "PASS",
-        "NULL Count: CREATED_LOCAL_TZ": "PASS",
-        "Column Count: CREATED_LOCAL_TZ": "PASS",
-        "Distinct Values: CREATED_LOCAL_TZ": "PASS",
         "NULL Count: RAW_DATA": "PASS",
         "Column Count: RAW_DATA": "PASS",
         "Distinct Values: RAW_DATA": "PASS",
-        "NULL Count: XML_DATA": "PASS",
-        "Column Count: XML_DATA": "PASS",
         "NULL Count: FLOAT_VALUE": "PASS",
         "Column Count: FLOAT_VALUE": "PASS",
         "Distinct Values: FLOAT_VALUE": "PASS",
@@ -112,7 +107,7 @@
       },
       "categories": {
         "completeness": {
-          "passed": 38,
+          "passed": 34,
           "failed": 0
         },
         "integrity": {
@@ -120,7 +115,7 @@
           "failed": 0
         },
         "accuracy": {
-          "passed": 39,
+          "passed": 38,
           "failed": 7
         }
       }
@@ -395,29 +390,7 @@
       {
         "column": "CREATED_TZ",
         "source_column": "CREATED_TZ",
-        "category": "other",
-        "null_src": 1,
-        "null_tgt": 1,
-        "null_status": "PASS",
-        "distinct_src": 2,
-        "distinct_tgt": 2,
-        "distinct_status": "PASS",
-        "min_src": null,
-        "min_tgt": null,
-        "max_src": null,
-        "max_tgt": null,
-        "minmax_status": null,
-        "sum_src": null,
-        "sum_tgt": null,
-        "sum_status": null,
-        "maxlen_src": null,
-        "maxlen_tgt": null,
-        "maxlen_status": null
-      },
-      {
-        "column": "CREATED_LOCAL_TZ",
-        "source_column": "CREATED_LOCAL_TZ",
-        "category": "other",
+        "category": "date",
         "null_src": 1,
         "null_tgt": 1,
         "null_status": "PASS",
@@ -468,28 +441,6 @@
         "distinct_src": 2,
         "distinct_tgt": 2,
         "distinct_status": "PASS",
-        "min_src": null,
-        "min_tgt": null,
-        "max_src": null,
-        "max_tgt": null,
-        "minmax_status": null,
-        "sum_src": null,
-        "sum_tgt": null,
-        "sum_status": null,
-        "maxlen_src": null,
-        "maxlen_tgt": null,
-        "maxlen_status": null
-      },
-      {
-        "column": "XML_DATA",
-        "source_column": "XML_DATA",
-        "category": "other",
-        "null_src": 1,
-        "null_tgt": 1,
-        "null_status": "PASS",
-        "distinct_src": null,
-        "distinct_tgt": null,
-        "distinct_status": null,
         "min_src": null,
         "min_tgt": null,
         "max_src": null,
@@ -587,10 +538,10 @@
     "NULL count failed for MIGRATION_COMPATIBILITY_TEST.CLOB_DATA: ORA-22849: Type CLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
     "Non-null count failed for MIGRATION_COMPATIBILITY_TEST.CLOB_DATA: ORA-22849: Type CLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
     "Distinct count failed for MIGRATION_COMPATIBILITY_TEST.CLOB_DATA: ORA-22849: Type CLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
+    "MIN/MAX failed for MIGRATION_COMPATIBILITY_TEST.CREATED_TZ: ('ODBC SQL type -155 is not yet supported.  column-index=0  type=-155', 'HY106')",
     "NULL count failed for MIGRATION_COMPATIBILITY_TEST.DOCUMENT_DATA: ORA-22849: Type BLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
     "Non-null count failed for MIGRATION_COMPATIBILITY_TEST.DOCUMENT_DATA: ORA-22849: Type BLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
-    "Distinct count failed for MIGRATION_COMPATIBILITY_TEST.DOCUMENT_DATA: ORA-22849: Type BLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e",
-    "Distinct count failed for MIGRATION_COMPATIBILITY_TEST.XML_DATA: ORA-22950: cannot order objects without MAP or ORDER method\nHelp: https://docs.oracle.com/error-help"
+    "Distinct count failed for MIGRATION_COMPATIBILITY_TEST.DOCUMENT_DATA: ORA-22849: Type BLOB is not supported for this function or operator.\nHelp: https://docs.oracle.com/e"
   ],
   "retry_candidates": [],
   "results": [
@@ -1067,30 +1018,6 @@
       "table": "MIGRATION_COMPATIBILITY_TEST"
     },
     {
-      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.CREATED_LOCAL_TZ)",
-      "source": "1",
-      "target": "1",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "MIGRATION_COMPATIBILITY_TEST"
-    },
-    {
-      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.CREATED_LOCAL_TZ)",
-      "source": "2",
-      "target": "2",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "MIGRATION_COMPATIBILITY_TEST"
-    },
-    {
-      "check": "Distinct Values (MIGRATION_COMPATIBILITY_TEST.CREATED_LOCAL_TZ)",
-      "source": "2",
-      "target": "2",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "MIGRATION_COMPATIBILITY_TEST"
-    },
-    {
       "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.RAW_DATA)",
       "source": "1",
       "target": "1",
@@ -1112,22 +1039,6 @@
       "target": "2",
       "status": "PASS",
       "category": "accuracy",
-      "table": "MIGRATION_COMPATIBILITY_TEST"
-    },
-    {
-      "check": "NULL Count (MIGRATION_COMPATIBILITY_TEST.XML_DATA)",
-      "source": "1",
-      "target": "1",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "MIGRATION_COMPATIBILITY_TEST"
-    },
-    {
-      "check": "Column Count (MIGRATION_COMPATIBILITY_TEST.XML_DATA)",
-      "source": "2",
-      "target": "2",
-      "status": "PASS",
-      "category": "completeness",
       "table": "MIGRATION_COMPATIBILITY_TEST"
     },
     {

@@ -91,6 +91,32 @@ def safe_int(val):
         return None
 
 
+def normalize_confidence(val, default=0.95):
+    """Normalize an AI-provided confidence score to a 0-1 fraction.
+
+    The AI returns confidence on inconsistent scales across rows:
+      - 0.0-1.0  -> already a fraction (0.95 -> 0.95)
+      - >1 to 10 -> 0-10 scale        (9    -> 0.9)
+      - >10      -> percentage        (85   -> 0.85)
+    This unifies them so the UI (which multiplies by 100) never shows
+    a real 90% as '9%'.
+    """
+    try:
+        c = float(val)
+    except (TypeError, ValueError):
+        return default
+    if c != c:  # NaN
+        return default
+    if c <= 1.0:
+        conf = c
+    elif c <= 10.0:
+        conf = c / 10.0
+    else:
+        conf = c / 100.0
+    # Clamp to [0, 1]
+    return max(0.0, min(1.0, conf))
+
+
 def parse_sql_type(type_str):
     text = str(type_str or "").strip().upper()
     match = re.match(r"^([A-Z0-9_ ]+?)\s*\(([^)]*)\)\s*(.*)$", text)
@@ -442,6 +468,13 @@ def connect_source():
             )
             connector.connect()
             tables = connector.discover_tables()
+            # Also discover stored procedures/functions so the connect
+            # popup can show a per-object-type breakdown, not just tables.
+            try:
+                procedures = connector.discover_procedures()
+            except Exception:
+                procedures = []
+            procedure_names = [p.get("name") if isinstance(p, dict) else str(p) for p in procedures]
             connector.disconnect()
 
             state["source_type"] = "Oracle (Real)"
@@ -454,7 +487,13 @@ def connect_source():
                 "password": oracle_pass,
                 "mode": oracle_mode,
             }
-            return jsonify({"success": True, "tables": tables, "table_count": len(tables)})
+            return jsonify({
+                "success": True,
+                "tables": tables,
+                "table_count": len(tables),
+                "procedures": procedure_names,
+                "procedure_count": len(procedure_names),
+            })
 
         except Exception as e:
             return jsonify({"success": False, "error": f"Oracle connection failed: {str(e)}"})
@@ -471,10 +510,19 @@ def connect_source():
             cursor = conn.cursor()
             cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE='BASE TABLE' ORDER BY TABLE_NAME")
             tables = [row[0] for row in cursor.fetchall()]
+            # Discover stored procedures for the connect-popup breakdown.
+            try:
+                cursor.execute("SELECT ROUTINE_NAME FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE' ORDER BY ROUTINE_NAME")
+                procedure_names = [row[0] for row in cursor.fetchall()]
+            except Exception:
+                procedure_names = []
             conn.close()
             state["source_type"] = "SQL Server"
             state["connection_config"] = {"server": server, "database": database}
-            return jsonify({"success": True, "tables": tables, "table_count": len(tables)})
+            return jsonify({
+                "success": True, "tables": tables, "table_count": len(tables),
+                "procedures": procedure_names, "procedure_count": len(procedure_names),
+            })
         except Exception as e:
             return jsonify({"success": False, "error": f"SQL Server connection failed: {str(e)}"})
 
@@ -801,7 +849,7 @@ def analyze_datatypes():
                     "source_type": source_full,
                     "target_type": normalized_target,
                     "risk": analysis.get("risk", "Low"),
-                    "confidence": min(analysis.get("confidence", 1.0), 1.0) if analysis.get("confidence", 1.0) <= 1 else analysis.get("confidence", 100) / 100,
+                    "confidence": normalize_confidence(analysis.get("confidence", 0.95)),
                     "status": analysis.get("status", "Compatible"),
                     "notes": analysis.get("recommendation", ""),
                 })
@@ -1001,23 +1049,51 @@ def select_objects():
     requested = {str(name).strip().upper() for name in data.get("tables", []) if str(name).strip()}
     available = {str(row.get("table_name", "")).strip().upper() for row in (state.get("schema") or [])}
     selected = sorted(requested & available)
-    if not selected:
-        return jsonify({"success": False, "error": "Select at least one discovered table."})
 
-    state["selected_tables"] = selected
-    state["schema"] = [
-        row for row in state["schema"]
-        if str(row.get("table_name", "")).strip().upper() in selected
-    ]
+    # Procedure selection (unified with table selection). If the "procedures" key
+    # is omitted entirely, keep all discovered procedures (backward compatible).
+    all_procs = state.get("procedures") or []
+    proc_key_present = "procedures" in data
+    selected_procs = None
+    if proc_key_present:
+        requested_procs = {str(n).strip().upper() for n in (data.get("procedures") or []) if str(n).strip()}
+        selected_procs = [
+            p for p in all_procs
+            if (p.get("name") if isinstance(p, dict) else str(p) or "").upper() in requested_procs
+        ]
+
+    # Require at least one object overall (a table OR, when procedures are being chosen, a procedure).
+    if not selected and not (proc_key_present and selected_procs):
+        return jsonify({"success": False, "error": "Select at least one discovered object (table or procedure)."})
+
+    if selected:
+        state["selected_tables"] = selected
+        state["schema"] = [
+            row for row in state["schema"]
+            if str(row.get("table_name", "")).strip().upper() in selected
+        ]
+
+    if proc_key_present:
+        # Filter procedures to the selected set; drop conversions for deselected ones.
+        kept_names = {(p.get("name") if isinstance(p, dict) else str(p) or "").upper() for p in selected_procs}
+        state["procedures"] = selected_procs
+        state["procedure_conversions"] = [
+            c for c in state.get("procedure_conversions", [])
+            if c.get("name", "").upper() in kept_names
+        ]
+
     state["datatype_analysis"] = []
     state["mappings"] = []
     state["ddl_statements"] = []
     state["all_mappings_approved"] = False
     return jsonify({
-
         "success": True,
         "selected_tables": selected,
         "schema_count": len(state["schema"]),
+        "selected_procedures": [
+            (p.get("name") if isinstance(p, dict) else str(p)) for p in (selected_procs if selected_procs is not None else all_procs)
+        ],
+        "procedure_count": len(state.get("procedures", [])),
     })
 
 
@@ -1046,7 +1122,7 @@ def generate_mapping():
                 "target_type": target_type,
                 "transformation": "Direct" if risk == "Low" else ("Type Conversion" if risk == "Medium" else "Review Required"),
                 "risk": risk,
-                "confidence": item.get("confidence", 1.0),
+                "confidence": normalize_confidence(item.get("confidence", 0.95)),
                 "status": item.get("status", "Compatible"),
                 "approved": auto_approved,
             }
@@ -1913,7 +1989,542 @@ def discover_procedures():
         except Exception as e:
             return jsonify({"success": False, "error": str(e)})
 
+    # ---- SQL Server ----
+    elif state["source_type"] == "SQL Server":
+        if not SQLServerConnector:
+            return jsonify({"success": False, "error": "pyodbc not installed. Run: pip install pyodbc"})
+        cfg = state.get("connection_config") or {}
+        try:
+            connector = SQLServerConnector(cfg.get("server", "localhost"), cfg.get("database", "MigrationDemo"))
+            conn = connector.connect()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION
+                FROM INFORMATION_SCHEMA.ROUTINES
+                WHERE ROUTINE_TYPE = 'PROCEDURE'
+                ORDER BY ROUTINE_NAME
+            """)
+            procedures = []
+            for row in cursor.fetchall():
+                procedures.append({
+                    "name": row[0],
+                    "type": row[1] or "PROCEDURE",
+                    "source_code": row[2] or "",
+                })
+            conn.close()
+            state["procedures"] = procedures
+            return jsonify({
+                "success": True,
+                "procedures": procedures,
+                "count": len(procedures),
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
     return jsonify({"success": False, "error": "Unsupported source type for procedure discovery."})
+
+
+# ============================================================
+# POST /api/analyze_procedures — Conversion-risk analysis for code objects
+# ============================================================
+
+@app.route("/api/analyze_procedures", methods=["POST"])
+def analyze_procedures():
+    """Score conversion risk (Low/Medium/High) for each discovered procedure/view
+    by scanning its source code for PL/SQL features that complicate the
+    PL/SQL -> T-SQL rewrite. Does NOT re-run discovery; uses state['procedures'].
+    """
+    procedures = state.get("procedures") or []
+    if not procedures:
+        # Nothing discovered yet (or none exist) — return empty, not an error.
+        return jsonify({"success": True, "objects": [], "count": 0})
+
+    objects = []
+    for p in procedures:
+        if isinstance(p, dict):
+            name = p.get("name") or p.get("NAME") or ""
+            otype = p.get("type") or p.get("object_type") or "PROCEDURE"
+            src = p.get("source_code", "")
+        else:
+            name, otype, src = str(p), "PROCEDURE", ""
+        risk, reasons = score_procedure_risk(src)
+        objects.append({
+            "name": name,
+            "type": otype,
+            "risk": risk,
+            "reasons": reasons,
+        })
+
+    # Sort High -> Medium -> Low for visibility
+    order = {"High": 0, "Medium": 1, "Low": 2}
+    objects.sort(key=lambda o: order.get(o["risk"], 3))
+
+    return jsonify({"success": True, "objects": objects, "count": len(objects)})
+
+
+# ============================================================
+# Shared: PL/SQL -> T-SQL conversion-risk scorer
+# ============================================================
+
+_PROC_HIGH_SIGNALS = [
+    ("SYS_REFCURSOR", "REF CURSOR"), ("%ROWTYPE", "%ROWTYPE"), ("%TYPE", "%TYPE"),
+    ("DBMS_", "DBMS_ package call"), ("BULK COLLECT", "BULK COLLECT"), ("FORALL", "FORALL"),
+    ("PRAGMA", "PRAGMA"), ("UTL_", "UTL_ package call"), ("EXECUTE IMMEDIATE", "dynamic SQL"),
+    ("CURSOR ", "explicit cursor"), ("EXCEPTION", "exception block"),
+]
+_PROC_MEDIUM_SIGNALS = [
+    ("NVL", "NVL()"), ("SYSDATE", "SYSDATE"), ("DECODE", "DECODE()"), ("TO_DATE", "TO_DATE()"),
+    ("TO_CHAR", "TO_CHAR()"), ("TO_NUMBER", "TO_NUMBER()"), ("ROWNUM", "ROWNUM"),
+    ("DUAL", "FROM DUAL"), ("||", "string concat (||)"), ("MERGE", "MERGE statement"),
+    ("SEQUENCE", "sequence reference"), (".NEXTVAL", "sequence NEXTVAL"),
+]
+
+def score_procedure_risk(source_code):
+    """Return (risk, reasons) for a PL/SQL source string."""
+    src = (source_code or "").upper()
+    high_hits = [label for token, label in _PROC_HIGH_SIGNALS if token in src]
+    med_hits = [label for token, label in _PROC_MEDIUM_SIGNALS if token in src]
+    if high_hits:
+        risk = "High"
+    elif med_hits:
+        risk = "Medium"
+    else:
+        risk = "Low"
+    reasons = high_hits + med_hits
+    if not reasons:
+        reasons = ["Simple logic — no complex Oracle-specific constructs detected"]
+    return risk, reasons
+
+
+# ============================================================
+# POST /api/mapping_procedures — Code-object mappings for Mapping Review
+# ============================================================
+
+@app.route("/api/mapping_procedures", methods=["POST"])
+def mapping_procedures():
+    """Build approval-ready code-object mappings for the Mapping Review step.
+
+    For each discovered procedure: ensure a procedure_conversions entry exists
+    (so the existing /api/approve_procedure + /api/deploy_procedures flow works),
+    score PL/SQL->T-SQL conversion risk, and auto-approve Low risk (Medium/High
+    stay pending), mirroring the column-mapping approval policy.
+    """
+    procedures = state.get("procedures") or []
+    if not procedures:
+        return jsonify({"success": True, "objects": [], "count": 0})
+
+    conversions = state.setdefault("procedure_conversions", [])
+
+    objects = []
+    for p in procedures:
+        if isinstance(p, dict):
+            name = (p.get("name") or p.get("NAME") or "")
+            otype = p.get("type") or p.get("object_type") or "PROCEDURE"
+            src = p.get("source_code", "")
+        else:
+            name, otype, src = str(p), "PROCEDURE", ""
+        risk, reasons = score_procedure_risk(src)
+        auto_approved = (risk.lower() == "low")
+
+        # Find/create the conversion record (target_code filled later by convert step).
+        existing = next((c for c in conversions if c.get("name", "").upper() == name.upper()), None)
+        if existing is None:
+            existing = {
+                "name": name,
+                "source_type": otype,
+                "source_code": src,
+                "target_code": "",
+                "status": "approved" if auto_approved else "pending",
+                "approved": auto_approved,
+            }
+            conversions.append(existing)
+        else:
+            # Preserve a prior manual decision; only set default if untouched.
+            if "approved" not in existing:
+                existing["approved"] = auto_approved
+            existing["source_code"] = existing.get("source_code") or src
+
+        objects.append({
+            "name": name,
+            "type": otype,
+            "risk": risk,
+            "reasons": reasons,
+            "transformation": "PL/SQL → T-SQL",
+            "approved": bool(existing.get("approved")),
+        })
+
+    order = {"High": 0, "Medium": 1, "Low": 2}
+    objects.sort(key=lambda o: order.get(o["risk"], 3))
+    state["all_procedures_approved"] = all(o["approved"] for o in objects) if objects else True
+    return jsonify({"success": True, "objects": objects, "count": len(objects)})
+
+
+# ============================================================
+# Signal -> T-SQL rewrite guidance (rule-based, for risk cards)
+# ============================================================
+
+# Maps a detected PL/SQL signal label to concrete T-SQL rewrite guidance.
+_PROC_SIGNAL_GUIDANCE = {
+    "REF CURSOR": "SYS_REFCURSOR has no direct T-SQL equivalent — return a result set directly, or use a table-valued function / temp table (#tmp) the caller SELECTs from.",
+    "%ROWTYPE": "%ROWTYPE has no T-SQL equivalent — declare explicit variables or a TABLE type / table variable with named columns.",
+    "%TYPE": "%TYPE anchoring is not supported — replace with the explicit SQL Server type (e.g. INT, NVARCHAR(n)).",
+    "DBMS_ package call": "DBMS_* packages are Oracle-only — map DBMS_OUTPUT.PUT_LINE to PRINT/RAISERROR; other DBMS_* calls need a T-SQL equivalent or removal.",
+    "BULK COLLECT": "BULK COLLECT has no equivalent — use a set-based INSERT ... SELECT or a table variable populated by a single query.",
+    "FORALL": "FORALL bulk DML → rewrite as a single set-based INSERT/UPDATE/DELETE ... SELECT statement.",
+    "PRAGMA": "PRAGMA directives (e.g. AUTONOMOUS_TRANSACTION) have no direct T-SQL equivalent — redesign the transaction handling explicitly.",
+    "UTL_ package call": "UTL_* packages (file/HTTP/SMTP) are Oracle-only — move this logic outside the procedure or use a CLR/agent job.",
+    "dynamic SQL": "EXECUTE IMMEDIATE → sp_executesql with typed parameters (avoid string concatenation to prevent SQL injection).",
+    "explicit cursor": "Explicit cursors are slow in T-SQL — prefer a set-based rewrite; if a cursor is unavoidable, use DECLARE CURSOR ... FETCH with LOCAL FAST_FORWARD.",
+    "exception block": "Oracle EXCEPTION WHEN ... → wrap logic in BEGIN TRY ... END TRY BEGIN CATCH ... END CATCH; map named exceptions to ERROR_NUMBER()/ERROR_MESSAGE().",
+    "NVL()": "NVL(a,b) → ISNULL(a,b) or COALESCE(a,b).",
+    "SYSDATE": "SYSDATE → GETDATE() (or SYSUTCDATETIME() for UTC).",
+    "DECODE()": "DECODE(...) → CASE WHEN ... THEN ... END.",
+    "TO_DATE()": "TO_DATE(s,fmt) → CONVERT(datetime, s, style) or TRY_CONVERT; verify the format style code.",
+    "TO_CHAR()": "TO_CHAR(x,fmt) → FORMAT() or CONVERT() with an explicit style.",
+    "TO_NUMBER()": "TO_NUMBER(s) → TRY_CONVERT(DECIMAL(38,10), s) or CAST.",
+    "ROWNUM": "ROWNUM → TOP (n) or ROW_NUMBER() OVER (...) in a subquery/CTE.",
+    "FROM DUAL": "FROM DUAL → remove it; T-SQL allows SELECT without a FROM clause.",
+    "string concat (||)": "Oracle || concatenation → + operator (or CONCAT() to null-safe concatenate).",
+    "MERGE statement": "Oracle MERGE → T-SQL MERGE is supported but syntax differs; validate the WHEN clauses and add a terminating semicolon.",
+    "sequence reference": "Oracle sequences → SQL Server SEQUENCE object (NEXT VALUE FOR) or an IDENTITY column.",
+    "sequence NEXTVAL": "seq.NEXTVAL → NEXT VALUE FOR seq (SQL Server sequence) or an IDENTITY column.",
+}
+
+
+def _generate_procedure_risk_recommendation(obj):
+    """Build a rule-based risk card for a Medium/High risk code object.
+    Returns None for Low risk (mirrors _generate_risk_recommendation for columns)."""
+    risk = str(obj.get("risk", "Low"))
+    if risk.lower() not in ("medium", "high"):
+        return None
+    reasons = obj.get("reasons", []) or []
+    issues = []
+    solutions = []
+    for label in reasons:
+        issues.append(label)
+        guidance = _PROC_SIGNAL_GUIDANCE.get(label)
+        if guidance:
+            solutions.append(guidance)
+    if not solutions:
+        solutions.append("Review the converted T-SQL carefully and test against the source behavior.")
+    ai_recommendation = "reject" if risk.lower() == "high" else "approve"
+    reasoning = (
+        f"{risk} conversion risk — {len(issues)} Oracle-specific construct(s) detected that "
+        f"require manual attention during PL/SQL → T-SQL rewrite."
+    )
+    return {
+        "name": obj.get("name", ""),
+        "type": obj.get("type", "PROCEDURE"),
+        "risk": risk,
+        "transformation": obj.get("transformation", "PL/SQL → T-SQL"),
+        "compatibility_issues": issues,
+        "ai_solution": " ".join(solutions),
+        "solutions": solutions,
+        "reasoning": reasoning,
+        "ai_recommendation": ai_recommendation,
+    }
+
+
+# ============================================================
+# POST /api/procedure_risk_recommendation — risk cards for code objects
+# ============================================================
+
+@app.route("/api/procedure_risk_recommendation", methods=["POST"])
+def procedure_risk_recommendation():
+    """Rule-based risk cards for Medium/High risk procedures/views.
+    Low-risk objects are omitted (mirrors the column risk-review behavior)."""
+    procedures = state.get("procedures") or []
+    recommendations = []
+    for p in procedures:
+        if isinstance(p, dict):
+            name = p.get("name") or p.get("NAME") or ""
+            otype = p.get("type") or p.get("object_type") or "PROCEDURE"
+            src = p.get("source_code", "")
+        else:
+            name, otype, src = str(p), "PROCEDURE", ""
+        risk, reasons = score_procedure_risk(src)
+        rec = _generate_procedure_risk_recommendation({
+            "name": name, "type": otype, "risk": risk, "reasons": reasons,
+            "transformation": "PL/SQL → T-SQL",
+        })
+        if rec is not None:
+            recommendations.append(rec)
+    order = {"High": 0, "Medium": 1, "Low": 2}
+    recommendations.sort(key=lambda r: order.get(r["risk"], 3))
+    if not recommendations:
+        return jsonify({"success": True, "recommendations": [],
+                        "message": "All procedures are low risk — no medium or high risk code objects to review."})
+    return jsonify({"success": True, "recommendations": recommendations})
+
+
+# ============================================================
+# POST /api/procedure_ai_deepdive — AI-tailored advice for one procedure
+# ============================================================
+
+@app.route("/api/procedure_ai_deepdive", methods=["POST"])
+def procedure_ai_deepdive():
+    """Call the AI engine for a deeper, procedure-specific conversion analysis.
+    Falls back gracefully when no AI engine is configured."""
+    data = request.get_json() or {}
+    proc_name = str(data.get("procedure_name", "")).strip().upper()
+    if not proc_name:
+        return jsonify({"success": False, "error": "procedure_name is required."})
+
+    proc = None
+    for p in state.get("procedures", []):
+        pname = (p.get("name") if isinstance(p, dict) else str(p)) or ""
+        if pname.upper() == proc_name:
+            proc = p
+            break
+    if proc is None:
+        return jsonify({"success": False, "error": f"Procedure '{proc_name}' not found. Run Schema Discovery first."})
+
+    source_code = proc.get("source_code", "") if isinstance(proc, dict) else ""
+    if not source_code:
+        return jsonify({"success": False, "error": f"No source code available for '{proc_name}'."})
+
+    ai_engine = get_ai_engine()
+    if not ai_engine or not getattr(ai_engine, "is_available", lambda: False)():
+        return jsonify({
+            "success": True,
+            "ai_available": False,
+            "analysis": "AI engine is not configured in this environment. The rule-based guidance on the card reflects the detected Oracle-specific constructs and their standard T-SQL rewrites.",
+        })
+
+    try:
+        system_message = "You are a senior database migration engineer specializing in Oracle PL/SQL to Azure SQL (T-SQL) conversion."
+        prompt = f"""Analyze this Oracle PL/SQL procedure for migration to Azure SQL (T-SQL).
+
+Provide a concise assessment covering:
+1. The specific conversion challenges in THIS procedure.
+2. Concrete T-SQL rewrite guidance for each challenge.
+3. Any behavioral differences to test after conversion.
+
+Oracle PL/SQL source:
+```sql
+{source_code}
+```
+
+Return a short, structured analysis (no full code rewrite)."""
+        response = ai_engine.call(prompt, system_message)
+        return jsonify({"success": True, "ai_available": True, "analysis": (response or "").strip()})
+    except Exception as e:
+        return jsonify({"success": False, "error": f"AI analysis failed: {str(e)[:200]}"})
+
+
+# ============================================================
+# Shared: convert one PL/SQL procedure to T-SQL (used by DDL gen)
+# ============================================================
+
+def _convert_plsql_to_tsql(proc_name, source_code, source_type="PROCEDURE"):
+    """Convert a single procedure's PL/SQL to T-SQL and upsert into
+    state['procedure_conversions']. Reuses the AI engine when available,
+    otherwise leaves target_code empty with a note. Returns the conversion dict."""
+    tsql_code = ""
+    note = ""
+    ai_engine = get_ai_engine()
+    if ai_engine and getattr(ai_engine, "is_available", lambda: True)():
+        try:
+            prompt = f"""Convert the following Oracle PL/SQL procedure to Azure SQL Server T-SQL.
+
+Key conversion rules:
+- Replace SYS_REFCURSOR with table-valued output or temp table pattern
+- Replace DBMS_OUTPUT.PUT_LINE with PRINT or RAISERROR
+- Replace NVL with ISNULL
+- Replace Oracle exception handling (WHEN...THEN) with TRY...CATCH
+- Replace %ROWTYPE/%TYPE with explicit types
+- Use CREATE OR ALTER PROCEDURE syntax
+- Add SET NOCOUNT ON at the start
+- Handle IN/OUT parameters -> Azure SQL OUTPUT parameters
+
+Oracle PL/SQL source:
+```sql
+{source_code}
+```
+
+Return ONLY the T-SQL code, no explanation."""
+            response = ai_engine.call(prompt)
+            tsql_code = (response or "").strip()
+            if tsql_code.startswith("```"):
+                tsql_code = "\n".join(l for l in tsql_code.split("\n") if not l.strip().startswith("```"))
+            tsql_code = tsql_code.strip()
+        except Exception as e:
+            note = f"AI conversion failed: {str(e)[:150]}"
+    else:
+        note = "AI engine not configured — convert this procedure via the AI step, or edit manually."
+
+    conversion = {
+        "name": proc_name,
+        "source_type": source_type,
+        "source_code": source_code,
+        "target_code": tsql_code,
+        "status": "converted" if tsql_code else "pending",
+        "note": note,
+    }
+    convs = state.setdefault("procedure_conversions", [])
+    idx = next((i for i, c in enumerate(convs) if c.get("name", "").upper() == proc_name.upper()), None)
+    if idx is not None:
+        # preserve prior approval decision
+        conversion["approved"] = convs[idx].get("approved", False)
+        convs[idx] = conversion
+    else:
+        conversion["approved"] = False
+        convs.append(conversion)
+    return conversion
+
+
+# ============================================================
+# POST /api/generate_procedure_ddl — Converted T-SQL for approved procs
+# ============================================================
+
+def _normalize_tsql(text):
+    """Normalize T-SQL for comparison: collapse whitespace, uppercase, drop comments.
+    Also treats CREATE PROCEDURE and CREATE OR ALTER PROCEDURE as equivalent so a
+    body-only difference is what drives ALTER vs No-Change."""
+    if not text:
+        return ""
+    t = str(text)
+    # Strip line comments and block comments
+    t = re.sub(r"--[^\n]*", " ", t)
+    t = re.sub(r"/\*.*?\*/", " ", t, flags=re.S)
+    # Normalize CREATE [OR ALTER] PROCEDURE -> CREATE PROCEDURE
+    t = re.sub(r"(?is)\bCREATE\s+OR\s+ALTER\s+PROC(EDURE)?\b", "CREATE PROCEDURE", t)
+    t = re.sub(r"(?is)\bALTER\s+PROC(EDURE)?\b", "CREATE PROCEDURE", t)
+    t = re.sub(r"(?is)\bCREATE\s+PROC\b", "CREATE PROCEDURE", t)
+    # Drop schema qualifier [dbo]. / dbo. and square brackets for a looser match
+    t = t.replace("[", "").replace("]", "")
+    t = re.sub(r"(?i)\bdbo\.", "", t)
+    # Collapse all whitespace and uppercase
+    t = re.sub(r"\s+", " ", t).strip().upper()
+    return t
+
+
+def _get_target_proc_definitions():
+    """Return {UPPER(proc_name): definition_text} for procedures in the target Azure SQL.
+    Returns None if the target is unreachable/unconfigured (caller then defaults to CREATE/ALTER)."""
+    azure_server = os.getenv("AZURE_SQL_SERVER", "")
+    azure_db = os.getenv("AZURE_SQL_DATABASE", "")
+    azure_user = os.getenv("AZURE_SQL_USERNAME", "")
+    azure_pass = os.getenv("AZURE_SQL_PASSWORD", "")
+    if not all([azure_server, azure_db, azure_user, azure_pass]):
+        return None
+    try:
+        conn = connect_azure_sql(azure_server, azure_db, azure_user, azure_pass)
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT p.name, OBJECT_DEFINITION(p.object_id)
+            FROM sys.procedures p
+        """)
+        result = {str(r[0]).strip().upper(): (r[1] or "") for r in cur.fetchall()}
+        cur.close()
+        conn.close()
+        return result
+    except Exception:
+        return None
+
+
+def _procedure_ddl_action(proc_name, new_tsql, target_defs):
+    """Decide CREATE / ALTER / NO_CHANGE for one procedure.
+    target_defs=None means target unknown -> default to CREATE if we can't tell.
+    When the proc exists but comparison is uncertain, default to ALTER (never falsely NO_CHANGE)."""
+    if target_defs is None:
+        # Can't inspect target — safest is to treat as CREATE-or-ALTER (idempotent).
+        return "create"
+    existing = target_defs.get((proc_name or "").upper())
+    if existing is None:
+        return "create"
+    # Exists — compare normalized bodies.
+    if new_tsql and _normalize_tsql(new_tsql) == _normalize_tsql(existing):
+        return "no_change"
+    # Exists but differs, or we couldn't confidently match -> ALTER.
+    return "alter"
+
+
+@app.route("/api/generate_procedure_ddl", methods=["POST"])
+def generate_procedure_ddl():
+    """Generate (convert) T-SQL DDL for APPROVED code objects only.
+    Mirrors generate_ddl's 'approved only' rule for tables."""
+    procedures = state.get("procedures") or []
+    if not procedures:
+        return jsonify({"success": True, "objects": [], "count": 0,
+                        "message": "No procedures discovered."})
+
+    # Which procedures are approved (from the shared conversions/approval state)?
+    convs = state.get("procedure_conversions", [])
+    approved_names = {c.get("name", "").upper() for c in convs if c.get("approved")}
+    if not approved_names:
+        return jsonify({"success": True, "objects": [], "count": 0,
+                        "message": "No approved code objects. Approve procedures in the Approval step first."})
+
+    # Fetch target definitions once for CREATE/ALTER/No-Change detection.
+    target_defs = _get_target_proc_definitions()
+
+    objects = []
+    create_count = alter_count = no_change_count = 0
+    for p in procedures:
+        name = (p.get("name") if isinstance(p, dict) else str(p)) or ""
+        if name.upper() not in approved_names:
+            continue
+        otype = p.get("type", "PROCEDURE") if isinstance(p, dict) else "PROCEDURE"
+        src = p.get("source_code", "") if isinstance(p, dict) else ""
+        conv = _convert_plsql_to_tsql(name, src, otype)
+        tsql = conv.get("target_code", "")
+        action = _procedure_ddl_action(name, tsql, target_defs)
+        if action == "create":
+            create_count += 1
+        elif action == "alter":
+            alter_count += 1
+        else:
+            no_change_count += 1
+        # Persist the action on the conversion record so deploy can skip No-Change.
+        for c in state.get("procedure_conversions", []):
+            if c.get("name", "").upper() == name.upper():
+                c["ddl_action"] = action
+                break
+        objects.append({
+            "name": name,
+            "type": otype,
+            "target_code": tsql,
+            "status": conv.get("status", "pending"),
+            "note": conv.get("note", ""),
+            "ddl_action": action,
+        })
+
+    return jsonify({
+        "success": True,
+        "objects": objects,
+        "count": len(objects),
+        "create_count": create_count,
+        "alter_count": alter_count,
+        "no_change_count": no_change_count,
+        "target_reachable": target_defs is not None,
+    })
+
+
+# ============================================================
+# GET /api/download_procedure_ddl — Download procedure DDL as .sql
+# ============================================================
+
+@app.route("/api/download_procedure_ddl")
+def download_procedure_ddl():
+    """Download converted procedure T-SQL as a separate .sql file."""
+    convs = [c for c in state.get("procedure_conversions", [])
+             if c.get("approved") and c.get("target_code") and c.get("ddl_action") != "no_change"]
+    if not convs:
+        return jsonify({"success": False, "error": "No deployable procedure DDL (all approved procedures are unchanged, or none converted). Generate procedure DDL first."})
+    out_dir = os.path.join(PROJECT_ROOT, "data")
+    os.makedirs(out_dir, exist_ok=True)
+    fname = "migration_procedures_ddl.sql"
+    fpath = os.path.join(out_dir, fname)
+    with open(fpath, "w", encoding="utf-8") as f:
+        f.write(f"-- Converted procedure DDL: {len(convs)} procedure(s)\n")
+        f.write(f"-- Generated at: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+        for c in convs:
+            f.write(f"-- Procedure: {c.get('name')}\n")
+            f.write(c.get("target_code", ""))
+            f.write("\n\nGO\n\n")
+    return send_from_directory(out_dir, fname, as_attachment=True,
+                               download_name=fname, mimetype="application/sql")
 
 
 # ============================================================
@@ -1945,7 +2556,7 @@ def convert_procedure():
 
     # AI Conversion: PL/SQL → T-SQL
     ai_engine = get_ai_engine()
-    if ai_engine:
+    if ai_engine and getattr(ai_engine, "is_available", lambda: True)():
         try:
             prompt = f"""Convert the following Oracle PL/SQL procedure to Azure SQL Server T-SQL.
 
@@ -1967,7 +2578,7 @@ Oracle PL/SQL source:
 
 Return ONLY the T-SQL code, no explanation."""
 
-            response = ai_engine.generate(prompt)
+            response = ai_engine.call(prompt)
             tsql_code = response.strip()
 
             # Remove markdown code fences if present
@@ -2084,6 +2695,10 @@ def deploy_procedures():
 
     deployed = []
     errors = []
+    skipped = []
+
+    # Target definitions for No-Change detection (skip identical procs).
+    target_defs = _get_target_proc_definitions()
 
     try:
         conn = connect_azure_sql(azure_server, azure_db, azure_user, azure_pass)
@@ -2091,7 +2706,23 @@ def deploy_procedures():
 
         for proc in approved_procs:
             try:
-                tsql = proc["target_code"]
+                tsql = proc.get("target_code", "")
+                # Auto-convert if this approved procedure was never converted yet.
+                if not tsql:
+                    conv = _convert_plsql_to_tsql(proc.get("name", ""), proc.get("source_code", ""), proc.get("source_type", "PROCEDURE"))
+                    tsql = conv.get("target_code", "")
+                    proc["target_code"] = tsql
+                if not tsql:
+                    proc["status"] = "failed"
+                    errors.append(f"{proc.get('name','?')}: no T-SQL available (conversion produced nothing — is the AI engine configured?)")
+                    continue
+                # Skip No-Change procedures (identical body already in target).
+                action = _procedure_ddl_action(proc.get("name", ""), tsql, target_defs)
+                proc["ddl_action"] = action
+                if action == "no_change":
+                    proc["status"] = "no_change"
+                    skipped.append(proc.get("name", ""))
+                    continue
                 # Split on GO statements for batch execution
                 batches = re.split(r"(?im)^\s*GO\s*;?\s*$", tsql)
                 for batch in batches:
@@ -2100,7 +2731,7 @@ def deploy_procedures():
                         cursor.execute(batch)
                 conn.commit()
                 proc["status"] = "deployed"
-                deployed.append(proc["name"])
+                deployed.append(proc.get("name",""))
 
                 # Update watermark for procedure
                 try:
@@ -2130,12 +2761,19 @@ def deploy_procedures():
     except Exception as e:
         return jsonify({"success": False, "error": f"Azure SQL connection failed: {str(e)[:200]}"})
 
+    msg = f"Deployed {len(deployed)} procedure(s) to Azure SQL."
+    if skipped:
+        msg += f" Skipped {len(skipped)} unchanged."
+    if errors:
+        msg += f" {len(errors)} error(s)."
     return jsonify({
         "success": True,
         "deployed": deployed,
         "deployed_count": len(deployed),
+        "skipped": skipped,
+        "skipped_count": len(skipped),
         "errors": errors,
-        "message": f"Deployed {len(deployed)} procedure(s) to Azure SQL. {len(errors)} error(s)."
+        "message": msg
     })
 
 
@@ -2169,7 +2807,7 @@ def execute_migration():
                     "target_type": target_type,
                     "transformation": "Direct" if risk == "Low" else ("Type Conversion" if risk == "Medium" else "Review Required"),
                     "risk": risk,
-                    "confidence": item.get("confidence", 1.0),
+                    "confidence": normalize_confidence(item.get("confidence", 0.95)),
                     "status": item.get("status", "Compatible"),
                     "approved": auto_approved,
                 })
@@ -3220,7 +3858,18 @@ def validate():
                             return ""
                         return f"{v:.10g}"
                     if isinstance(v, str):
-                        return v.rstrip()
+                        s = v.rstrip()
+                        # Numeric-only normalization: a purely numeric string like
+                        # '75000.00' (Azure DECIMAL) and '75000' (Oracle NUMBER) must
+                        # hash identically. Non-numeric strings pass through untouched
+                        # so genuine text differences still fail the checksum.
+                        st = s.strip()
+                        if st and re.fullmatch(r"[+-]?\d+(\.\d+)?", st):
+                            try:
+                                return str(Decimal(st).normalize())
+                            except (InvalidOperation, ValueError):
+                                return s
+                        return s
                     return str(v)
 
                 def table_checksum(cursor_obj, sql_text, batch_size=5000):
@@ -3338,8 +3987,21 @@ def validate():
                         t_min = normalize_checksum_val(t_min_raw)
                         t_max = normalize_checksum_val(t_max_raw)
 
-                        min_match = "PASS" if s_min == t_min else "FAIL"
-                        max_match = "PASS" if s_max == t_max else "FAIL"
+                        # Numeric-aware equality: 75000 == 75000.00 (Oracle NUMBER vs
+                        # Azure DECIMAL differ only in representation, not value).
+                        def _vals_equal(a, b):
+                            if a == b:
+                                return True
+                            try:
+                                from decimal import Decimal
+                                da, db = Decimal(str(a)), Decimal(str(b))
+                                return da == db
+                            except Exception:
+                                # date/non-numeric — normalize whitespace/case and compare
+                                return str(a).strip() == str(b).strip()
+
+                        min_match = "PASS" if _vals_equal(s_min, t_min) else "FAIL"
+                        max_match = "PASS" if _vals_equal(s_max, t_max) else "FAIL"
 
                         col_detail["checks"]["min"] = {"source": str(s_min_raw), "target": str(t_min_raw), "status": min_match}
                         col_detail["checks"]["max"] = {"source": str(s_max_raw), "target": str(t_max_raw), "status": max_match}
@@ -3679,6 +4341,147 @@ def validate_summary():
     return jsonify({"success": False, "error": "No validation results available. Run validation first."})
 
 
+# ============================================================
+# GET /api/validate_procedures — Verify deployed procedures exist in target
+# ============================================================
+
+@app.route("/api/validate_procedures")
+def validate_procedures():
+    """Verify each APPROVED procedure exists in the target Azure SQL database.
+    Separate from table reconciliation; does not affect the overall verdict."""
+    convs = state.get("procedure_conversions", [])
+    approved = [c for c in convs if c.get("approved")]
+    if not approved:
+        return jsonify({"success": True, "objects": [], "count": 0,
+                        "message": "No approved code objects to validate."})
+
+    azure_server = os.getenv("AZURE_SQL_SERVER", "")
+    azure_db = os.getenv("AZURE_SQL_DATABASE", "")
+    azure_user = os.getenv("AZURE_SQL_USERNAME", "")
+    azure_pass = os.getenv("AZURE_SQL_PASSWORD", "")
+    if not all([azure_server, azure_db, azure_user, azure_pass]):
+        return jsonify({"success": False, "error": "Azure SQL target configuration is missing in environment."})
+
+    # Fetch the set of procedures that actually exist in the target.
+    target_procs = set()
+    try:
+        conn = connect_azure_sql(azure_server, azure_db, azure_user, azure_pass)
+        cur = conn.cursor()
+        cur.execute("SELECT UPPER(ROUTINE_NAME) FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE'")
+        target_procs = {row[0] for row in cur.fetchall()}
+        cur.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Azure SQL connection failed: {str(e)[:200]}"})
+
+    objects = []
+    passed = 0
+    for c in approved:
+        name = c.get("name", "")
+        deployed = (c.get("status") == "deployed")
+        exists = name.upper() in target_procs
+        if exists:
+            status = "PASS"
+            passed += 1
+        elif deployed:
+            status = "FAIL"   # deploy reported success but object not found
+        else:
+            status = "NOT_DEPLOYED"
+        objects.append({
+            "name": name,
+            "type": c.get("source_type", "PROCEDURE"),
+            "deployed": deployed,
+            "exists": exists,
+            "status": status,
+        })
+
+    objects.sort(key=lambda o: {"FAIL": 0, "NOT_DEPLOYED": 1, "PASS": 2}.get(o["status"], 3))
+    return jsonify({
+        "success": True,
+        "objects": objects,
+        "count": len(objects),
+        "passed": passed,
+        "failed": len(objects) - passed,
+    })
+
+
+# ============================================================
+# POST /api/explain_validation_failure — AI explanation for a failed check
+# ============================================================
+
+# Rule-based fallback explanations keyed by check-name prefix.
+_VAL_FAIL_GUIDANCE = {
+    "Row Count Match": ("Source and target row counts differ.",
+        "Rows were dropped or duplicated during load. Impact: data completeness — the target is missing or has extra rows. Check the migration mode (append vs upsert), rejected rows, and any WHERE/CDC filter."),
+    "Checksum Match": ("Row-level checksum of source and target differ.",
+        "The column values don't match even if counts do. Impact: data accuracy — values were altered in transit (type conversion, encoding, rounding, trailing spaces). Compare a sample row and review datatype mappings for that table."),
+    "Null PK": ("A primary-key column contains NULLs in the target.",
+        "PK integrity broken. Impact: rows can't be uniquely identified and joins/merges may fail. Check the source key column and the mapping for that key."),
+    "Duplicate PK": ("Duplicate primary-key values found in the target.",
+        "PK uniqueness violated. Impact: MERGE/upsert and referential integrity break. De-duplicate at source or fix the key mapping."),
+    "NULL Count": ("NULL counts differ between source and target for this column.",
+        "NULLs were introduced or lost. Impact: a failed type conversion may have coerced values to NULL. Review the column's datatype mapping."),
+    "Column Count": ("Non-null value counts differ for this column.",
+        "Some values didn't migrate. Impact: partial data loss in this column — check conversion and filters."),
+    "Distinct Values": ("Distinct-value counts differ.",
+        "Cardinality changed. Impact: possible truncation/merging of values (e.g. string truncation collapsing distinct values). Check target length/precision."),
+    "MIN": ("Minimum value differs between source and target.",
+        "Boundary value changed. Impact: numeric/date range not preserved — check precision/scale or date conversion."),
+    "MAX": ("Maximum value differs between source and target.",
+        "Boundary value changed. Impact: numeric overflow or truncation — verify target precision and range."),
+    "SUM": ("Aggregate sum differs.",
+        "Totals don't reconcile. Impact: rounding/precision loss or missing rows — check DECIMAL precision and row counts."),
+    "Max String Length": ("Longest string length differs.",
+        "Strings were truncated. Impact: target column is too short — increase the NVARCHAR/VARCHAR length or use (MAX)."),
+    "Rejected Rows": ("Some rows were rejected during load.",
+        "Rows failed to insert. Impact: data completeness — inspect the rejection reason (constraint, type, size)."),
+}
+
+def _rule_based_failure_explanation(check_name, source, target):
+    for prefix, (why, impact) in _VAL_FAIL_GUIDANCE.items():
+        if str(check_name or "").startswith(prefix):
+            return f"{why}\n\nSource: {source} | Target: {target}\n\n{impact}"
+    return (f"Check '{check_name}' did not pass (source={source}, target={target}). "
+            "Impact: the target does not match the source for this metric — review the mapping and migration step for this table/column.")
+
+
+@app.route("/api/explain_validation_failure", methods=["POST"])
+def explain_validation_failure():
+    """Explain WHY a validation check failed and its impact. AI when available, rule-based otherwise."""
+    data = request.get_json() or {}
+    check_name = str(data.get("check", "")).strip()
+    source = str(data.get("source", "")).strip()
+    target = str(data.get("target", "")).strip()
+    if not check_name:
+        return jsonify({"success": False, "error": "check is required."})
+
+    ai_engine = get_ai_engine()
+    if ai_engine and getattr(ai_engine, "is_available", lambda: False)():
+        try:
+            system_message = "You are a data-migration validation expert. Explain concisely why a reconciliation check failed and its impact."
+            prompt = f"""A post-migration validation check FAILED during an Oracle -> Azure SQL migration.
+
+Check: {check_name}
+Source value: {source}
+Target value: {target}
+
+In 2-4 short sentences explain:
+1. Why this check likely failed (probable root cause).
+2. The data impact (accuracy/completeness/integrity).
+3. One concrete thing to check or fix.
+Be specific and practical. No preamble."""
+            explanation = ai_engine.call(prompt, system_message)
+            return jsonify({"success": True, "ai": True, "explanation": (explanation or "").strip()})
+        except Exception as e:
+            # Fall back to rule-based on any AI error.
+            return jsonify({"success": True, "ai": False,
+                            "explanation": _rule_based_failure_explanation(check_name, source, target),
+                            "note": f"(AI unavailable: {str(e)[:80]})"})
+
+    return jsonify({"success": True, "ai": False,
+                    "explanation": _rule_based_failure_explanation(check_name, source, target)})
+
+
 @app.route("/api/report")
 def report():
     tables = set(m["source_table"] for m in state["mappings"]) if state["mappings"] else set()
@@ -3734,6 +4537,28 @@ def report():
     report_data["approved_count"] = approved_count
     report_data["skipped_count"] = skipped_count
 
+    # ── Code objects (procedures/views) summary ──
+    convs = state.get("procedure_conversions", [])
+    procs = state.get("procedures", [])
+    co_total = len(procs)
+    co_approved = sum(1 for c in convs if c.get("approved"))
+    co_deployed = sum(1 for c in convs if c.get("status") == "deployed")
+    code_objects = []
+    for c in convs:
+        code_objects.append({
+            "name": c.get("name", ""),
+            "type": c.get("source_type", "PROCEDURE"),
+            "approved": bool(c.get("approved")),
+            "status": c.get("status", "pending"),
+        })
+    report_data["code_objects"] = {
+        "total": co_total,
+        "approved": co_approved,
+        "deployed": co_deployed,
+        "pending": max(0, co_total - co_approved),
+        "items": code_objects,
+    }
+
     return jsonify({"success": True, "report": report_data})
 
 
@@ -3767,6 +4592,16 @@ def download_report():
         "mappings": state["mappings"],
         "ddl_statements": state["ddl_statements"],
         "validation_results": state["validation_results"],
+        "code_objects": {
+            "total": len(state.get("procedures", [])),
+            "approved": sum(1 for c in state.get("procedure_conversions", []) if c.get("approved")),
+            "deployed": sum(1 for c in state.get("procedure_conversions", []) if c.get("status") == "deployed"),
+            "items": [
+                {"name": c.get("name", ""), "type": c.get("source_type", "PROCEDURE"),
+                 "approved": bool(c.get("approved")), "status": c.get("status", "pending")}
+                for c in state.get("procedure_conversions", [])
+            ],
+        },
     }
 
     return jsonify(report)

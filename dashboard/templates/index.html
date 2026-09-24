@@ -8,6 +8,22 @@
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Collapsible object groups (Schema Discovery) */
+.obj-group { border:1px solid var(--border,#e5e7eb); border-radius:8px; overflow:hidden; margin-bottom:12px; }
+.obj-section-header { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--surface-2,#f8fafc); cursor:pointer; user-select:none; border-top:1px solid var(--border,#e5e7eb); }
+.obj-group > .obj-section-header:first-child { border-top:none; }
+.obj-section-header:hover { background:var(--surface-3,#f1f5f9); }
+.obj-section-body { padding:6px 10px 10px; }
+.obj-caret { display:inline-block; width:14px; font-size:11px; color:var(--text-muted,#6b7280); }
+.obj-item { border-top:1px solid var(--border,#eef2f7); }
+.obj-item:first-child { border-top:none; }
+.obj-item-header { display:flex; align-items:center; gap:8px; padding:6px 8px; }
+.obj-item-title { display:flex; align-items:center; gap:6px; cursor:pointer; user-select:none; flex:1; }
+.obj-item-title:hover { color:var(--primary,#6c63ff); }
+.obj-item-body { padding:4px 8px 10px 30px; }
+.hidden { display:none; }
+</style>
 </head>
 <body>
 
@@ -230,7 +246,7 @@
             <div class="card-header">
                 <div>
                     <h2>Schema Discovery</h2>
-                    <p class="card-subtitle">AI agent discovers tables, columns, and data types from the source database</p>
+                    <p class="card-subtitle">AI agent discovers tables, columns, data types, and stored procedures from the source database</p>
                 </div>
                 <button class="btn btn-primary" id="btnDiscoverSchema" onclick="discoverSchema()">
                     <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>Discover Schema
@@ -246,6 +262,7 @@
             <div id="schemaTable" class="hidden">
                 <div class="table-container"></div>
             </div>
+            <div id="schemaProcedures" class="hidden" style="margin-top:16px;"></div>
         </div>
 
         <div class="bottom-nav">
@@ -261,7 +278,7 @@
             <div class="card-header">
                 <div>
                     <h2>AI Datatype Analysis</h2>
-                    <p class="card-subtitle">AI agent analyzes each column for Azure SQL compatibility</p>
+                    <p class="card-subtitle">AI agent analyzes each column for Azure SQL compatibility, plus conversion risk for code objects</p>
                 </div>
                 <button class="btn btn-primary" id="btnAnalyze" onclick="runAnalysis()">
                     <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.5a2 2 0 0 1 5 0v1.2a5.5 5.5 0 0 1 3.4 5.1v2.2a2.2 2.2 0 0 0 .6 1.5l1.1 1.1a1 1 0 0 1-.7 1.7H5.1a1 1 0 0 1-.7-1.7l1.1-1.1a2.2 2.2 0 0 0 .6-1.5V8.8a5.5 5.5 0 0 1 3.4-5.1z"/><path d="M9 17a3 3 0 0 0 6 0"/></svg></span>Run AI Analysis
@@ -280,6 +297,7 @@
             <div id="analysisTable" class="hidden">
                 <div class="table-container"></div>
             </div>
+            <div id="analysisCodeObjects" class="hidden" style="margin-top:16px;"></div>
         </div>
 
         <div class="bottom-nav">
@@ -295,7 +313,7 @@
             <div class="card-header">
                 <div>
                     <h2>AI Column Mapping & Review</h2>
-                    <p class="card-subtitle">AI generates source → target mappings with risk assessment</p>
+                    <p class="card-subtitle">AI generates source → target mappings with risk assessment, plus code-object conversion approvals</p>
                 </div>
                 <button class="btn btn-primary" id="btnMapping" onclick="generateMapping()">
                     <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14"/><path d="M15 6v14"/></svg></span>Generate Mapping
@@ -311,6 +329,7 @@
             <div id="mappingTable" class="hidden">
                 <div class="table-container"></div>
             </div>
+            <div id="mappingCodeObjects" class="hidden" style="margin-top:16px;"></div>
 
             <!-- AI Risk Recommendation Section (appears after mapping) -->
             <div id="aiReviewSection" class="hidden" style="margin-top: 20px;">
@@ -319,8 +338,9 @@
                         <h3 style="margin: 0; color: #7c3aed;">🤖 AI Risk Review</h3>
                         <button class="btn btn-sm" onclick="generateAllAIRecommendations()" style="color: #7c3aed; border-color: #7c3aed; background: transparent;">Regenerate</button>
                     </div>
-                    <p class="card-subtitle" style="margin-bottom: 12px;">AI compatibility analysis for medium and high risk mappings — helps data architects decide approval</p>
+                    <p class="card-subtitle" style="margin-bottom: 12px;">AI compatibility analysis for medium and high risk mappings and code objects — helps data architects decide approval</p>
                     <div id="aiRecommendationResults"></div>
+                    <div id="aiCodeObjectResults" style="margin-top: 16px;"></div>
                 </div>
             </div>
         </div>
@@ -338,7 +358,7 @@
             <div class="card-header">
                 <div>
                     <h2>Human Approval Gate</h2>
-                    <p class="card-subtitle">Review and approve mappings before migration execution</p>
+                    <p class="card-subtitle">Review and approve column mappings and code objects before migration execution</p>
                 </div>
                 <div>
                     <div style="display: inline-block; position: relative;">
@@ -360,6 +380,7 @@
             <div id="approvalTable">
                 <div class="table-container"></div>
             </div>
+            <div id="approvalCodeObjects" class="hidden" style="margin-top:16px;"></div>
         </div>
 
         <div class="bottom-nav">
@@ -375,7 +396,7 @@
             <div class="card-header">
                 <div>
                     <h2>SQL / DDL Generator</h2>
-                    <p class="card-subtitle">AI generates CREATE TABLE DDL for Azure SQL Database</p>
+                    <p class="card-subtitle">AI generates CREATE TABLE DDL for tables and CREATE OR ALTER PROCEDURE T-SQL for approved code objects</p>
                 </div>
                 <button class="btn btn-primary" id="btnDDL" onclick="generateDDL()">
                     <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h0a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h0a1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v0a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg></span>Generate DDL
@@ -388,6 +409,7 @@
             </div>
 
             <div id="ddlContent" class="hidden"></div>
+            <div id="ddlCodeObjects" class="hidden" style="margin-top:16px;"></div>
         </div>
 
         <div class="bottom-nav">
@@ -436,6 +458,15 @@
             <button class="btn btn-success" id="btnMigrate" onclick="executeMigration()">
                 <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l6-1 9-9a2.1 2.1 0 0 0-3-3l-9 9-1 6z"/><path d="M14 6l4 4"/></svg></span>Execute Migration
             </button>
+
+            <div id="deployProcSection" style="margin-top:20px;border-top:1px solid var(--border,#e5e7eb);padding-top:16px;">
+                <h3 style="margin:0 0 4px;">Deploy Code Objects</h3>
+                <p class="card-subtitle" style="margin-bottom:10px;">Deploy approved procedures (CREATE OR ALTER PROCEDURE) to Azure SQL</p>
+                <button class="btn btn-primary" id="btnDeployProcs" onclick="deployProcedures()">
+                    <span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v13m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg></span>Deploy Procedures
+                </button>
+                <div id="deployProcResult" class="hidden" style="margin-top:12px;"></div>
+            </div>
         </div>
 
         <div class="bottom-nav">
@@ -925,9 +956,14 @@ async function connectSource() {
     if (res.success) {
         const tableCount = res.table_count || (Array.isArray(res.tables) ? res.tables.length : 0);
         const tableNames = Array.isArray(res.tables) ? res.tables.join(', ') : '';
-        let msg = `✅ Connected! Found <strong>${tableCount}</strong> table(s)`;
+        const procCount = res.procedure_count || (Array.isArray(res.procedures) ? res.procedures.length : 0);
+        const procNames = Array.isArray(res.procedures) ? res.procedures.join(', ') : '';
+        let msg = `✅ Connected! Found <strong>${tableCount}</strong> table(s) and <strong>${procCount}</strong> procedure(s)`;
         if (tableCount > 0 && tableNames && !tableNames.includes('Not connected')) {
-            msg += `: ${tableNames}`;
+            msg += `<br><strong>Tables:</strong> ${tableNames}`;
+        }
+        if (procCount > 0 && procNames) {
+            msg += `<br><strong>Procedures:</strong> ${procNames}`;
         }
         if (res.message) msg += `<br><em>${res.message}</em>`;
         showAlert('connectStatus', 'success', msg);
@@ -952,6 +988,7 @@ async function connectSource() {
 // ============================================================
 let discoveredSchemaRows = [];
 let selectedSchemaObjects = new Set();
+let selectedProcedures = new Set();
 let schemaPage = 0;
 const schemaPageSize = 100;
 
@@ -964,42 +1001,76 @@ function escapeHtml(value) {
 function renderSchemaPage() {
     const table = document.getElementById('schemaTable');
     const hasMultiSchema = discoveredSchemaRows.some(r => r.schema_name);
-    const totalPages = Math.max(1, Math.ceil(discoveredSchemaRows.length / schemaPageSize));
-    schemaPage = Math.min(schemaPage, totalPages - 1);
-    const start = schemaPage * schemaPageSize;
-    const pageRows = discoveredSchemaRows.slice(start, start + schemaPageSize);
-    let html = `<div class="table-container"><table>
-        <thead><tr><th>Load</th>${hasMultiSchema ? '<th>Schema</th>' : ''}<th>Table</th><th>Column</th><th>Data Type</th><th>Nullable</th></tr></thead><tbody>`;
-    const seenTables = new Set();
-    discoveredSchemaRows.slice(0, start).forEach(r => {
-        const previousTable = r.table_name || r.TABLE_NAME || '';
-        const previousSchema = r.schema_name || '';
-        seenTables.add(previousSchema ? previousSchema + '.' + previousTable : previousTable);
-    });
-    pageRows.forEach(r => {
+
+    // Group column rows by qualified table name, preserving order
+    const groups = new Map(); // qualifiedName -> { schema, name, cols: [] }
+    discoveredSchemaRows.forEach(r => {
         const tableName = r.table_name || r.TABLE_NAME || '';
         const schemaName = r.schema_name || '';
         const qualifiedName = schemaName ? schemaName + '.' + tableName : tableName;
-        const showSelector = !seenTables.has(qualifiedName);
-        seenTables.add(qualifiedName);
-        html += `<tr>
-            <td>${showSelector ? `<input type="checkbox" class="schema-table-select" value="${escapeHtml(qualifiedName)}" ${selectedSchemaObjects.has(qualifiedName) ? 'checked' : ''} onchange="toggleSchemaObject(this)" aria-label="Select ${escapeHtml(qualifiedName)} for migration">` : ''}</td>
-            ${hasMultiSchema ? `<td><span style="color: var(--text-muted, #6b7280); font-size: 12px;">${escapeHtml(schemaName)}</span></td>` : ''}
-            <td><strong>${escapeHtml(tableName)}</strong></td>
-            <td>${escapeHtml(r.column_name || r.COLUMN_NAME || '')}</td>
-            <td><code>${escapeHtml(r.data_type || r.DATA_TYPE || r.FULL_DATA_TYPE || '')}</code></td>
-            <td>${escapeHtml(r.nullable || r.IS_NULLABLE || r.NULLABLE || 'Y')}</td>
-        </tr>`;
+        if (!groups.has(qualifiedName)) {
+            groups.set(qualifiedName, { schema: schemaName, name: tableName, qualified: qualifiedName, cols: [] });
+        }
+        groups.get(qualifiedName).cols.push({
+            column: r.column_name || r.COLUMN_NAME || '',
+            type: r.data_type || r.DATA_TYPE || r.FULL_DATA_TYPE || '',
+            nullable: r.nullable || r.IS_NULLABLE || r.NULLABLE || 'Y',
+        });
     });
-    html += '</tbody></table></div>';
-    html += `<div style="margin-top:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+
+    let html = '';
+    html += '<div class="obj-group">';
+    // ---- Tables section header (collapsible) ----
+    html += `<div class="obj-section-header" onclick="toggleObjSection('tablesBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Tables (${groups.size})</strong>
+    </div>`;
+    html += '<div id="tablesBody" class="obj-section-body hidden">';
+
+    if (groups.size === 0) {
+        html += '<p class="card-subtitle" style="padding:8px 12px;">No tables discovered.</p>';
+    }
+
+    let ti = 0;
+    groups.forEach(g => {
+        const bodyId = 'tblcols_' + ti;
+        html += `<div class="obj-item">
+            <div class="obj-item-header">
+                <input type="checkbox" class="schema-table-select" value="${escapeHtml(g.qualified)}" ${selectedSchemaObjects.has(g.qualified) ? 'checked' : ''} onclick="event.stopPropagation()" onchange="toggleSchemaObject(this)" aria-label="Select ${escapeHtml(g.qualified)} for migration">
+                <span class="obj-item-title" onclick="toggleObjSection('${bodyId}', this)">
+                    <span class="obj-caret">▶</span>
+                    <strong>${escapeHtml(g.name)}</strong>
+                    ${hasMultiSchema && g.schema ? `<span style="color:var(--text-muted,#6b7280);font-size:12px;">(${escapeHtml(g.schema)})</span>` : ''}
+                    <span class="card-subtitle" style="margin-left:6px;">${g.cols.length} column(s)</span>
+                </span>
+            </div>
+            <div id="${bodyId}" class="obj-item-body hidden">
+                <div class="table-container"><table>
+                    <thead><tr><th>Column</th><th>Data Type</th><th>Nullable</th></tr></thead><tbody>`;
+        g.cols.forEach(c => {
+            html += `<tr><td>${escapeHtml(c.column)}</td><td><code>${escapeHtml(c.type)}</code></td><td>${escapeHtml(c.nullable)}</td></tr>`;
+        });
+        html += `</tbody></table></div></div></div>`;
+        ti++;
+    });
+    html += '</div>'; // tablesBody
+
+    // ---- Stored Procedures section (rendered by renderSchemaProcedures into its own box) ----
+    // ---- Action bar ----
+    html += `<div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="btn btn-primary" onclick="selectSchemaObjects()">Use selected objects</button>
-        <button class="btn btn-outline" onclick="changeSchemaPage(-1)" ${schemaPage === 0 ? 'disabled' : ''}>Previous</button>
-        <span class="card-subtitle">Page ${schemaPage + 1} of ${totalPages} (${start + 1}-${Math.min(start + schemaPageSize, discoveredSchemaRows.length)} of ${discoveredSchemaRows.length} columns)</span>
-        <button class="btn btn-outline" onclick="changeSchemaPage(1)" ${schemaPage >= totalPages - 1 ? 'disabled' : ''}>Next</button>
         <span id="selectedObjectsStatus" class="card-subtitle">${selectedSchemaObjects.size} object(s) selected</span>
     </div>`;
+    html += '</div>'; // obj-group
     table.innerHTML = html;
+}
+
+function toggleObjSection(bodyId, headerEl) {
+    const body = document.getElementById(bodyId);
+    if (!body) return;
+    const nowHidden = body.classList.toggle('hidden');
+    const caret = headerEl.querySelector('.obj-caret');
+    if (caret) caret.textContent = nowHidden ? '▶' : '▼';
 }
 
 function toggleSchemaObject(input) {
@@ -1020,6 +1091,7 @@ async function discoverSchema() {
     showLoading('schemaLoading', true);
     document.getElementById('schemaMetrics').classList.add('hidden');
     document.getElementById('schemaTable').classList.add('hidden');
+    document.getElementById('schemaProcedures').classList.add('hidden');
 
     const res = await apiCall('/api/discover_schema', { method: 'POST', body: JSON.stringify({}) });
 
@@ -1040,17 +1112,24 @@ async function discoverSchema() {
         const colCount = schema.length;
         const schemaSet = new Set(schema.map(r => r.schema_name || '').filter(Boolean));
         selectedSchemaObjects = tableSet;
+        selectedProcedures = new Set();  // reset; renderSchemaProcedures re-selects all by default
+
+        // Also discover stored procedures (reuses existing endpoint)
+        const procRes = await apiCall('/api/discover_procedures', { method: 'POST', body: JSON.stringify({}) });
+        const procedures = (procRes && procRes.success && Array.isArray(procRes.procedures)) ? procRes.procedures : [];
 
         document.getElementById('schemaMetrics').classList.remove('hidden');
         document.getElementById('schemaMetrics').innerHTML = buildMetrics([
             ...(schemaSet.size > 0 ? [{ label: 'Schemas', value: schemaSet.size, cls: '' }] : []),
             { label: 'Tables', value: tableCount, cls: 'success' },
             { label: 'Columns', value: colCount, cls: '' },
+            { label: 'Procedures', value: procedures.length, cls: procedures.length > 0 ? 'success' : '' },
         ]);
 
         const table = document.getElementById('schemaTable');
         table.classList.remove('hidden');
         renderSchemaPage();
+        renderSchemaProcedures(procedures);
         markComplete(1);
     } else {
         showAlert('schemaTable', 'error', res.error);
@@ -1058,16 +1137,76 @@ async function discoverSchema() {
     }
 }
 
+function renderSchemaProcedures(procedures) {
+    const box = document.getElementById('schemaProcedures');
+    if (!box) return;
+    const procs = procedures || [];
+    window._discoveredProcedures = procs;
+    let html = '<div class="obj-group">';
+    // Stored Procedures section
+    html += `<div class="obj-section-header" onclick="toggleObjSection('procsBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Stored Procedures (${procs.length})</strong>
+    </div>`;
+    html += '<div id="procsBody" class="obj-section-body hidden">';
+    if (procs.length === 0) {
+        html += '<p class="card-subtitle" style="padding:8px 12px;">No stored procedures discovered.</p>';
+    } else {
+        // Default: all procedures selected (unless the user already changed the set)
+        if (selectedProcedures.size === 0) {
+            procs.forEach(p => selectedProcedures.add((p.name || p.NAME || String(p)).toUpperCase()));
+        }
+        html += '<div class="table-container"><table><thead><tr><th>Select</th><th>Procedure</th><th>Type</th></tr></thead><tbody>';
+        procs.forEach(p => {
+            const rawName = p.name || p.NAME || String(p);
+            const name = escapeHtml(rawName);
+            const type = escapeHtml(p.type || p.object_type || 'PROCEDURE');
+            const checked = selectedProcedures.has(rawName.toUpperCase()) ? 'checked' : '';
+            html += '<tr><td><input type="checkbox" class="schema-proc-select" value="' + name + '" ' + checked + ' onchange="toggleProcedureSelect(this)" aria-label="Select ' + name + '"></td><td><strong>' + name + '</strong></td><td>' + type + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+        html += '<div style="padding:6px 8px;"><span id="selectedProcsStatus" class="card-subtitle">' + selectedProcedures.size + ' procedure(s) selected</span></div>';
+    }
+    html += '</div>'; // procsBody
+
+    // Views section (placeholder — wired for later view discovery)
+    html += `<div class="obj-section-header" onclick="toggleObjSection('viewsBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Views (0)</strong>
+    </div>`;
+    html += '<div id="viewsBody" class="obj-section-body hidden">';
+    html += '<p class="card-subtitle" style="padding:8px 12px;">View discovery coming soon.</p>';
+    html += '</div>'; // viewsBody
+
+    html += '</div>'; // obj-group
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+}
+
+function toggleProcedureSelect(input) {
+    const val = (input.value || '').toUpperCase();
+    if (input.checked) selectedProcedures.add(val);
+    else selectedProcedures.delete(val);
+    const status = document.getElementById('selectedProcsStatus');
+    if (status) status.textContent = `${selectedProcedures.size} procedure(s) selected`;
+}
+
 async function selectSchemaObjects() {
     const tables = [...selectedSchemaObjects];
+    // Send the actual procedure names (not uppercased keys) that are selected.
+    const procedures = (window._discoveredProcedures || [])
+        .map(p => p.name || p.NAME || String(p))
+        .filter(n => selectedProcedures.has(n.toUpperCase()));
     const res = await apiCall('/api/select_objects', {
         method: 'POST',
-        body: JSON.stringify({ tables })
+        body: JSON.stringify({ tables, procedures })
     });
     const status = document.getElementById('selectedObjectsStatus');
     if (res.success) {
-        if (status) status.textContent = `${res.selected_tables.length} object(s) selected for DDL and load`;
-        showAlert('', 'success', `Selected objects: ${res.selected_tables.join(', ')}`);
+        const tblN = (res.selected_tables || []).length;
+        const procN = (res.selected_procedures || []).length;
+        if (status) status.textContent = `${tblN} table(s), ${procN} procedure(s) selected for load`;
+        showAlert('', 'success', `Selected: ${tblN} table(s), ${procN} procedure(s)`);
         fetchDeltaPlan();
     } else {
         if (status) status.textContent = res.error || 'Selection failed';
@@ -1084,6 +1223,7 @@ async function runAnalysis() {
     showLoading('analysisLoading', true);
     document.getElementById('analysisMetrics').classList.add('hidden');
     document.getElementById('analysisTable').classList.add('hidden');
+    document.getElementById('analysisCodeObjects').classList.add('hidden');
     const progressEl = document.getElementById('analysisProgress');
     if (progressEl) {
         progressEl.classList.remove('hidden');
@@ -1126,7 +1266,11 @@ async function runAnalysis() {
         let html = `<div class="table-container"><table>
             <thead><tr><th>Table</th><th>Column</th><th>Source</th><th>Target</th><th>Status</th><th>Risk</th><th>Confidence</th></tr></thead><tbody>`;
         data.forEach(r => {
-            const rawConf = r.confidence || 1; const conf = ((rawConf > 1 ? rawConf : rawConf * 100)).toFixed(0) + '%';
+            // Backend sends confidence as a 0-1 fraction; normalize defensively for any stray scale.
+            let rawConf = Number(r.confidence);
+            if (!isFinite(rawConf)) rawConf = 0.95;
+            let confPct = rawConf <= 1 ? rawConf * 100 : (rawConf <= 10 ? rawConf * 10 : rawConf);
+            const conf = Math.round(Math.max(0, Math.min(100, confPct))) + '%';
             html += `<tr>
                 <td><strong>${r.table}</strong></td>
                 <td>${r.column}</td>
@@ -1139,11 +1283,55 @@ async function runAnalysis() {
         });
         html += '</tbody></table></div>';
         table.innerHTML = html;
+
+        // Also fetch + render conversion-risk analysis for code objects (procs/views)
+        try {
+            const codeRes = await apiCall('/api/analyze_procedures', { method: 'POST', body: '{}' });
+            const objs = (codeRes && codeRes.success && Array.isArray(codeRes.objects)) ? codeRes.objects : [];
+            renderCodeObjectAnalysis(objs);
+        } catch (e) {
+            renderCodeObjectAnalysis([]);
+        }
+
         markComplete(2);
     } else {
         showAlert('analysisTable', 'error', res.error);
         document.getElementById('analysisTable').classList.remove('hidden');
     }
+}
+
+function renderCodeObjectAnalysis(objects) {
+    const box = document.getElementById('analysisCodeObjects');
+    if (!box) return;
+    const objs = objects || [];
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('codeObjBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Object Conversion (${objs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">Procedures & views — PL/SQL → T-SQL conversion risk</span>
+    </div>`;
+    html += '<div id="codeObjBody" class="obj-section-body hidden">';
+    if (objs.length === 0) {
+        html += '<p class="card-subtitle" style="padding:8px 12px;">No procedures or views discovered. Run Schema Discovery first, or none exist in this schema.</p>';
+    } else {
+        html += '<div class="table-container"><table><thead><tr><th>Object</th><th>Type</th><th>Conversion Risk</th><th>Signals detected</th></tr></thead><tbody>';
+        objs.forEach(o => {
+            const name = escapeHtml(o.name || '');
+            const type = escapeHtml(o.type || 'PROCEDURE');
+            const reasons = Array.isArray(o.reasons) ? o.reasons.map(escapeHtml).join(', ') : '';
+            html += `<tr>
+                <td><strong>${name}</strong></td>
+                <td>${type}</td>
+                <td>${riskBadge(o.risk)}</td>
+                <td><span class="card-subtitle">${reasons}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+    }
+    html += '</div>'; // codeObjBody
+    html += '</div>'; // obj-group
+    box.innerHTML = html;
+    box.classList.remove('hidden');
 }
 
 // ============================================================
@@ -1155,6 +1343,7 @@ async function generateMapping() {
     showLoading('mappingLoading', true);
     document.getElementById('mappingMetrics').classList.add('hidden');
     document.getElementById('mappingTable').classList.add('hidden');
+    document.getElementById('mappingCodeObjects').classList.add('hidden');
 
     const res = await apiCall('/api/generate_mapping', { method: 'POST', body: '{}' });
 
@@ -1176,6 +1365,15 @@ async function generateMapping() {
 
         renderMappingTable(mappings);
         markComplete(3);
+
+        // Also fetch + render code-object (proc/view) approval mappings
+        try {
+            const codeRes = await apiCall('/api/mapping_procedures', { method: 'POST', body: '{}' });
+            const objs = (codeRes && codeRes.success && Array.isArray(codeRes.objects)) ? codeRes.objects : [];
+            renderCodeObjectMappings(objs);
+        } catch (e) {
+            renderCodeObjectMappings([]);
+        }
 
         generateAllAIRecommendations();
     } else {
@@ -1204,6 +1402,78 @@ function renderMappingTable(data) {
     table.innerHTML = html;
 }
 
+let codeObjectMappings = [];
+
+function renderCodeObjectMappings(objects) {
+    codeObjectMappings = objects || [];
+    const box = document.getElementById('mappingCodeObjects');
+    if (!box) return;
+    const objs = codeObjectMappings;
+    const approvedCount = objs.filter(o => o.approved).length;
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('codeMapBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Object Mappings (${objs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">${approvedCount}/${objs.length} approved — Low auto-approved, Medium/High need review</span>
+    </div>`;
+    html += '<div id="codeMapBody" class="obj-section-body hidden">';
+    if (objs.length === 0) {
+        html += '<p class="card-subtitle" style="padding:8px 12px;">No procedures or views to map. Run Schema Discovery first, or none exist.</p>';
+    } else {
+        html += `<div style="display:flex;gap:8px;margin:6px 8px 12px;">
+            <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjects(true)">Approve All</button>
+            <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjects(false)">Unselect All</button>
+        </div>`;
+        html += '<div class="table-container"><table><thead><tr><th>Approve</th><th>Object</th><th>Type</th><th>Conversion</th><th>Risk</th><th>Signals detected</th></tr></thead><tbody>';
+        objs.forEach((o, i) => {
+            const name = escapeHtml(o.name || '');
+            const type = escapeHtml(o.type || 'PROCEDURE');
+            const reasons = Array.isArray(o.reasons) ? o.reasons.map(escapeHtml).join(', ') : '';
+            const transform = escapeHtml(o.transformation || 'PL/SQL → T-SQL');
+            html += `<tr>
+                <td><input type="checkbox" class="codeobj-approve" data-name="${name}" ${o.approved ? 'checked' : ''} onchange="toggleCodeObjectApproval('${name}', this.checked)"></td>
+                <td><strong>${name}</strong></td>
+                <td>${type}</td>
+                <td><code>${transform}</code></td>
+                <td>${riskBadge(o.risk)}</td>
+                <td><span class="card-subtitle">${reasons}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+    }
+    html += '</div>'; // codeMapBody
+    html += '</div>'; // obj-group
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+}
+
+async function toggleCodeObjectApproval(name, approved) {
+    const res = await apiCall('/api/approve_procedure', {
+        method: 'POST',
+        body: JSON.stringify({ procedure_name: name, approved })
+    });
+    const obj = codeObjectMappings.find(o => (o.name || '').toUpperCase() === (name || '').toUpperCase());
+    if (obj) obj.approved = approved;
+    // Re-render to refresh the approved count in the header
+    renderCodeObjectMappings(codeObjectMappings);
+    // Keep the section expanded after re-render
+    const body = document.getElementById('codeMapBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '▼'; }
+}
+
+async function approveAllCodeObjects(approved) {
+    for (const o of codeObjectMappings) {
+        await apiCall('/api/approve_procedure', {
+            method: 'POST',
+            body: JSON.stringify({ procedure_name: o.name, approved })
+        });
+        o.approved = approved;
+    }
+    renderCodeObjectMappings(codeObjectMappings);
+    const body = document.getElementById('codeMapBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '▼'; }
+}
+
 // ============================================================
 // STEP 5: DDL GENERATION
 // ============================================================
@@ -1212,6 +1482,7 @@ async function generateDDL() {
     btn.disabled = true;
     showLoading('ddlLoading', true);
     document.getElementById('ddlContent').classList.add('hidden');
+    document.getElementById('ddlCodeObjects').classList.add('hidden');
 
     const unchangedTables = (deltaData || [])
         .filter(r => r.state === 'unchanged')
@@ -1277,12 +1548,21 @@ async function generateDDL() {
                      <div class="code-block"><pre>${ddl}</pre></div>`;
         });
 
-        html += `<button class="btn btn-outline" style="margin-top: 16px;" onclick="downloadDDL()">⬇️ Download DDL</button>`;
+        html += `<button class="btn btn-outline" style="margin-top: 16px;" onclick="downloadDDL()">⬇️ Download Table DDL</button>`;
         ddlEl.innerHTML = html;
         markComplete(5);
     } else {
         document.getElementById('ddlContent').classList.remove('hidden');
         document.getElementById('ddlContent').innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+
+    // Also convert + render approved code-object DDL (separate download)
+    try {
+        const procRes = await apiCall('/api/generate_procedure_ddl', { method: 'POST', body: '{}' });
+        const objs = (procRes && procRes.success && Array.isArray(procRes.objects)) ? procRes.objects : [];
+        renderCodeObjectDDL(objs, procRes && procRes.message);
+    } catch (e) {
+        renderCodeObjectDDL([], 'Could not generate code-object DDL.');
     }
 }
 
@@ -1290,36 +1570,181 @@ function downloadDDL() {
     window.location.href = '/api/download_ddl';
 }
 
+function downloadProcedureDDL() {
+    window.location.href = '/api/download_procedure_ddl';
+}
+
+function renderCodeObjectDDL(objects, emptyMsg) {
+    const box = document.getElementById('ddlCodeObjects');
+    if (!box) return;
+    const objs = objects || [];
+    const cCreate = objs.filter(o => o.ddl_action === 'create').length;
+    const cAlter = objs.filter(o => o.ddl_action === 'alter').length;
+    const cNoChange = objs.filter(o => o.ddl_action === 'no_change').length;
+    const actionSummary = objs.length
+        ? `${cCreate ? '🆕 ' + cCreate + ' CREATE ' : ''}${cAlter ? '🔧 ' + cAlter + ' ALTER ' : ''}${cNoChange ? '✓ ' + cNoChange + ' No Change' : ''}`.trim()
+        : 'Converted PL/SQL → T-SQL for approved procedures';
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('ddlProcBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Object DDL (${objs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">${actionSummary}</span>
+    </div>`;
+    html += '<div id="ddlProcBody" class="obj-section-body hidden">';
+    if (objs.length === 0) {
+        html += `<p class="card-subtitle" style="padding:8px 12px;">${escapeHtml(emptyMsg || 'No approved code objects to convert.')}</p>`;
+    } else {
+        objs.forEach(o => {
+            const name = escapeHtml(o.name || '');
+            const type = escapeHtml(o.type || 'PROCEDURE');
+            const code = o.target_code || '';
+            const statusBadgeHtml = code
+                ? '<span class="badge-status badge-pass" style="margin-left:8px;">✓ converted</span>'
+                : '<span class="badge-status badge-medium" style="margin-left:8px;">⚠ ' + escapeHtml(o.note || 'not converted') + '</span>';
+            let actionBadge = '';
+            if (o.ddl_action === 'create') actionBadge = '<span class="badge-status badge-pass" style="margin-left:8px;">🆕 CREATE</span>';
+            else if (o.ddl_action === 'alter') actionBadge = '<span class="badge-status badge-medium" style="margin-left:8px;">🔧 ALTER</span>';
+            else if (o.ddl_action === 'no_change') actionBadge = '<span class="badge-status" style="margin-left:8px;background:#e5e7eb;color:#555;">✓ No Change</span>';
+            // No-Change procedures: don't show/generate DDL — nothing will be deployed.
+            if (o.ddl_action === 'no_change') {
+                html += `<h4 style="margin:14px 0 8px;">⚙️ ${name} <span style="font-weight:400;color:#6b7280;font-size:12px;">(${type})</span> ${actionBadge}</h4>`;
+                html += `<p class="card-subtitle" style="margin:0 0 6px;">Already up to date in the target — no DDL generated, will be skipped on deploy.</p>`;
+                return;
+            }
+            html += `<h4 style="margin:14px 0 8px;">⚙️ ${name} <span style="font-weight:400;color:#6b7280;font-size:12px;">(${type})</span> ${actionBadge} ${statusBadgeHtml}</h4>`;
+            if (code) {
+                html += `<div class="code-block"><pre>${escapeHtml(code)}</pre></div>`;
+            }
+        });
+        // Download only offered when there are CREATE/ALTER procedures with real DDL.
+        const anyDeployable = objs.some(o => o.target_code && o.ddl_action !== 'no_change');
+        if (anyDeployable) {
+            html += `<button class="btn btn-outline" style="margin-top:14px;" onclick="downloadProcedureDDL()">⬇️ Download Procedure DDL</button>`;
+        }
+    }
+    html += '</div></div>';
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+}
+
 // ============================================================
 // STEP 6: APPROVAL
 // ============================================================
 async function loadApprovalData() {
     const res = await apiCall('/api/state');
-    if (res.mappings && res.mappings.length > 0) {
-        const mappings = res.mappings;
-        const total = mappings.length;
-        const approved = mappings.filter(m => m.approved).length;
-        const pending = total - approved;
-        const lowCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'low').length;
-        const medCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'medium').length;
-        const highCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'high').length;
-        const metricsEl = document.getElementById('approvalMetrics');
-        if (metricsEl) {
-            metricsEl.classList.remove('hidden');
-            metricsEl.innerHTML = buildMetrics([
-                { label: 'Total', value: total, cls: '' },
-                { label: 'Approved', value: approved, cls: 'success' },
-                { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
-                { label: 'Low Risk', value: lowCount, cls: 'success' },
-                { label: 'Medium Risk', value: medCount, cls: 'warning' },
-                { label: 'High Risk', value: highCount, cls: highCount > 0 ? 'fail' : 'success' },
-            ]);
-        }
+    // Fetch code-object approvals (ensures conversion records + risk scoring)
+    try {
+        const codeRes = await apiCall('/api/mapping_procedures', { method: 'POST', body: '{}' });
+        window._codeObjApprovals = (codeRes && codeRes.success && Array.isArray(codeRes.objects)) ? codeRes.objects : [];
+    } catch (e) { window._codeObjApprovals = []; }
+
+    const mappings = res.mappings || [];
+    if (mappings.length > 0 || (window._codeObjApprovals || []).length > 0) {
+        renderApprovalMetrics(mappings, window._codeObjApprovals || []);
         const tableEl = document.getElementById('approvalTable');
         if (tableEl) tableEl.classList.remove('hidden');
         renderApprovalTable(mappings);
-        if (pending === 0) markComplete(4);
+        renderApprovalCodeObjects(window._codeObjApprovals || []);
+        recomputeApprovalGate(mappings, window._codeObjApprovals || []);
     }
+}
+
+function renderApprovalMetrics(mappings, codeObjs) {
+    const total = mappings.length;
+    const approved = mappings.filter(m => m.approved).length;
+    const pending = total - approved;
+    const lowCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'low').length;
+    const medCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'medium').length;
+    const highCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'high').length;
+    const coTotal = codeObjs.length;
+    const coApproved = codeObjs.filter(o => o.approved).length;
+    const coPending = coTotal - coApproved;
+    const metricsEl = document.getElementById('approvalMetrics');
+    if (metricsEl) {
+        metricsEl.classList.remove('hidden');
+        metricsEl.innerHTML = buildMetrics([
+            { label: 'Columns', value: total, cls: '' },
+            { label: 'Approved', value: approved, cls: 'success' },
+            { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
+            { label: 'Low Risk', value: lowCount, cls: 'success' },
+            { label: 'Medium Risk', value: medCount, cls: 'warning' },
+            { label: 'High Risk', value: highCount, cls: highCount > 0 ? 'fail' : 'success' },
+            { label: 'Code Objects', value: coTotal, cls: '' },
+            { label: 'Code Pending', value: coPending, cls: coPending > 0 ? 'warning' : 'success' },
+        ]);
+    }
+}
+
+function recomputeApprovalGate(mappings, codeObjs) {
+    const colPending = mappings.filter(m => !m.approved).length;
+    const coPending = (codeObjs || []).filter(o => !o.approved).length;
+    if (colPending === 0 && coPending === 0) markComplete(4);
+}
+
+function renderApprovalCodeObjects(objects) {
+    const box = document.getElementById('approvalCodeObjects');
+    if (!box) return;
+    const objs = objects || [];
+    if (objs.length === 0) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+    const approvedCount = objs.filter(o => o.approved).length;
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('apprCodeBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Object Approvals (${objs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">${approvedCount}/${objs.length} approved — final sign-off before migration</span>
+    </div>`;
+    html += '<div id="apprCodeBody" class="obj-section-body hidden">';
+    html += `<div style="display:flex;gap:8px;margin:6px 8px 12px;">
+        <button class="btn btn-sm btn-success" onclick="approveAllCodeObjectsApproval(true)">Approve All</button>
+        <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjectsApproval(false)">Unselect All</button>
+    </div>`;
+    html += '<div class="table-container"><table><thead><tr><th>Approve</th><th>Object</th><th>Type</th><th>Conversion</th><th>Risk</th><th>Status</th></tr></thead><tbody>';
+    objs.forEach(o => {
+        const name = escapeHtml(o.name || '');
+        const type = escapeHtml(o.type || 'PROCEDURE');
+        const transform = escapeHtml(o.transformation || 'PL/SQL → T-SQL');
+        const status = o.approved ? '<span class="badge-status badge-pass">✓ Approved</span>' : '<span class="badge-status badge-medium">Pending</span>';
+        html += `<tr>
+            <td><input type="checkbox" ${o.approved ? 'checked' : ''} onchange="setApprovalCodeObject('${name}', this.checked)" aria-label="Approve ${name}"></td>
+            <td><strong>${name}</strong></td>
+            <td>${type}</td>
+            <td><code>${transform}</code></td>
+            <td>${riskBadge(o.risk)}</td>
+            <td>${status}</td>
+        </tr>`;
+    });
+    html += '</tbody></table></div></div></div>';
+    box.innerHTML = html;
+    box.classList.remove('hidden');
+}
+
+async function setApprovalCodeObject(name, approved) {
+    await apiCall('/api/approve_procedure', { method: 'POST', body: JSON.stringify({ procedure_name: name, approved }) });
+    const objs = window._codeObjApprovals || [];
+    const o = objs.find(x => (x.name || '').toUpperCase() === (name || '').toUpperCase());
+    if (o) o.approved = approved;
+    // keep section expanded across re-render
+    renderApprovalCodeObjects(objs);
+    const body = document.getElementById('apprCodeBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '▼'; }
+    const st = await apiCall('/api/state');
+    renderApprovalMetrics(st.mappings || [], objs);
+    recomputeApprovalGate(st.mappings || [], objs);
+}
+
+async function approveAllCodeObjectsApproval(approved) {
+    const objs = window._codeObjApprovals || [];
+    for (const o of objs) {
+        await apiCall('/api/approve_procedure', { method: 'POST', body: JSON.stringify({ procedure_name: o.name, approved }) });
+        o.approved = approved;
+    }
+    renderApprovalCodeObjects(objs);
+    const body = document.getElementById('apprCodeBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '▼'; }
+    const st = await apiCall('/api/state');
+    renderApprovalMetrics(st.mappings || [], objs);
+    recomputeApprovalGate(st.mappings || [], objs);
+    showToast(`Code objects ${approved ? 'approved' : 'unselected'}`, approved ? 'success' : 'info');
 }
 
 async function approveAll() {
@@ -1365,6 +1790,108 @@ async function generateAllAIRecommendations() {
     } catch (err) {
         resultsEl.innerHTML = `<div class="alert alert-error">AI analysis failed: ${err.message}</div>`;
     }
+
+    // Also fetch + render code-object (proc/view) risk cards
+    try {
+        const procRes = await apiCall('/api/procedure_risk_recommendation', { method: 'POST', body: JSON.stringify({}) });
+        const procRecs = (procRes && procRes.success && Array.isArray(procRes.recommendations)) ? procRes.recommendations : [];
+        renderCodeObjectRiskCards(procRecs);
+    } catch (e) {
+        renderCodeObjectRiskCards([]);
+    }
+}
+
+function renderCodeObjectRiskCards(recs) {
+    const box = document.getElementById('aiCodeObjectResults');
+    if (!box) return;
+    const list = recs || [];
+    if (list.length === 0) {
+        // Nothing risky — keep it quiet but informative
+        box.innerHTML = '<div class="obj-group"><div class="obj-section-header" style="cursor:default;"><strong>Code Objects (0 medium/high)</strong><span class="card-subtitle" style="margin-left:8px;">No medium or high risk procedures to review</span></div></div>';
+        return;
+    }
+    const high = list.filter(r => (r.risk || '').toLowerCase() === 'high').length;
+    const med = list.filter(r => (r.risk || '').toLowerCase() === 'medium').length;
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('codeRiskBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Objects (${list.length} medium/high)</strong>
+        <span class="card-subtitle" style="margin-left:8px;">${high > 0 ? '🔴 ' + high + ' High ' : ''}${med > 0 ? '🟡 ' + med + ' Medium' : ''} — PL/SQL → T-SQL conversion risk</span>
+    </div>`;
+    html += '<div id="codeRiskBody" class="obj-section-body hidden">';
+    list.forEach((rec, i) => {
+        const recColor = rec.ai_recommendation === 'approve' ? '#059669' : '#dc2626';
+        const recLabel = rec.ai_recommendation === 'approve' ? '✅ Safe to Approve' : '⚠️ Needs Review';
+        const bgColor = rec.ai_recommendation === 'approve' ? 'var(--bg-card, #f0fdf4)' : 'var(--bg-card, #fef2f2)';
+        const name = escapeHtml(rec.name || '');
+        html += `<div class="ai-rec-card" data-risk="${(rec.risk || '').toLowerCase()}" style="background:${bgColor};border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid ${recColor};">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <strong>${name} <span style="font-weight:400;color:#6b7280;font-size:12px;">(${escapeHtml(rec.type || 'PROCEDURE')})</span></strong>
+                <span style="color:${recColor};font-weight:600;font-size:13px;">${recLabel}</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-muted,#555);margin-bottom:4px;">
+                <code>${escapeHtml(rec.transformation || 'PL/SQL → T-SQL')}</code> ${riskBadge(rec.risk)}
+            </div>`;
+        if (Array.isArray(rec.compatibility_issues) && rec.compatibility_issues.length) {
+            html += '<div style="font-size:12px;margin-top:6px;">';
+            rec.compatibility_issues.forEach(issue => {
+                html += `<div style="color:#b45309;margin-bottom:2px;">⚡ ${escapeHtml(issue)}</div>`;
+            });
+            html += '</div>';
+        }
+        if (Array.isArray(rec.solutions) && rec.solutions.length) {
+            html += '<div style="font-size:12px;color:var(--text-primary,#374151);margin-top:6px;background:var(--bg-page,#f0fdf4);padding:6px 8px;border-radius:6px;">💡 <strong>Guidance:</strong><ul style="margin:4px 0 0 16px;padding:0;">';
+            rec.solutions.forEach(s => { html += `<li style="margin-bottom:3px;">${escapeHtml(s)}</li>`; });
+            html += '</ul></div>';
+        }
+        if (rec.reasoning) {
+            html += `<div style="font-size:11px;color:var(--text-muted,#6b7280);margin-top:4px;font-style:italic;">📋 ${escapeHtml(rec.reasoning)}</div>`;
+        }
+        html += `<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-sm btn-success" onclick="setCodeObjectApproval('${name}', true, this)" style="font-size:12px;">✓ Approve</button>
+            <button class="btn btn-sm btn-outline" onclick="setCodeObjectApproval('${name}', false, this)" style="font-size:12px;color:#dc2626;border-color:#dc2626;">✗ Reject</button>
+            <button class="btn btn-sm btn-outline" onclick="askAIDeepDive('${name}', this)" style="font-size:12px;color:#7c3aed;border-color:#7c3aed;">🤖 Ask AI for deeper analysis</button>
+        </div>
+        <div id="deepdive_${i}" data-proc="${name}" style="display:none;margin-top:8px;font-size:12px;background:var(--bg-page,#faf5ff);border:1px solid #ddd6fe;border-radius:6px;padding:8px;white-space:pre-wrap;"></div>
+        </div>`;
+    });
+    html += '</div></div>';
+    box.innerHTML = html;
+}
+
+async function setCodeObjectApproval(name, approved, btn) {
+    if (btn) btn.disabled = true;
+    await apiCall('/api/approve_procedure', { method: 'POST', body: JSON.stringify({ procedure_name: name, approved }) });
+    // Reflect in the Mapping Review section if present
+    if (typeof codeObjectMappings !== 'undefined' && Array.isArray(codeObjectMappings)) {
+        const o = codeObjectMappings.find(x => (x.name || '').toUpperCase() === (name || '').toUpperCase());
+        if (o) o.approved = approved;
+        if (typeof renderCodeObjectMappings === 'function') renderCodeObjectMappings(codeObjectMappings);
+    }
+    if (btn) { btn.disabled = false; }
+    showToast(`${name} ${approved ? 'approved' : 'rejected'}`, approved ? 'success' : 'info');
+}
+
+async function askAIDeepDive(name, btn) {
+    // Find the deep-dive panel next to this button
+    const card = btn.closest('.ai-rec-card');
+    const panel = card ? card.querySelector('[id^="deepdive_"]') : null;
+    if (!panel) return;
+    panel.style.display = 'block';
+    panel.textContent = '🤖 Analyzing this procedure with AI...';
+    btn.disabled = true;
+    try {
+        const res = await apiCall('/api/procedure_ai_deepdive', { method: 'POST', body: JSON.stringify({ procedure_name: name }) });
+        if (res.success) {
+            const prefix = res.ai_available ? '🤖 AI Analysis:\n\n' : 'ℹ️ ';
+            panel.textContent = prefix + (res.analysis || 'No analysis returned.');
+        } else {
+            panel.textContent = '⚠️ ' + (res.error || 'AI analysis failed.');
+        }
+    } catch (e) {
+        panel.textContent = '⚠️ AI analysis failed: ' + e.message;
+    }
+    btn.disabled = false;
 }
 
 function showAIRecommendationPanel(recs) {
@@ -1653,22 +2180,10 @@ async function approveByRisk(level) {
 function refreshApprovalView(res) {
     const mappings = res.mappings || res.data || [];
     window._lastApprovalMappings = mappings;  // Cache for download
-    const total = mappings.length;
-    const approved = mappings.filter(m => m.approved).length;
-    const pending = total - approved;
-    const lowCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'low').length;
-    const medCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'medium').length;
-    const highCount = mappings.filter(m => (m.risk || m.risk_level || '').toLowerCase() === 'high').length;
-    document.getElementById('approvalMetrics').innerHTML = buildMetrics([
-        { label: 'Total', value: total, cls: '' },
-        { label: 'Approved', value: approved, cls: 'success' },
-        { label: 'Pending', value: pending, cls: pending > 0 ? 'warning' : 'success' },
-        { label: 'Low Risk', value: lowCount, cls: 'success' },
-        { label: 'Medium Risk', value: medCount, cls: 'warning' },
-        { label: 'High Risk', value: highCount, cls: highCount > 0 ? 'fail' : 'success' },
-    ]);
+    const codeObjs = window._codeObjApprovals || [];
+    renderApprovalMetrics(mappings, codeObjs);
     renderApprovalTable(mappings);
-    if (pending === 0) markComplete(4);
+    recomputeApprovalGate(mappings, codeObjs);
 }
 
 function renderApprovalTable(data) {
@@ -1745,6 +2260,46 @@ async function executeMigration() {
     } else {
         result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
     }
+}
+
+async function deployProcedures() {
+    const btn = document.getElementById('btnDeployProcs');
+    const out = document.getElementById('deployProcResult');
+    btn.disabled = true;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;display:inline-block;"></div> Deploying...';
+    out.classList.remove('hidden');
+    out.innerHTML = '<div class="card-subtitle">Deploying approved procedures to Azure SQL...</div>';
+    try {
+        const res = await apiCall('/api/deploy_procedures', { method: 'POST', body: '{}' });
+        if (res.success) {
+            const deployed = res.deployed || [];
+            const errs = res.errors || [];
+            const alertClass = errs.length ? 'alert-warning' : 'alert-success';
+            let html = `<div class="alert ${alertClass}">
+                ${errs.length ? '⚠️' : '✅'} <strong>${res.message || 'Deployment complete'}</strong>`;
+            if (deployed.length) {
+                html += `<div style="margin-top:6px;font-size:13px;"><strong>Deployed:</strong> ${deployed.map(escapeHtml).join(', ')}</div>`;
+            }
+            const skipped = res.skipped || [];
+            if (skipped.length) {
+                html += `<div style="margin-top:6px;font-size:13px;color:#6b7280;"><strong>Skipped (No Change):</strong> ${skipped.map(escapeHtml).join(', ')}</div>`;
+            }
+            if (errs.length) {
+                html += '<div style="margin-top:8px;padding:8px;background:rgba(245,158,11,0.1);border-radius:6px;"><strong>Errors:</strong><ul style="margin:4px 0;">'
+                     + errs.map(e => `<li>${escapeHtml(e)}</li>`).join('') + '</ul></div>';
+            }
+            html += '</div>';
+            out.innerHTML = html;
+            showToast(`Deployed ${deployed.length} procedure(s)`, errs.length ? 'info' : 'success');
+        } else {
+            out.innerHTML = `<div class="alert alert-error">❌ ${escapeHtml(res.error || 'Deployment failed')}</div>`;
+        }
+    } catch (e) {
+        out.innerHTML = `<div class="alert alert-error">❌ ${escapeHtml(e.message)}</div>`;
+    }
+    btn.disabled = false;
+    btn.innerHTML = orig;
 }
 
 async function runPreMigrationCheck() {
@@ -1898,23 +2453,109 @@ async function runValidation() {
             <div id="valAllChecksPanel" style="display: none; margin-top: 8px;">
                 <div class="table-container"><table>
                     <thead><tr><th>Check</th><th>Source</th><th>Target</th><th>Status</th></tr></thead><tbody>`;
-        checks.forEach(c => {
+        checks.forEach((c, ci) => {
             const isPassed = c.status === 'PASS';
             const badgeCls = isPassed ? 'badge-pass' : 'badge-fail';
             const icon = isPassed ? '✓' : '✕';
+            let statusCell;
+            if (isPassed) {
+                statusCell = `<span class="badge-status ${badgeCls}">${icon} ${c.status}</span>`;
+            } else {
+                // FAIL — hover/click to get an AI explanation of why + impact.
+                statusCell = `<span class="badge-status ${badgeCls}" style="cursor:pointer;" title="Click for AI explanation of why this failed"
+                    onclick="explainValidationFailure(${ci}, this)">${icon} ${c.status} <span style="font-size:10px;">🔍 why?</span></span>`;
+            }
             html += `<tr>
-                <td><strong>${c.check}</strong></td>
-                <td>${c.source || '-'}</td>
-                <td>${c.target || '-'}</td>
-                <td><span class="badge-status ${badgeCls}">${icon} ${c.status}</span></td>
-            </tr>`;
+                <td><strong>${escapeHtml(c.check || '')}</strong></td>
+                <td>${escapeHtml(String(c.source ?? '-'))}</td>
+                <td>${escapeHtml(String(c.target ?? '-'))}</td>
+                <td>${statusCell}</td>
+            </tr>
+            <tr id="valFailExplain_${ci}" style="display:none;"><td colspan="4" style="background:var(--bg-page,#fef2f2);padding:10px 14px;font-size:12px;white-space:pre-wrap;border-left:3px solid #dc2626;"></td></tr>`;
         });
         html += '</tbody></table></div></div></div>';
+        window._valChecks = checks;
 
+        html += '<div id="validationCodeObjects" style="margin-top:16px;"></div>';
         result.innerHTML = html;
         markComplete(7);
+
+        // Fetch + render code-object validation (separate section, not in overall verdict)
+        try {
+            const procRes = await apiCall('/api/validate_procedures');
+            const objs = (procRes && procRes.success && Array.isArray(procRes.objects)) ? procRes.objects : [];
+            renderCodeObjectValidation(objs, procRes && procRes.message);
+        } catch (e) {
+            renderCodeObjectValidation([], 'Could not verify code objects.');
+        }
     } else {
         result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+    }
+}
+
+function renderCodeObjectValidation(objects, emptyMsg) {
+    const box = document.getElementById('validationCodeObjects');
+    if (!box) return;
+    const objs = objects || [];
+    const passed = objs.filter(o => o.status === 'PASS').length;
+    let html = '<div class="obj-group">';
+    html += `<div class="obj-section-header" onclick="toggleObjSection('valCodeBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Code Object Validation (${objs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">${objs.length ? passed + '/' + objs.length + ' verified in Azure SQL' : (emptyMsg || 'No approved code objects to validate')}</span>
+    </div>`;
+    html += '<div id="valCodeBody" class="obj-section-body hidden">';
+    if (objs.length === 0) {
+        html += `<p class="card-subtitle" style="padding:8px 12px;">${escapeHtml(emptyMsg || 'No approved code objects to validate.')}</p>`;
+    } else {
+        html += '<div class="table-container"><table><thead><tr><th>Object</th><th>Type</th><th>Deployed</th><th>Exists in target</th><th>Status</th></tr></thead><tbody>';
+        objs.forEach(o => {
+            const name = escapeHtml(o.name || '');
+            const type = escapeHtml(o.type || 'PROCEDURE');
+            const deployed = o.deployed ? '✓' : '—';
+            const exists = o.exists ? '✓' : '✕';
+            let badgeCls, label;
+            if (o.status === 'PASS') { badgeCls = 'badge-pass'; label = '✅ PASS'; }
+            else if (o.status === 'NOT_DEPLOYED') { badgeCls = 'badge-medium'; label = '⚠ NOT DEPLOYED'; }
+            else { badgeCls = 'badge-fail'; label = '✕ FAIL'; }
+            html += `<tr>
+                <td><strong>${name}</strong></td>
+                <td>${type}</td>
+                <td>${deployed}</td>
+                <td>${exists}</td>
+                <td><span class="badge-status ${badgeCls}">${label}</span></td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+    }
+    html += '</div></div>';
+    box.innerHTML = html;
+}
+
+async function explainValidationFailure(idx, badgeEl) {
+    const checks = window._valChecks || [];
+    const c = checks[idx];
+    if (!c) return;
+    const row = document.getElementById('valFailExplain_' + idx);
+    if (!row) return;
+    const cell = row.querySelector('td');
+    // Toggle off if already shown
+    if (row.style.display !== 'none') { row.style.display = 'none'; return; }
+    row.style.display = '';
+    cell.textContent = '🔍 Analyzing why this check failed...';
+    try {
+        const res = await apiCall('/api/explain_validation_failure', {
+            method: 'POST',
+            body: JSON.stringify({ check: c.check, source: c.source, target: c.target })
+        });
+        if (res.success) {
+            const prefix = res.ai ? '🤖 AI explanation:\n\n' : '📋 ';
+            cell.textContent = prefix + (res.explanation || 'No explanation available.') + (res.note ? '\n\n' + res.note : '');
+        } else {
+            cell.textContent = '⚠️ ' + (res.error || 'Could not explain this failure.');
+        }
+    } catch (e) {
+        cell.textContent = '⚠️ ' + e.message;
     }
 }
 
@@ -2159,6 +2800,7 @@ async function loadReport() {
                 { label: 'Columns', value: (rpt.approved_count || summary.columns) + (rpt.skipped_count ? '/' + summary.columns : ''), cls: '' },
                 { label: 'Total Rows', value: (migSummary.total_source_rows != null ? migSummary.total_source_rows + ' → ' + migSummary.total_target_rows : 'N/A'), cls: migSummary.total_source_rows === migSummary.total_target_rows ? 'success' : 'warning' },
                 { label: 'Status', value: finalStatus, cls: statusCls },
+                ...((rpt.code_objects && rpt.code_objects.total > 0) ? [{ label: 'Code Objects', value: (rpt.code_objects.deployed || 0) + '/' + rpt.code_objects.total + ' deployed', cls: (rpt.code_objects.deployed === rpt.code_objects.total ? 'success' : '') }] : []),
             ])}
         </div>`;
 
@@ -2213,6 +2855,36 @@ async function loadReport() {
         }
 
 
+
+        // Code Objects summary card
+        const co = rpt.code_objects;
+        if (co && co.total > 0) {
+            let coHtml = `<div class="card" style="margin-top: 16px; padding: 20px;">
+                <h3 style="margin-bottom: 6px;">⚙️ Code Objects</h3>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">${co.approved} approved · ${co.deployed} deployed · ${co.pending} pending (of ${co.total})</p>`;
+            if (co.items && co.items.length) {
+                coHtml += `<table style="width:100%;border-collapse:collapse;">
+                    <thead><tr style="border-bottom:2px solid var(--border-color,#e5e7eb);">
+                        <th style="text-align:left;padding:8px;">Object</th>
+                        <th style="text-align:left;padding:8px;">Type</th>
+                        <th style="text-align:left;padding:8px;">Approved</th>
+                        <th style="text-align:left;padding:8px;">Status</th>
+                    </tr></thead><tbody>`;
+                co.items.forEach(o => {
+                    const st = (o.status || 'pending');
+                    const stCls = st === 'deployed' ? 'badge-pass' : (st === 'failed' ? 'badge-fail' : 'badge-medium');
+                    coHtml += `<tr style="border-bottom:1px solid var(--border-color,#eef2f7);">
+                        <td style="padding:8px;"><strong>${escapeHtml(o.name || '')}</strong></td>
+                        <td style="padding:8px;">${escapeHtml(o.type || 'PROCEDURE')}</td>
+                        <td style="padding:8px;">${o.approved ? '✓' : '—'}</td>
+                        <td style="padding:8px;"><span class="badge-status ${stCls}">${escapeHtml(st)}</span></td>
+                    </tr>`;
+                });
+                coHtml += '</tbody></table>';
+            }
+            coHtml += '</div>';
+            html += coHtml;
+        }
 
         reportEl.innerHTML = html;
         markComplete(8);
