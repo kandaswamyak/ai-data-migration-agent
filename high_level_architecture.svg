@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1060" viewBox="0 0 1120 1060">
+<rect x="0" y="0" width="1120" height="1060" rx="0" fill="#ffffff"/>
+<text x="560.0" y="46" font-family="Helvetica, Arial, sans-serif" font-size="25" fill="#1f2937" text-anchor="middle" font-weight="bold">AI Data Migration Agent — High-Level Architecture</text>
+<text x="560.0" y="72" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#5b6472" text-anchor="middle" font-weight="normal">Multi-agent AI framework with LangGraph orchestration · Oracle → Azure SQL</text>
+<rect x="241.0" y="88" width="638.0" height="28" rx="14" fill="#e8f1fe"/>
+<text x="560.0" y="107" font-family="Menlo, monospace" font-size="12.5" fill="#2563eb" text-anchor="middle" font-weight="bold">Oracle Source  →  AI Engine (GPT-4o-mini + LangGraph)  →  Migration Studio  →  Azure SQL Target</text>
+<text x="42" y="142" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">END-TO-END DATA FLOW</text>
+<rect x="42" y="154" width="1036" height="196" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<rect x="84" y="174" width="300" height="92" rx="14" fill="#f7f9fc" stroke="#2563eb" stroke-width="2"/>
+<circle cx="150" cy="209" r="20" fill="#e8f1fe"/>
+<ellipse cx="150" cy="202.4" rx="9.9" ry="3.74" fill="none" stroke="#2563eb" stroke-width="2"/>
+<path d="M140.1,202.4 V215.6 A9.9,3.74 0 0 0 159.9,215.6 V202.4" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M140.1,209 A9.9,3.74 0 0 0 159.9,209" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="200" y="204" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#1f2937" text-anchor="start" font-weight="bold">Oracle</text>
+<text x="200" y="224" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#9aa3af" text-anchor="start" font-weight="normal" letter-spacing="0.5">SOURCE DATABASE</text>
+<path d="M538.0,216 h44 M576.0,210 l8,6 l-8,6" fill="none" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="560.0" y="246" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#9aa3af" text-anchor="middle" font-weight="normal">AI Engine</text>
+<rect x="736" y="174" width="300" height="92" rx="14" fill="#f7f9fc" stroke="#16a34a" stroke-width="2"/>
+<circle cx="800" cy="209" r="20" fill="#e7f6ec"/>
+<path d="M789.65,213.6 a5,5 0 0 1 1,-9 a6,6 0 0 1 11,-2 a5,5 0 0 1 2,11 Z" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="838" y="204" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#1f2937" text-anchor="start" font-weight="bold">Azure SQL</text>
+<text x="838" y="224" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#9aa3af" text-anchor="start" font-weight="normal" letter-spacing="0.5">TARGET DATABASE</text>
+<text x="560.0" y="292" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#9aa3af" text-anchor="middle" font-weight="bold" letter-spacing="0.6">SOURCE → TARGET MAPPING CARDINALITIES</text>
+<rect x="67.0" y="304" width="230" height="32" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<rect x="75.0" y="312" width="34" height="16" rx="4" fill="#e7f6ec"/>
+<text x="92.0" y="324" font-family="Menlo, monospace" font-size="12" fill="#15803d" text-anchor="middle" font-weight="bold">1-1</text>
+<text x="117.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#5b6472" text-anchor="start" font-weight="normal">One → one target</text>
+<text x="287.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#15803d" text-anchor="end" font-weight="bold">● Now</text>
+<rect x="309.0" y="304" width="235" height="32" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<rect x="317.0" y="312" width="34" height="16" rx="4" fill="#e7f6ec"/>
+<text x="334.0" y="324" font-family="Menlo, monospace" font-size="12" fill="#15803d" text-anchor="middle" font-weight="bold">2-1</text>
+<text x="359.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#5b6472" text-anchor="start" font-weight="normal">Two → one (merge)</text>
+<text x="534.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#15803d" text-anchor="end" font-weight="bold">● Now</text>
+<rect x="556.0" y="304" width="245" height="32" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2" stroke-dasharray="5 3"/>
+<rect x="564.0" y="312" width="34" height="16" rx="4" fill="#e8f1fe"/>
+<text x="581.0" y="324" font-family="Menlo, monospace" font-size="12" fill="#1d4ed8" text-anchor="middle" font-weight="bold">2-2</text>
+<text x="606.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#5b6472" text-anchor="start" font-weight="normal">Two → two targets</text>
+<text x="791.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1d4ed8" text-anchor="end" font-weight="bold">◇ Future</text>
+<rect x="813.0" y="304" width="240" height="32" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2" stroke-dasharray="5 3"/>
+<rect x="821.0" y="312" width="34" height="16" rx="4" fill="#e8f1fe"/>
+<text x="838.0" y="324" font-family="Menlo, monospace" font-size="12" fill="#1d4ed8" text-anchor="middle" font-weight="bold">1-2</text>
+<text x="863.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#5b6472" text-anchor="start" font-weight="normal">One → two (split)</text>
+<text x="1043.0" y="324" font-family="Helvetica, Arial, sans-serif" font-size="9.5" fill="#1d4ed8" text-anchor="end" font-weight="bold">◇ Future</text>
+<path d="M560.0,346 l0,10 M555.0,351 l5,5 l5,-5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="42" y="360" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">AI ENGINE — MULTI-AGENT LAYER (GPT-4o-mini)</text>
+<rect x="42" y="372" width="1036" height="92" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<rect x="42" y="372" width="5" height="92" rx="2.5" fill="#7c3aed"/>
+<circle cx="72" cy="402" r="15" fill="#f0e9fe"/>
+<rect x="65.2" y="396.9" width="13.6" height="11.049999999999999" rx="4" fill="none" stroke="#7c3aed" stroke-width="2"/>
+<circle cx="69.025" cy="402" r="1.36" fill="#7c3aed"/>
+<circle cx="74.975" cy="402" r="1.36" fill="#7c3aed"/>
+<path d="M72,396.9 V393.5" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="72" cy="392.65" r="1.36" fill="#7c3aed"/>
+<text x="96" y="407" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#1f2937" text-anchor="start" font-weight="bold">AI Engine</text>
+<text x="1056" y="407" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#9aa3af" text-anchor="end" font-weight="normal">Orchestrated by LangGraph</text>
+<rect x="66" y="428" width="114.80000000000001" height="28" rx="14" fill="#f0e9fe" stroke="#c9b3f5" stroke-width="1.2"/>
+<text x="123.4" y="446" font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#7c3aed" text-anchor="middle" font-weight="bold">Schema Agent</text>
+<path d="M185.8,437 l6,5 l-6,5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="198.8" y="428" width="129.60000000000002" height="28" rx="14" fill="#f0e9fe" stroke="#c9b3f5" stroke-width="1.2"/>
+<text x="263.6" y="446" font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#7c3aed" text-anchor="middle" font-weight="bold">Datatype Agent</text>
+<path d="M333.40000000000003,437 l6,5 l-6,5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="346.40000000000003" y="428" width="122.2" height="28" rx="14" fill="#f0e9fe" stroke="#c9b3f5" stroke-width="1.2"/>
+<text x="407.50000000000006" y="446" font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#7c3aed" text-anchor="middle" font-weight="bold">Mapping Agent</text>
+<path d="M473.6,437 l6,5 l-6,5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="486.6" y="428" width="166.6" height="28" rx="14" fill="#f0e9fe" stroke="#c9b3f5" stroke-width="1.2"/>
+<text x="569.9" y="446" font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#7c3aed" text-anchor="middle" font-weight="bold">SQL Generator Agent</text>
+<path d="M658.2,437 l6,5 l-6,5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="671.2" y="428" width="144.4" height="28" rx="14" fill="#f0e9fe" stroke="#c9b3f5" stroke-width="1.2"/>
+<text x="743.4000000000001" y="446" font-family="Helvetica, Arial, sans-serif" font-size="12.5" fill="#7c3aed" text-anchor="middle" font-weight="bold">Validation Agent</text>
+<path d="M560.0,460 l0,10 M555.0,465 l5,5 l5,-5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="42" y="474" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">MIGRATION STUDIO — CONTROL PLANE</text>
+<rect x="42" y="486" width="1036" height="156" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<circle cx="72" cy="516" r="15" fill="#e8f1fe"/>
+<circle cx="72" cy="516" r="3.2" fill="none" stroke="#2563eb" stroke-width="2"/>
+<path d="M76.8,516.0 L79.2,516.0" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M75.4,519.4 L77.1,521.1" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M72.0,520.8 L72.0,523.2" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M68.6,519.4 L66.9,521.1" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M67.2,516.0 L64.8,516.0" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M68.6,512.6 L66.9,510.9" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M72.0,511.2 L72.0,508.8" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M75.4,512.6 L77.1,510.9" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="96" y="521" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#1f2937" text-anchor="start" font-weight="bold">Migration Studio</text>
+<text x="1056" y="521" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#9aa3af" text-anchor="end" font-weight="normal">Orchestration &amp; Management</text>
+<rect x="66.0" y="536" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="88.0" cy="558" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M83.1,562.9 L88.0,558" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M88.0,558 l3.5,-3.5 a3,3 0 0 0 0,-5 l-1,-1 a3,3 0 0 0 -5,0 l-3.5,3.5 Z" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M89.4,551.7 l2,-2 M91.5,553.8 l2,-2" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="108.0" y="555" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Connection Manager</text>
+<text x="108.0" y="571" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Manages source &amp; target DB connections</text>
+<rect x="409.3333333333333" y="536" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="431.3333333333333" cy="558" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<ellipse cx="431.3333333333333" cy="553.8" rx="6.3" ry="2.38" fill="none" stroke="#2563eb" stroke-width="2"/>
+<path d="M425.0333333333333,553.8 V562.2 A6.3,2.38 0 0 0 437.6333333333333,562.2 V553.8" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M425.0333333333333,558 A6.3,2.38 0 0 0 437.6333333333333,558" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="451.3333333333333" y="555" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Metadata Store</text>
+<text x="451.3333333333333" y="571" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Schemas, mappings, rules, logs</text>
+<rect x="752.6666666666666" y="536" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="774.6666666666666" cy="558" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<circle cx="774.6666666666666" cy="558" r="5.6" fill="none" stroke="#16a34a" stroke-width="2"/>
+<path d="M771.8666666666667,558 l3,3 l5,-6" fill="none" stroke="#16a34a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="794.6666666666666" y="555" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Approval Center</text>
+<text x="794.6666666666666" y="571" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Human-in-the-loop review &amp; approval</text>
+<rect x="66.0" y="586" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="88.0" cy="608" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<circle cx="88.0" cy="608" r="2.8" fill="none" stroke="#2563eb" stroke-width="2"/>
+<path d="M92.2,608.0 L94.3,608.0" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M91.0,611.0 L92.5,612.5" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M88.0,612.2 L88.0,614.3" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M85.0,611.0 L83.5,612.5" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M83.8,608.0 L81.7,608.0" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M85.0,605.0 L83.5,603.5" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M88.0,603.8 L88.0,601.7" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M91.0,605.0 L92.5,603.5" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="108.0" y="605" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Execution Manager</text>
+<text x="108.0" y="621" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Runs migrations, monitors progress</text>
+<rect x="409.3333333333333" y="586" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="431.3333333333333" cy="608" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M425.0333333333333,608 a9,6 0 0 1 18,0 a9,6 0 0 1 -18,0 Z" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="431.3333333333333" cy="608" r="1.68" fill="none" stroke="#d97706" stroke-width="2"/>
+<text x="451.3333333333333" y="605" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Monitoring &amp; Alerts</text>
+<text x="451.3333333333333" y="621" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Real-time alerts, logs, notifications</text>
+<rect x="752.6666666666666" y="586" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="774.6666666666666" cy="608" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M769.0666666666666,612.9 h16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="769.7666666666667" y="608.7" width="2.4499999999999997" height="3.5" rx="1" fill="#7c3aed"/>
+<rect x="773.4766666666666" y="605.9" width="2.4499999999999997" height="6.3" rx="1" fill="#7c3aed"/>
+<rect x="777.1866666666666" y="603.8" width="2.4499999999999997" height="8.399999999999999" rx="1" fill="#7c3aed"/>
+<text x="794.6666666666666" y="605" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Reporting</text>
+<text x="794.6666666666666" y="621" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Reports, metrics, audit logs (PDF)</text>
+<path d="M560.0,638 l0,10 M555.0,643 l5,5 l5,-5" fill="none" stroke="#9aa3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="42" y="652" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">DATA &amp; INTEGRATION LAYER</text>
+<rect x="42" y="664" width="1036" height="156" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<circle cx="72" cy="694" r="15" fill="#e8f1fe"/>
+<path d="M66.4,699.6 L72,694" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M72,694 l4.0,-4.0 a3,3 0 0 0 0,-5 l-1,-1 a3,3 0 0 0 -5,0 l-4.0,4.0 Z" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M73.6,686.8 l2,-2 M76.0,689.2 l2,-2" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="96" y="699" font-family="Helvetica, Arial, sans-serif" font-size="16" fill="#1f2937" text-anchor="start" font-weight="bold">Data &amp; Integration</text>
+<rect x="66.0" y="714" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="88.0" cy="736" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M88.0,730.4 l7,3 v5 c0,5 -4,8 -7,9 c-3,-1 -7,-4 -7,-9 v-5 Z" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="108.0" y="733" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Secure Connectivity</text>
+<text x="108.0" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">VPN, Private Link, TLS</text>
+<rect x="409.3333333333333" y="714" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="431.3333333333333" cy="736" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<circle cx="430.6333333333333" cy="735.3" r="3.5" fill="none" stroke="#2563eb" stroke-width="2"/>
+<path d="M433.43333333333334,738.1 l4,4" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="451.3333333333333" y="733" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Data Extractors</text>
+<text x="451.3333333333333" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Schema, profiling, sampling</text>
+<rect x="752.6666666666666" y="714" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="774.6666666666666" cy="736" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<rect x="769.0666666666666" y="733.2" width="7.0" height="5.6" rx="1.5" fill="none" stroke="#d97706" stroke-width="2"/>
+<path d="M776.0666666666666,735.3 h4 l3,3 v2 h-7 Z" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="771.8666666666667" cy="740.2" r="1.4" fill="none" stroke="#d97706" stroke-width="2"/>
+<circle cx="778.1666666666666" cy="740.2" r="1.4" fill="none" stroke="#d97706" stroke-width="2"/>
+<text x="794.6666666666666" y="733" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Data Loaders</text>
+<text x="794.6666666666666" y="749" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Bulk, batch, incremental</text>
+<rect x="66.0" y="764" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="88.0" cy="786" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M83.8,780.4 h8 l4,4 v12 h-12 Z" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M85.9,785.3 h6 M85.9,788.1 h6" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="108.0" y="783" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">Audit &amp; Lineage</text>
+<text x="108.0" y="799" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Track changes &amp; lineage graph</text>
+<rect x="409.3333333333333" y="764" width="333.3333333333333" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="431.3333333333333" cy="786" r="13" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M431.3333333333333,780.4 l8,4 v8 l-8,4 l-8,-4 v-8 Z" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M425.7333333333333,783.2 l8,4 l8,-4 M431.3333333333333,786 v8" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="451.3333333333333" y="783" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#1f2937" text-anchor="start" font-weight="bold">File Storage</text>
+<text x="451.3333333333333" y="799" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#5b6472" text-anchor="start" font-weight="normal">Scripts, reports, backups</text>
+<text x="42" y="830" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">CROSS-CUTTING CONCERNS</text>
+<rect x="42" y="842" width="1036" height="72" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<rect x="66.0" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="147.66666666666669" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M147.66666666666669,864.2 l7,3 v5 c0,5 -4,8 -7,9 c-3,-1 -7,-4 -7,-9 v-5 Z" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="147.66666666666669" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Security</text>
+<text x="147.66666666666669" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">RBAC · Vault · Secrets</text>
+<rect x="237.33333333333334" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="319.0" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M313.6,869 a9,6 0 0 1 18,0 a9,6 0 0 1 -18,0 Z" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="319.0" cy="869" r="1.44" fill="none" stroke="#2563eb" stroke-width="2"/>
+<text x="319.0" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Observability</text>
+<text x="319.0" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">Logs · Metrics · Tracing</text>
+<rect x="408.6666666666667" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="490.33333333333337" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M490.33333333333337,864.2 l7,3 v5 c0,5 -4,8 -7,9 c-3,-1 -7,-4 -7,-9 v-5 Z" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="490.33333333333337" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Resilience</text>
+<text x="490.33333333333337" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">Retries · Checkpoints</text>
+<rect x="580.0" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="661.6666666666666" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M656.8666666666667,873.2 h16" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="657.4666666666666" y="869.6" width="2.1" height="3.0" rx="1" fill="#7c3aed"/>
+<rect x="660.6466666666666" y="867.2" width="2.1" height="5.3999999999999995" rx="1" fill="#7c3aed"/>
+<rect x="663.8266666666666" y="865.4" width="2.1" height="7.199999999999999" rx="1" fill="#7c3aed"/>
+<text x="661.6666666666666" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Scalability</text>
+<text x="661.6666666666666" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">Autoscale · Parallel</text>
+<rect x="751.3333333333334" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="833.0" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<path d="M828.2,867.8 l8,-5 l8,5 Z" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M830.0,868.4 v6" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M833.0,868.4 v6" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M836.0,868.4 v6" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M828.2,872.6 h16" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="833.0" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Governance</text>
+<text x="833.0" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">Policies · Compliance</text>
+<rect x="922.6666666666667" y="856" width="163.33333333333334" height="44" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="1004.3333333333334" cy="869" r="11" fill="#ffffff" stroke="#e5e9f0" stroke-width="1"/>
+<circle cx="1004.3333333333334" cy="869" r="4.2" fill="none" stroke="#16a34a" stroke-width="2"/>
+<path d="M1004.3333333333334,866.6 v8 M1002.8333333333334,868.1 h5" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1004.3333333333334" y="887" font-family="Helvetica, Arial, sans-serif" font-size="10.5" fill="#1f2937" text-anchor="middle" font-weight="bold">Cost Optimization</text>
+<text x="1004.3333333333334" y="898" font-family="Helvetica, Arial, sans-serif" font-size="8.3" fill="#5b6472" text-anchor="middle" font-weight="normal">Tagging · Usage</text>
+<text x="42" y="924" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#374151" text-anchor="start" font-weight="bold" letter-spacing="0.8">9-PHASE LANGGRAPH WORKFLOW</text>
+<rect x="42" y="936" width="1036" height="76" rx="14" fill="#ffffff" stroke="#e5e9f0" stroke-width="1.4"/>
+<rect x="66.0" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="119.11111111111111" cy="960" r="11" fill="#2563eb"/>
+<text x="119.11111111111111" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">1</text>
+<text x="119.11111111111111" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Connect</text>
+<rect x="180.22222222222223" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="233.33333333333334" cy="960" r="11" fill="#2563eb"/>
+<text x="233.33333333333334" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">2</text>
+<text x="233.33333333333334" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Discover</text>
+<rect x="294.44444444444446" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="347.55555555555554" cy="960" r="11" fill="#2563eb"/>
+<text x="347.55555555555554" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">3</text>
+<text x="347.55555555555554" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Analyze</text>
+<rect x="408.6666666666667" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="461.7777777777778" cy="960" r="11" fill="#2563eb"/>
+<text x="461.7777777777778" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">4</text>
+<text x="461.7777777777778" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Map</text>
+<rect x="522.8888888888889" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="576.0" cy="960" r="11" fill="#2563eb"/>
+<text x="576.0" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">5</text>
+<text x="576.0" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Approve</text>
+<rect x="637.1111111111111" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="690.2222222222222" cy="960" r="11" fill="#2563eb"/>
+<text x="690.2222222222222" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">6</text>
+<text x="690.2222222222222" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Generate</text>
+<rect x="751.3333333333334" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="804.4444444444445" cy="960" r="11" fill="#2563eb"/>
+<text x="804.4444444444445" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">7</text>
+<text x="804.4444444444445" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Migrate</text>
+<rect x="865.5555555555557" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="918.6666666666667" cy="960" r="11" fill="#2563eb"/>
+<text x="918.6666666666667" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">8</text>
+<text x="918.6666666666667" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Validate</text>
+<rect x="979.7777777777778" y="960" width="106.22222222222223" height="40" rx="10" fill="#f7f9fc" stroke="#e5e9f0" stroke-width="1.2"/>
+<circle cx="1032.888888888889" cy="960" r="11" fill="#2563eb"/>
+<text x="1032.888888888889" y="964" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#ffffff" text-anchor="middle" font-weight="bold">9</text>
+<text x="1032.888888888889" y="988" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#1f2937" text-anchor="middle" font-weight="bold">Report</text>
+<text x="560.0" y="1036" font-family="Helvetica, Arial, sans-serif" font-size="11" fill="#9aa3af" text-anchor="middle" font-weight="normal">© 2026 DXC Technology Company. All rights reserved. — DXC Internal</text>
+</svg>
