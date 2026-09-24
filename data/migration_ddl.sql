@@ -1,15 +1,14 @@
--- Generated DDL: 1 table(s), 5 column(s)
+-- Generated DDL: 1 table(s), 4 column(s)
 -- CREATE: 1, ALTER: 0, No Change: 0
--- Generated at: 2026-09-24 15:05:59
+-- Generated at: 2026-09-24 15:16:11
 
--- Generated DDL for [dbo].[Orders]
-CREATE TABLE [dbo].[Orders]
+-- Generated DDL for [dbo].[Product]
+CREATE TABLE [dbo].[Product]
 (
-    [OrderID] INT NULL,
-    [CustomerID] INT NULL,
     [ProductID] INT NULL,
-    [Quantity] INT NULL,
-    [OrderDate] DATETIME2 NULL
+    [ProductName] VARCHAR(100) NULL,
+    [Category] VARCHAR(50) NULL,
+    [Price] DECIMAL(10,2) NULL
 );
 
 GO

@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-24T09:37:13.070757+00:00",
+  "generated_at_utc": "2026-09-24T09:46:39.953815+00:00",
   "overall": "All validation checks passed",
   "all_passed": true,
   "migration_summary": {
@@ -9,111 +9,58 @@
     "tables_passed": 1,
     "tables_with_issues": 0,
     "validation_completion": "100%",
-    "total_checks": 34,
-    "checks_passed": 34,
+    "total_checks": 25,
+    "checks_passed": 25,
     "checks_failed": 0,
     "rejected_rows": 0,
     "overall_status": "PASS"
   },
   "table_validation": {
-    "Orders": {
-      "checks_total": 32,
-      "checks_passed": 32,
+    "Product": {
+      "checks_total": 23,
+      "checks_passed": 23,
       "checks_failed": 0,
       "status": "PASS",
       "overall": "PASS",
       "checks": {
         "Row Count Match": "PASS",
         "Checksum Match": "PASS",
-        "NULL Count: OrderID": "PASS",
-        "Column Count: OrderID": "PASS",
-        "Distinct Values: OrderID": "PASS",
-        "MIN: OrderID": "PASS",
-        "MAX: OrderID": "PASS",
-        "SUM: OrderID": "PASS",
-        "NULL Count: CustomerID": "PASS",
-        "Column Count: CustomerID": "PASS",
-        "Distinct Values: CustomerID": "PASS",
-        "MIN: CustomerID": "PASS",
-        "MAX: CustomerID": "PASS",
-        "SUM: CustomerID": "PASS",
         "NULL Count: ProductID": "PASS",
         "Column Count: ProductID": "PASS",
         "Distinct Values: ProductID": "PASS",
         "MIN: ProductID": "PASS",
         "MAX: ProductID": "PASS",
         "SUM: ProductID": "PASS",
-        "NULL Count: Quantity": "PASS",
-        "Column Count: Quantity": "PASS",
-        "Distinct Values: Quantity": "PASS",
-        "MIN: Quantity": "PASS",
-        "MAX: Quantity": "PASS",
-        "SUM: Quantity": "PASS",
-        "NULL Count: OrderDate": "PASS",
-        "Column Count: OrderDate": "PASS",
-        "Distinct Values: OrderDate": "PASS",
-        "MIN: OrderDate": "PASS",
-        "MAX: OrderDate": "PASS",
+        "NULL Count: ProductName": "PASS",
+        "Column Count: ProductName": "PASS",
+        "Distinct Values: ProductName": "PASS",
+        "Max String Length: ProductName": "PASS",
+        "NULL Count: Category": "PASS",
+        "Column Count: Category": "PASS",
+        "Distinct Values: Category": "PASS",
+        "Max String Length: Category": "PASS",
+        "NULL Count: Price": "PASS",
+        "Column Count: Price": "PASS",
+        "Distinct Values: Price": "PASS",
+        "MIN: Price": "PASS",
+        "MAX: Price": "PASS",
+        "SUM: Price": "PASS",
         "Rejected Rows": "PASS"
       },
       "categories": {
         "completeness": {
-          "passed": 12,
+          "passed": 10,
           "failed": 0
         },
         "accuracy": {
-          "passed": 20,
+          "passed": 13,
           "failed": 0
         }
       }
     }
   },
   "column_details": {
-    "Orders": [
-      {
-        "column": "OrderID",
-        "source_column": "ORDERID",
-        "category": "numeric",
-        "null_src": 0,
-        "null_tgt": 0,
-        "null_status": "PASS",
-        "distinct_src": 3,
-        "distinct_tgt": 3,
-        "distinct_status": "PASS",
-        "min_src": "1001",
-        "min_tgt": "1001",
-        "max_src": "1003",
-        "max_tgt": "1003",
-        "minmax_status": "PASS",
-        "sum_src": "3006",
-        "sum_tgt": "3006",
-        "sum_status": "PASS",
-        "maxlen_src": null,
-        "maxlen_tgt": null,
-        "maxlen_status": null
-      },
-      {
-        "column": "CustomerID",
-        "source_column": "CUSTOMERID",
-        "category": "numeric",
-        "null_src": 0,
-        "null_tgt": 0,
-        "null_status": "PASS",
-        "distinct_src": 3,
-        "distinct_tgt": 3,
-        "distinct_status": "PASS",
-        "min_src": "1",
-        "min_tgt": "1",
-        "max_src": "3",
-        "max_tgt": "3",
-        "minmax_status": "PASS",
-        "sum_src": "6",
-        "sum_tgt": "6",
-        "sum_status": "PASS",
-        "maxlen_src": null,
-        "maxlen_tgt": null,
-        "maxlen_status": null
-      },
+    "Product": [
       {
         "column": "ProductID",
         "source_column": "PRODUCTID",
@@ -137,45 +84,67 @@
         "maxlen_status": null
       },
       {
-        "column": "Quantity",
-        "source_column": "QUANTITY",
-        "category": "numeric",
-        "null_src": 0,
-        "null_tgt": 0,
-        "null_status": "PASS",
-        "distinct_src": 2,
-        "distinct_tgt": 2,
-        "distinct_status": "PASS",
-        "min_src": "1",
-        "min_tgt": "1",
-        "max_src": "2",
-        "max_tgt": "2",
-        "minmax_status": "PASS",
-        "sum_src": "4",
-        "sum_tgt": "4",
-        "sum_status": "PASS",
-        "maxlen_src": null,
-        "maxlen_tgt": null,
-        "maxlen_status": null
-      },
-      {
-        "column": "OrderDate",
-        "source_column": "ORDERDATE",
-        "category": "date",
+        "column": "ProductName",
+        "source_column": "PRODUCTNAME",
+        "category": "string",
         "null_src": 0,
         "null_tgt": 0,
         "null_status": "PASS",
         "distinct_src": 3,
         "distinct_tgt": 3,
         "distinct_status": "PASS",
-        "min_src": "2025-05-01 00:00:00",
-        "min_tgt": "2025-05-01 00:00:00",
-        "max_src": "2025-05-10 00:00:00",
-        "max_tgt": "2025-05-10 00:00:00",
-        "minmax_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
         "sum_src": null,
         "sum_tgt": null,
         "sum_status": null,
+        "maxlen_src": 6,
+        "maxlen_tgt": 6,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "Category",
+        "source_column": "CATEGORY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 11,
+        "maxlen_tgt": 11,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "Price",
+        "source_column": "PRICE",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "25.00",
+        "min_tgt": "25.00",
+        "max_src": "1200.00",
+        "max_tgt": "1200.00",
+        "minmax_status": "PASS",
+        "sum_src": "1405.00",
+        "sum_tgt": "1405.00",
+        "sum_status": "PASS",
         "maxlen_src": null,
         "maxlen_tgt": null,
         "maxlen_status": null
@@ -185,14 +154,14 @@
   "mismatched_tables": [],
   "checksum_results": [
     {
-      "table": "Orders->Orders",
-      "source_hash": "45b2e9a95e85ac9e5b471e6baf05921ccc43c44a6cd65eb3f20c55a235d71ac8",
-      "target_hash": "45b2e9a95e85ac9e5b471e6baf05921ccc43c44a6cd65eb3f20c55a235d71ac8",
+      "table": "Product->Product",
+      "source_hash": "a2c97b3eefa4ac2fa80c815ab7620ec3aa0bfc16dcb35f87ccd4f4d827684de0",
+      "target_hash": "a2c97b3eefa4ac2fa80c815ab7620ec3aa0bfc16dcb35f87ccd4f4d827684de0",
       "status": "PASS"
     }
   ],
   "watermark_info": {
-    "Orders": {
+    "Product": {
       "failed_rows": 0,
       "duplicates_skipped": 0,
       "rows_read": 3,
@@ -203,260 +172,188 @@
   "retry_candidates": [],
   "results": [
     {
-      "check": "Row Count Match (Orders)",
+      "check": "Row Count Match (Product)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Checksum Match (Orders)",
-      "source": "45b2e9a95e85",
-      "target": "45b2e9a95e85",
+      "check": "Checksum Match (Product)",
+      "source": "a2c97b3eefa4",
+      "target": "a2c97b3eefa4",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "NULL Count (Orders.OrderID)",
+      "check": "NULL Count (Product.ProductID)",
       "source": "0",
       "target": "0",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Column Count (Orders.OrderID)",
+      "check": "Column Count (Product.ProductID)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Distinct Values (Orders.OrderID)",
+      "check": "Distinct Values (Product.ProductID)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MIN (Orders.OrderID)",
-      "source": "1001",
-      "target": "1001",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "MAX (Orders.OrderID)",
-      "source": "1003",
-      "target": "1003",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "SUM (Orders.OrderID)",
-      "source": "3006",
-      "target": "3006",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "NULL Count (Orders.CustomerID)",
-      "source": "0",
-      "target": "0",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "Orders"
-    },
-    {
-      "check": "Column Count (Orders.CustomerID)",
-      "source": "3",
-      "target": "3",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "Orders"
-    },
-    {
-      "check": "Distinct Values (Orders.CustomerID)",
-      "source": "3",
-      "target": "3",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "MIN (Orders.CustomerID)",
-      "source": "1",
-      "target": "1",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "MAX (Orders.CustomerID)",
-      "source": "3",
-      "target": "3",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "SUM (Orders.CustomerID)",
-      "source": "6",
-      "target": "6",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "NULL Count (Orders.ProductID)",
-      "source": "0",
-      "target": "0",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "Orders"
-    },
-    {
-      "check": "Column Count (Orders.ProductID)",
-      "source": "3",
-      "target": "3",
-      "status": "PASS",
-      "category": "completeness",
-      "table": "Orders"
-    },
-    {
-      "check": "Distinct Values (Orders.ProductID)",
-      "source": "3",
-      "target": "3",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "MIN (Orders.ProductID)",
+      "check": "MIN (Product.ProductID)",
       "source": "101",
       "target": "101",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MAX (Orders.ProductID)",
+      "check": "MAX (Product.ProductID)",
       "source": "103",
       "target": "103",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "SUM (Orders.ProductID)",
+      "check": "SUM (Product.ProductID)",
       "source": "306",
       "target": "306",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "NULL Count (Orders.Quantity)",
+      "check": "NULL Count (Product.ProductName)",
       "source": "0",
       "target": "0",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Column Count (Orders.Quantity)",
+      "check": "Column Count (Product.ProductName)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Distinct Values (Orders.Quantity)",
-      "source": "2",
-      "target": "2",
+      "check": "Distinct Values (Product.ProductName)",
+      "source": "3",
+      "target": "3",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MIN (Orders.Quantity)",
-      "source": "1",
-      "target": "1",
+      "check": "Max String Length (Product.ProductName)",
+      "source": "6",
+      "target": "6",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MAX (Orders.Quantity)",
-      "source": "2",
-      "target": "2",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "SUM (Orders.Quantity)",
-      "source": "4",
-      "target": "4",
-      "status": "PASS",
-      "category": "accuracy",
-      "table": "Orders"
-    },
-    {
-      "check": "NULL Count (Orders.OrderDate)",
+      "check": "NULL Count (Product.Category)",
       "source": "0",
       "target": "0",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Column Count (Orders.OrderDate)",
+      "check": "Column Count (Product.Category)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Distinct Values (Orders.OrderDate)",
+      "check": "Distinct Values (Product.Category)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "Max String Length (Product.Category)",
+      "source": "11",
+      "target": "11",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "NULL Count (Product.Price)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Column Count (Product.Price)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Distinct Values (Product.Price)",
       "source": "3",
       "target": "3",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MIN (Orders.OrderDate)",
-      "source": "2025-05-01 00:00:00",
-      "target": "2025-05-01 00:00:00",
+      "check": "MIN (Product.Price)",
+      "source": "25.00",
+      "target": "25.00",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "MAX (Orders.OrderDate)",
-      "source": "2025-05-10 00:00:00",
-      "target": "2025-05-10 00:00:00",
+      "check": "MAX (Product.Price)",
+      "source": "1200.00",
+      "target": "1200.00",
       "status": "PASS",
       "category": "accuracy",
-      "table": "Orders"
+      "table": "Product"
     },
     {
-      "check": "Rejected Rows (Orders)",
+      "check": "SUM (Product.Price)",
+      "source": "1405.00",
+      "target": "1405.00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "Rejected Rows (Product)",
       "source": "3",
       "target": "0 failed, 0 skipped",
       "status": "PASS",
       "category": "completeness",
-      "table": "Orders"
+      "table": "Product"
     },
     {
       "check": "Total Row Count Match",

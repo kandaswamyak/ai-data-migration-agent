@@ -20,6 +20,24 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import math
 
 
+def _format_duration(seconds):
+    """Human-readable elapsed time: '1.8s', '2m 05s', '1h 03m 20s'."""
+    try:
+        seconds = float(seconds)
+    except (TypeError, ValueError):
+        return "0s"
+    if seconds < 0:
+        seconds = 0
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    total = int(round(seconds))
+    hours, rem = divmod(total, 3600)
+    minutes, secs = divmod(rem, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {secs:02d}s"
+    return f"{minutes}m {secs:02d}s"
+
+
 def connect_azure_sql(server, database, username, password, attempts=3):
     """Open an Azure SQL connection with bounded retries for transient resets."""
     import pyodbc
@@ -2204,6 +2222,7 @@ def execute_migration():
     azure_pass = os.getenv("AZURE_SQL_PASSWORD", "")
 
     mode = "live"
+    _migration_started = time.time()
     executed_statements = []
     errors = []
     migrated_rows = 0
@@ -2931,6 +2950,8 @@ WHEN NOT MATCHED THEN
         "executed_count": len(executed_statements),
         "ddl_created": len(tables_created),
         "ddl_skipped_existing": len(tables_skipped_ddl),
+        "duration_sec": round(time.time() - _migration_started, 2),
+        "duration_display": _format_duration(time.time() - _migration_started),
         "errors": errors,
     })
 

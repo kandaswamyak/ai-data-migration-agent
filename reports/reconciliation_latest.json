@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-24T09:36:12.753638+00:00",
+  "generated_at_utc": "2026-09-24T09:46:23.708579+00:00",
   "mode": "append",
   "rows_read": 3,
   "rows_written": 3,
@@ -8,16 +8,16 @@
   "failed_rows": 0,
   "table_metrics": [
     {
-      "source_table": "Orders",
-      "target_table": "Orders",
+      "source_table": "Product",
+      "target_table": "Product",
       "rows_read": 3,
       "rows_written": 3,
       "rows_updated": 0,
       "duplicates_skipped": 0,
       "failed_rows": 0,
       "partition_count": 1,
-      "duration_sec": 2.068,
-      "throughput_rps": 1.45
+      "duration_sec": 2.275,
+      "throughput_rps": 1.32
     }
   ],
   "failed_rows_sample": [],

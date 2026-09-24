@@ -1737,7 +1737,8 @@ async function executeMigration() {
         result.innerHTML = `<div class="alert ${alertClass}">
             ${icon} <strong>${modeLabel} — Migration Complete!</strong><br>
             ${res.message}<br>
-            <small>Mode: ${res.migration_mode || mode} | Tables: ${res.tables_migrated} | Columns: ${res.columns_migrated}${res.skipped ? ' | Skipped: ' + res.skipped : ''}${res.rows_migrated !== undefined ? ' | Rows Inserted: ' + res.rows_migrated : ''}${res.rows_updated !== undefined ? ' | Rows Updated: ' + res.rows_updated : ''}${res.duplicate_rows_skipped !== undefined ? ' | Duplicate Skipped: ' + res.duplicate_rows_skipped : ''}</small>
+            ${res.duration_display ? `<div style="margin:6px 0;"><strong>⏱️ Completed in ${res.duration_display}</strong></div>` : ''}
+            <small>Mode: ${res.migration_mode || mode} | Tables: ${res.tables_migrated} | Columns: ${res.columns_migrated}${res.skipped ? ' | Skipped: ' + res.skipped : ''}${res.rows_migrated !== undefined ? ' | Rows Inserted: ' + res.rows_migrated : ''}${res.rows_updated !== undefined ? ' | Rows Updated: ' + res.rows_updated : ''}${res.duplicate_rows_skipped !== undefined ? ' | Duplicate Skipped: ' + res.duplicate_rows_skipped : ''}${res.duration_display ? ' | Time: ' + res.duration_display : ''}</small>
             ${errHtml}
         </div>`;
         markComplete(6);
