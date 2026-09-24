@@ -1716,7 +1716,8 @@ def pre_migration_check():
         checks.append({"check": name, "status": "PASS" if passed else "FAIL", "detail": detail})
 
     # Source readiness
-    source_ok = bool(state.get("source_type")) and state.get("source_type") == "Oracle (Real)"
+    _src = state.get("source_type")
+    source_ok = _src in ("Oracle (Real)", "Oracle", "SQL Server")
     add_check(
         "Source Connection",
         source_ok,
@@ -1772,7 +1773,10 @@ def pre_migration_check():
                     mapped_target_tables,
                 )
                 existing_tables = {str(row[0]).strip() for row in cur.fetchall()}
-                target_table_exists = {t: t in existing_tables for t in mapped_target_tables}
+                # Case-insensitive presence match (SQL Server object names are case-insensitive
+                # by default; DDL/mapping casing may differ).
+                existing_lower = {e.lower() for e in existing_tables}
+                target_table_exists = {t: (t in existing_tables or t.lower() in existing_lower) for t in mapped_target_tables}
 
             cur.execute("SELECT OBJECT_ID('dbo.MIGRATION_WATERMARKS', 'U')")
             watermark_bootstrapped = cur.fetchone()[0] is not None
@@ -1798,17 +1802,28 @@ def pre_migration_check():
         # Source table row estimates
         try:
             cfg = state.get("connection_config") or {}
-            source_connector = OracleConnector(
-                host=cfg.get("host", "localhost"),
-                port=cfg.get("port", 1521),
-                service_name=cfg.get("service_name"),
-                sid=cfg.get("sid"),
-                username=cfg.get("username", ""),
-                password=cfg.get("password", ""),
-                mode=cfg.get("mode", "NORMAL"),
-            )
-            source_connector.connect()
-            source_tables = sorted({str(m.get("source_table", "")).upper() for m in approved if m.get("source_table")})
+            if _src in ("Oracle (Real)", "Oracle"):
+                source_connector = OracleConnector(
+                    host=cfg.get("host", "localhost"),
+                    port=cfg.get("port", 1521),
+                    service_name=cfg.get("service_name"),
+                    sid=cfg.get("sid"),
+                    username=cfg.get("username", ""),
+                    password=cfg.get("password", ""),
+                    mode=cfg.get("mode", "NORMAL"),
+                )
+                source_connector.connect()
+                source_tables = sorted({str(m.get("source_table", "")).upper() for m in approved if m.get("source_table")})
+            else:
+                source_connector = SQLServerConnector(
+                    cfg.get("server", "localhost"),
+                    cfg.get("database", ""),
+                    username=cfg.get("username") or None,
+                    password=cfg.get("password") or None,
+                )
+                source_connector.connect()
+                # SQL Server: preserve table-name case as stored in mappings.
+                source_tables = sorted({str(m.get("source_table", "")).strip() for m in approved if m.get("source_table")})
             for t in source_tables:
                 try:
                     source_table_counts[t] = int(source_connector.get_row_count(t))
@@ -2325,11 +2340,14 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
             conn.commit()
 
             # ------------------------------------------------------------
-            # DATA MIGRATION (Oracle Real -> Azure SQL)
+            # DATA MIGRATION (Oracle Real | SQL Server -> Azure SQL)
             # ------------------------------------------------------------
-            if state.get("source_type") != "Oracle (Real)":
+            _mig_src_type = state.get("source_type")
+            _src_is_oracle = _mig_src_type in ("Oracle (Real)", "Oracle")
+            _src_is_sqlserver = _mig_src_type == "SQL Server"
+            if not (_src_is_oracle or _src_is_sqlserver):
                 mode = "dry_run"
-                errors.append("Source is not Oracle (Real). Data copy skipped; only DDL execution attempted.")
+                errors.append(f"Source type '{_mig_src_type}' does not support data copy. Only DDL execution attempted.")
             else:
                 cfg = state.get("connection_config") or {}
                 shared_source_connector = None
@@ -2348,16 +2366,24 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                 def get_partition_ranges(src_cur, source_table, partition_col, last_scn):
                     if not partition_col:
                         return []
-                    where = ""
-                    binds = {}
-                    if last_scn and last_scn > 0:
-                        where = " WHERE ORA_ROWSCN > :pscn"
-                        binds = {"pscn": int(last_scn)}
-                    q = (
-                        f"SELECT MIN({quote_oracle_ident(partition_col)}), MAX({quote_oracle_ident(partition_col)}) "
-                        f"FROM {quote_oracle_ident(source_table)}{where}"
-                    )
-                    src_cur.execute(q, binds)
+                    if _src_is_sqlserver:
+                        # SQL Server: no SCN; bracket quoting; MIN/MAX over full table.
+                        q = (
+                            f"SELECT MIN({quote_sql_ident(partition_col)}), MAX({quote_sql_ident(partition_col)}) "
+                            f"FROM {quote_sql_ident(source_table)}"
+                        )
+                        src_cur.execute(q)
+                    else:
+                        where = ""
+                        binds = {}
+                        if last_scn and last_scn > 0:
+                            where = " WHERE ORA_ROWSCN > :pscn"
+                            binds = {"pscn": int(last_scn)}
+                        q = (
+                            f"SELECT MIN({quote_oracle_ident(partition_col)}), MAX({quote_oracle_ident(partition_col)}) "
+                            f"FROM {quote_oracle_ident(source_table)}{where}"
+                        )
+                        src_cur.execute(q, binds)
                     row = src_cur.fetchone()
                     if not row or row[0] is None or row[1] is None:
                         return []
@@ -2411,6 +2437,14 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
 
                         if shared_source_connector is not None:
                             src_connector = shared_source_connector
+                        elif _src_is_sqlserver:
+                            src_connector = SQLServerConnector(
+                                cfg.get("server", "localhost"),
+                                cfg.get("database", ""),
+                                username=cfg.get("username") or None,
+                                password=cfg.get("password") or None,
+                            )
+                            src_connector.connect()
                         else:
                             src_connector = OracleConnector(
                                 host=cfg.get("host", "localhost"),
@@ -2424,9 +2458,13 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                             src_connector.connect()
                         src_cur = src_connector.connection.cursor()
 
-                        # Oracle stores unquoted identifiers as UPPERCASE; must match.
-                        source_table = source_table.upper()
-                        source_cols = [str(m.get("source_column", "")).upper() for m in mappings]
+                        if _src_is_sqlserver:
+                            # SQL Server: preserve identifier case as stored in mappings.
+                            source_cols = [str(m.get("source_column", "")).strip() for m in mappings]
+                        else:
+                            # Oracle stores unquoted identifiers as UPPERCASE; must match.
+                            source_table = source_table.upper()
+                            source_cols = [str(m.get("source_column", "")).upper() for m in mappings]
                         target_cols = [str(m.get("target_column", "")).strip() for m in mappings]
                         if not source_cols or not target_cols:
                             return result
@@ -2489,7 +2527,8 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                             last_scn = 0
 
                         # If target already has rows but watermark is missing, bootstrap SCN to avoid re-reading full table.
-                        if requested_mode in ("incremental", "upsert") and last_scn <= 0:
+                        # (Oracle-only: SQL Server source has no ORA_ROWSCN / SCN concept.)
+                        if _src_is_oracle and requested_mode in ("incremental", "upsert") and last_scn <= 0:
                             try:
                                 tgt_cur.execute(f"SELECT COUNT(1) FROM [dbo].{quote_sql_ident(target_table)}")
                                 tgt_count_row = tgt_cur.fetchone()
@@ -2511,7 +2550,8 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                                         f"Watermark bootstrap failed for {source_table}: {str(bootstrap_ex)[:140]}"
                                     )
 
-                        select_cols = ", ".join(quote_oracle_ident(c) for c in source_cols)
+                        _src_quote = quote_sql_ident if _src_is_sqlserver else quote_oracle_ident
+                        select_cols = ", ".join(_src_quote(c) for c in source_cols)
                         insert_cols = ", ".join(quote_sql_ident(c) for c in target_cols)
                         placeholders = ", ".join(["?"] * len(target_cols))
 
@@ -2534,22 +2574,36 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
 
                         for pr in partition_ranges:
                             where_clauses = []
-                            binds = {}
-                            if requested_mode == "incremental" and last_scn > 0:
-                                where_clauses.append("ORA_ROWSCN > :pscn")
-                                binds["pscn"] = int(last_scn)
-                            if pr and partition_col:
-                                where_clauses.append(f"{quote_oracle_ident(partition_col)} >= :pmin")
-                                where_clauses.append(f"{quote_oracle_ident(partition_col)} < :pmax")
-                                binds["pmin"] = int(pr[0])
-                                binds["pmax"] = int(pr[1])
-                            where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
-                            select_sql = (
-                                f"SELECT {select_cols}, ORA_ROWSCN AS CDC_SCN "
-                                f"FROM {quote_oracle_ident(source_table)}{where_sql}"
-                            )
-
-                            src_cur.execute(select_sql, binds)
+                            if _src_is_sqlserver:
+                                # SQL Server: no SCN; positional (?) binds; bracket quoting.
+                                params = []
+                                if pr and partition_col:
+                                    where_clauses.append(f"{quote_sql_ident(partition_col)} >= ?")
+                                    where_clauses.append(f"{quote_sql_ident(partition_col)} < ?")
+                                    params.append(int(pr[0]))
+                                    params.append(int(pr[1]))
+                                where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+                                select_sql = (
+                                    f"SELECT {select_cols} "
+                                    f"FROM {quote_sql_ident(source_table)}{where_sql}"
+                                )
+                                src_cur.execute(select_sql, params) if params else src_cur.execute(select_sql)
+                            else:
+                                binds = {}
+                                if requested_mode == "incremental" and last_scn > 0:
+                                    where_clauses.append("ORA_ROWSCN > :pscn")
+                                    binds["pscn"] = int(last_scn)
+                                if pr and partition_col:
+                                    where_clauses.append(f"{quote_oracle_ident(partition_col)} >= :pmin")
+                                    where_clauses.append(f"{quote_oracle_ident(partition_col)} < :pmax")
+                                    binds["pmin"] = int(pr[0])
+                                    binds["pmax"] = int(pr[1])
+                                where_sql = (" WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+                                select_sql = (
+                                    f"SELECT {select_cols}, ORA_ROWSCN AS CDC_SCN "
+                                    f"FROM {quote_oracle_ident(source_table)}{where_sql}"
+                                )
+                                src_cur.execute(select_sql, binds)
                             while True:
                                 batch = src_cur.fetchmany(5000)
                                 if not batch:
@@ -2557,10 +2611,14 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                                 result["rows_read"] += len(batch)
                                 out_rows = []
                                 for row in batch:
-                                    vals = tuple(normalize_cell(v) for v in row[:-1])
-                                    scn_val = int(row[-1]) if row[-1] is not None else 0
-                                    if scn_val > result["max_scn"]:
-                                        result["max_scn"] = scn_val
+                                    if _src_is_sqlserver:
+                                        # No CDC_SCN column appended for SQL Server sources.
+                                        vals = tuple(normalize_cell(v) for v in row)
+                                    else:
+                                        vals = tuple(normalize_cell(v) for v in row[:-1])
+                                        scn_val = int(row[-1]) if row[-1] is not None else 0
+                                        if scn_val > result["max_scn"]:
+                                            result["max_scn"] = scn_val
                                     out_rows.append(vals)
 
                                 if requested_mode == "append":
@@ -2740,15 +2798,23 @@ WHEN NOT MATCHED THEN
                     table_mappings.setdefault(key, []).append(m)
 
                 if len(table_mappings) == 1:
-                    shared_source_connector = OracleConnector(
-                        host=cfg.get("host", "localhost"),
-                        port=cfg.get("port", 1521),
-                        service_name=cfg.get("service_name"),
-                        sid=cfg.get("sid"),
-                        username=cfg.get("username", ""),
-                        password=cfg.get("password", ""),
-                        mode=cfg.get("mode", "NORMAL"),
-                    )
+                    if _src_is_sqlserver:
+                        shared_source_connector = SQLServerConnector(
+                            cfg.get("server", "localhost"),
+                            cfg.get("database", ""),
+                            username=cfg.get("username") or None,
+                            password=cfg.get("password") or None,
+                        )
+                    else:
+                        shared_source_connector = OracleConnector(
+                            host=cfg.get("host", "localhost"),
+                            port=cfg.get("port", 1521),
+                            service_name=cfg.get("service_name"),
+                            sid=cfg.get("sid"),
+                            username=cfg.get("username", ""),
+                            password=cfg.get("password", ""),
+                            mode=cfg.get("mode", "NORMAL"),
+                        )
                     shared_source_connector.connect()
 
                 max_workers = min(4, max(1, len(table_mappings)))
@@ -2888,8 +2954,9 @@ def validate():
     if not approved:
         return jsonify({"success": False, "error": "No approved mappings available for validation."})
 
-    if state.get("source_type") != "Oracle (Real)":
-        return jsonify({"success": False, "error": "Validation currently supports Oracle (Real) source only."})
+    _vsrc = state.get("source_type")
+    if _vsrc not in ("Oracle (Real)", "Oracle", "SQL Server"):
+        return jsonify({"success": False, "error": f"Validation does not support source type: {_vsrc or 'Not connected'}."})
 
     azure_server = os.getenv("AZURE_SQL_SERVER", "")
     azure_db = os.getenv("AZURE_SQL_DATABASE", "")
@@ -2952,22 +3019,43 @@ def validate():
 
         # Connect source
         cfg = state.get("connection_config") or {}
-        source_connector = OracleConnector(
-            host=cfg.get("host", "localhost"),
-            port=cfg.get("port", 1521),
-            service_name=cfg.get("service_name"),
-            sid=cfg.get("sid"),
-            username=cfg.get("username", ""),
+        _is_sqlserver_src = state.get("source_type") == "SQL Server"
+        if _is_sqlserver_src:
+            # SQL Server source: bracket-quote identifiers.
+            def src_q(name):
+                return "[" + str(name).replace("]", "]]") + "]"
+            def src_len(expr):
+                return f"LEN({expr})"
+            source_connector = SQLServerConnector(
+                cfg.get("server", "localhost"),
+                cfg.get("database", ""),
+                username=cfg.get("username") or None,
+                password=cfg.get("password") or None,
+            )
+            source_connector.connect()
+            src_cur = source_connector.connection.cursor()
+        else:
+            # Oracle source: double-quote identifiers (stored uppercase).
+            def src_q(name):
+                return '"' + str(name).replace('"', '""') + '"'
+            def src_len(expr):
+                return f"LENGTH({expr})"
+            source_connector = OracleConnector(
+                host=cfg.get("host", "localhost"),
+                port=cfg.get("port", 1521),
+                service_name=cfg.get("service_name"),
+                sid=cfg.get("sid"),
+                username=cfg.get("username", ""),
             password=cfg.get("password", ""),
-            mode=cfg.get("mode", "NORMAL"),
-        )
-        source_connector.connect()
-        src_cur = source_connector.connection.cursor()
+                mode=cfg.get("mode", "NORMAL"),
+            )
+            source_connector.connect()
+            src_cur = source_connector.connection.cursor()
 
         # ── Source counts ──
         for t in source_tables:
             try:
-                src_cur.execute(f'SELECT COUNT(*) FROM "{t}"')
+                src_cur.execute(f'SELECT COUNT(*) FROM {src_q(t)}')
                 source_counts[t] = int(src_cur.fetchone()[0])
             except Exception as ex:
                 source_counts[t] = -1
@@ -3030,9 +3118,9 @@ def validate():
                 try:
                     # Source PK stats
                     src_cur.execute(
-                        f'SELECT COUNT(*), COUNT(DISTINCT "{src_key_col}"), '
-                        f'SUM(CASE WHEN "{src_key_col}" IS NULL THEN 1 ELSE 0 END) '
-                        f'FROM "{s_table}"'
+                        f'SELECT COUNT(*), COUNT(DISTINCT {src_q(src_key_col)}), '
+                        f'SUM(CASE WHEN {src_q(src_key_col)} IS NULL THEN 1 ELSE 0 END) '
+                        f'FROM {src_q(s_table)}'
                     )
                     src_total, src_distinct, src_nulls = src_cur.fetchone()
                     src_total = int(src_total or 0)
@@ -3161,7 +3249,7 @@ def validate():
 
                 # ── 5. NULL Count per Column ──
                 try:
-                    src_cur.execute(f'SELECT COUNT(*) - COUNT("{src_col}") FROM "{s_table}"')
+                    src_cur.execute(f'SELECT COUNT(*) - COUNT({src_q(src_col)}) FROM {src_q(s_table)}')
                     s_nulls = int(src_cur.fetchone()[0])
                     tgt_cur.execute(f"SELECT COUNT(*) - COUNT({quote_sql_ident(tgt_col)}) FROM [dbo].{quote_sql_ident(t_table)}")
                     t_nulls = int(tgt_cur.fetchone()[0])
@@ -3180,7 +3268,7 @@ def validate():
 
                 # ── 6. Non-NULL Count (Column-Level Data Comparison) ──
                 try:
-                    src_cur.execute(f'SELECT COUNT("{src_col}") FROM "{s_table}"')
+                    src_cur.execute(f'SELECT COUNT({src_q(src_col)}) FROM {src_q(s_table)}')
                     s_nonnull = int(src_cur.fetchone()[0])
                     tgt_cur.execute(f"SELECT COUNT({quote_sql_ident(tgt_col)}) FROM [dbo].{quote_sql_ident(t_table)}")
                     t_nonnull = int(tgt_cur.fetchone()[0])
@@ -3199,7 +3287,7 @@ def validate():
 
                 # ── 7. Distinct Value Count ──
                 try:
-                    src_cur.execute(f'SELECT COUNT(DISTINCT "{src_col}") FROM "{s_table}"')
+                    src_cur.execute(f'SELECT COUNT(DISTINCT {src_q(src_col)}) FROM {src_q(s_table)}')
                     s_dist = int(src_cur.fetchone()[0])
                     tgt_cur.execute(f"SELECT COUNT(DISTINCT {quote_sql_ident(tgt_col)}) FROM [dbo].{quote_sql_ident(t_table)}")
                     t_dist = int(tgt_cur.fetchone()[0])
@@ -3219,7 +3307,7 @@ def validate():
                 # ── 8. MIN / MAX Validation (numeric + date columns) ──
                 if cat in ("numeric", "date"):
                     try:
-                        src_cur.execute(f'SELECT MIN("{src_col}"), MAX("{src_col}") FROM "{s_table}"')
+                        src_cur.execute(f'SELECT MIN({src_q(src_col)}), MAX({src_q(src_col)}) FROM {src_q(s_table)}')
                         s_min_raw, s_max_raw = src_cur.fetchone()
                         tgt_cur.execute(f"SELECT MIN({quote_sql_ident(tgt_col)}), MAX({quote_sql_ident(tgt_col)}) FROM [dbo].{quote_sql_ident(t_table)}")
                         t_min_raw, t_max_raw = tgt_cur.fetchone()
@@ -3257,7 +3345,7 @@ def validate():
                 # ── 9. Numeric Aggregate: SUM ──
                 if cat == "numeric":
                     try:
-                        src_cur.execute(f'SELECT CAST(SUM("{src_col}") AS VARCHAR(200)) FROM "{s_table}"')
+                        src_cur.execute(f'SELECT CAST(SUM({src_q(src_col)}) AS VARCHAR(200)) FROM {src_q(s_table)}')
                         s_sum = (src_cur.fetchone()[0] or "").strip()
                         tgt_cur.execute(f"SELECT CAST(SUM({quote_sql_ident(tgt_col)}) AS VARCHAR(200)) FROM [dbo].{quote_sql_ident(t_table)}")
                         t_sum = (tgt_cur.fetchone()[0] or "").strip()
@@ -3289,7 +3377,7 @@ def validate():
                 if cat == "string":
                     try:
                         # Oracle uses LENGTH(), Azure SQL uses LEN()
-                        src_cur.execute(f'SELECT MAX(LENGTH("{src_col}")) FROM "{s_table}"')
+                        src_cur.execute(f'SELECT MAX({src_len(src_q(src_col))}) FROM {src_q(s_table)}')
                         s_maxlen = src_cur.fetchone()[0]
                         tgt_cur.execute(f"SELECT MAX(LEN({quote_sql_ident(tgt_col)})) FROM [dbo].{quote_sql_ident(t_table)}")
                         t_maxlen = tgt_cur.fetchone()[0]
