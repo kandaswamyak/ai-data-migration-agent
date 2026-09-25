@@ -531,6 +531,94 @@ class OracleConnector:
             cursor.close()
             raise Exception(f"Procedure discovery failed: {str(e)}")
 
+    def discover_views(self, schema: Optional[str] = None) -> List[Dict]:
+        """
+        Discover views from the Oracle source.
+        Unlike procedures/functions, a view's definition lives in the
+        USER_VIEWS/ALL_VIEWS.TEXT (LONG) column, not in *_SOURCE.
+
+        Args:
+            schema: Schema/owner name (default: current user)
+
+        Returns:
+            List of dicts with keys: name, type, status, last_ddl_time, source_code
+        """
+        if not self.connection:
+            raise Exception("Not connected to Oracle database")
+
+        cursor = self.connection.cursor()
+
+        # LONG columns must be handled before other columns in the SELECT list.
+        if schema:
+            meta_query = """
+                SELECT object_name, status, last_ddl_time
+                FROM all_objects
+                WHERE owner = :owner
+                  AND object_type = 'VIEW'
+                ORDER BY object_name
+            """
+            def_query = """
+                SELECT view_name, text
+                FROM all_views
+                WHERE owner = :owner
+                ORDER BY view_name
+            """
+            params = {"owner": schema.upper()}
+        else:
+            meta_query = """
+                SELECT object_name, status, last_ddl_time
+                FROM user_objects
+                WHERE object_type = 'VIEW'
+                ORDER BY object_name
+            """
+            def_query = """
+                SELECT view_name, text
+                FROM user_views
+                ORDER BY view_name
+            """
+            params = {}
+
+        try:
+            # Object metadata (status, last DDL time)
+            cursor.execute(meta_query, params)
+            objects = {}
+            for row in cursor.fetchall():
+                objects[row[0]] = {
+                    "name": row[0],
+                    "type": "VIEW",
+                    "status": row[1],
+                    "last_ddl_time": row[2].isoformat() if row[2] else None,
+                    "source_code": "",
+                }
+
+            # View definition text (LONG). Read LONG fully.
+            cursor.setinputsizes()
+            cursor.execute(def_query, params)
+            for row in cursor.fetchall():
+                name = row[0]
+                text = row[1]
+                if text is not None and not isinstance(text, str):
+                    text = str(text)
+                ddl = "CREATE OR REPLACE VIEW " + name + " AS\n" + (text or "")
+                if name in objects:
+                    objects[name]["source_code"] = ddl
+                else:
+                    objects[name] = {
+                        "name": name,
+                        "type": "VIEW",
+                        "status": "VALID",
+                        "last_ddl_time": None,
+                        "source_code": ddl,
+                    }
+
+            cursor.close()
+            return list(objects.values())
+
+        except Exception as e:
+            cursor.close()
+            raise Exception(f"View discovery failed: {str(e)}")
+
+
     def get_procedure_source(self, procedure_name: str, schema: Optional[str] = None) -> str:
         """Get the full source code of a specific procedure."""
         if not self.connection:

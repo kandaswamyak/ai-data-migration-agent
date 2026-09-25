@@ -356,7 +356,16 @@ state = {
     "all_mappings_approved": False,
     "procedures": [],
     "procedure_conversions": [],
+    "views": [],
 }
+
+
+def _all_code_objects():
+    """Unified list of code objects (stored procedures/functions + views).
+    Procedures live in state['procedures']; views in state['views'].
+    Both carry name/type/source_code, so downstream risk-scoring, mapping,
+    approval, and DDL steps treat them uniformly. Views carry type='VIEW'."""
+    return (state.get("procedures") or []) + (state.get("views") or [])
 
 
 # ============================================================
@@ -388,6 +397,8 @@ def get_state():
         "procedure_count": len(state.get("procedures", [])),
         "procedure_conversions": state.get("procedure_conversions", []),
         "procedures_approved": sum(1 for c in state.get("procedure_conversions", []) if c.get("approved")),
+        "views": state.get("views", []),
+        "view_count": len(state.get("views", [])),
     })
 
 
@@ -403,6 +414,9 @@ def reset_state():
     state["source_type"] = None
     state["connection_config"] = {}
     state["schema"] = None
+    state["schema_full"] = None
+    state["procedures_full"] = []
+    state["views_full"] = []
     state["relational_metadata"] = {"constraints": None, "indexes": None}
     state["selected_tables"] = []
     state["datatype_analysis"] = []
@@ -415,6 +429,7 @@ def reset_state():
     state["all_mappings_approved"] = False
     state["procedures"] = []
     state["procedure_conversions"] = []
+    state["views"] = []
     return jsonify({"success": True, "message": "State reset. Ready for new migration."})
 
 # ============================================================
@@ -429,6 +444,9 @@ def connect_source():
     # Reset ALL state for fresh start
     state["source_type"] = None
     state["schema"] = None
+    state["schema_full"] = None
+    state["procedures_full"] = []
+    state["views_full"] = []
     state["relational_metadata"] = {"constraints": None, "indexes": None}
     state["selected_tables"] = []
     state["datatype_analysis"] = []
@@ -475,6 +493,12 @@ def connect_source():
             except Exception:
                 procedures = []
             procedure_names = [p.get("name") if isinstance(p, dict) else str(p) for p in procedures]
+            # Also discover views for the connect-popup breakdown.
+            try:
+                views = connector.discover_views()
+            except Exception:
+                views = []
+            view_names = [v.get("name") if isinstance(v, dict) else str(v) for v in views]
             connector.disconnect()
 
             state["source_type"] = "Oracle (Real)"
@@ -493,6 +517,8 @@ def connect_source():
                 "table_count": len(tables),
                 "procedures": procedure_names,
                 "procedure_count": len(procedure_names),
+                "views": view_names,
+                "view_count": len(view_names),
             })
 
         except Exception as e:
@@ -516,12 +542,19 @@ def connect_source():
                 procedure_names = [row[0] for row in cursor.fetchall()]
             except Exception:
                 procedure_names = []
+            # Discover views for the connect-popup breakdown.
+            try:
+                cursor.execute("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.VIEWS ORDER BY TABLE_NAME")
+                view_names = [row[0] for row in cursor.fetchall()]
+            except Exception:
+                view_names = []
             conn.close()
             state["source_type"] = "SQL Server"
             state["connection_config"] = {"server": server, "database": database}
             return jsonify({
                 "success": True, "tables": tables, "table_count": len(tables),
                 "procedures": procedure_names, "procedure_count": len(procedure_names),
+                "views": view_names, "view_count": len(view_names),
             })
         except Exception as e:
             return jsonify({"success": False, "error": f"SQL Server connection failed: {str(e)}"})
@@ -613,6 +646,7 @@ def discover_schema():
                 })
 
             state["schema"] = rows
+            state["schema_full"] = list(rows)  # pristine copy for re-selection
             return jsonify({"success": True, "schema": rows, "count": len(rows), "relational_metadata": state["relational_metadata"]})
 
         except Exception as e:
@@ -669,6 +703,7 @@ def discover_schema():
                 })
 
             state["schema"] = rows
+            state["schema_full"] = list(rows)  # pristine copy for re-selection
             return jsonify({"success": True, "schema": rows, "count": len(rows)})
         except Exception as e:
             return jsonify({"success": False, "error": f"SQL Server schema discovery failed: {str(e)}"})
@@ -683,7 +718,14 @@ def discover_schema():
 @app.route("/api/analyze", methods=["POST"])
 def analyze_datatypes():
     if not state["schema"]:
-        return jsonify({"success": False, "error": "No schema discovered. Run schema discovery first."})
+        # No tables selected is legitimate when the user chose only procedures/views.
+        # Fail only if nothing at all was discovered/selected (no tables AND no code objects).
+        if not _all_code_objects():
+            return jsonify({"success": False, "error": "No objects selected. Select tables, procedures, or views in Schema Discovery first."})
+        # Tables empty but code objects exist -> return empty column analysis, let the
+        # code-object (procedure/view) analysis carry the step.
+        state["datatype_analysis"] = []
+        return jsonify({"success": True, "analysis": [], "count": 0, "summary": {"total": 0, "compatible": 0, "review": 0, "incompatible": 0}})
 
     results = []
 
@@ -1046,41 +1088,68 @@ def analyze_compatibility():
 @app.route("/api/select_objects", methods=["POST"])
 def select_objects():
     data = request.get_json() or {}
+
+    # Pristine discovered lists (populated at discovery). Fall back to the live
+    # lists the first time if a full copy was not captured.
+    full_schema = state.get("schema_full")
+    if full_schema is None:
+        full_schema = list(state.get("schema") or [])
+        state["schema_full"] = full_schema
+    full_procs = state.get("procedures_full")
+    if full_procs is None:
+        full_procs = list(state.get("procedures") or [])
+        state["procedures_full"] = full_procs
+    full_views = state.get("views_full")
+    if full_views is None:
+        full_views = list(state.get("views") or [])
+        state["views_full"] = full_views
+
+    def _obj_name(o):
+        return (o.get("name") if isinstance(o, dict) else str(o)) or ""
+
+    # --- Tables ---
     requested = {str(name).strip().upper() for name in data.get("tables", []) if str(name).strip()}
-    available = {str(row.get("table_name", "")).strip().upper() for row in (state.get("schema") or [])}
+    available = {str(row.get("table_name", "")).strip().upper() for row in full_schema}
     selected = sorted(requested & available)
 
-    # Procedure selection (unified with table selection). If the "procedures" key
-    # is omitted entirely, keep all discovered procedures (backward compatible).
-    all_procs = state.get("procedures") or []
+    # --- Procedures --- ("procedures" key present => filter to exactly that set)
     proc_key_present = "procedures" in data
     selected_procs = None
     if proc_key_present:
         requested_procs = {str(n).strip().upper() for n in (data.get("procedures") or []) if str(n).strip()}
-        selected_procs = [
-            p for p in all_procs
-            if (p.get("name") if isinstance(p, dict) else str(p) or "").upper() in requested_procs
-        ]
+        selected_procs = [p for p in full_procs if _obj_name(p).upper() in requested_procs]
 
-    # Require at least one object overall (a table OR, when procedures are being chosen, a procedure).
-    if not selected and not (proc_key_present and selected_procs):
-        return jsonify({"success": False, "error": "Select at least one discovered object (table or procedure)."})
+    # --- Views --- ("views" key present => filter to exactly that set)
+    view_key_present = "views" in data
+    selected_views = None
+    if view_key_present:
+        requested_views = {str(n).strip().upper() for n in (data.get("views") or []) if str(n).strip()}
+        selected_views = [v for v in full_views if _obj_name(v).upper() in requested_views]
 
-    if selected:
-        state["selected_tables"] = selected
-        state["schema"] = [
-            row for row in state["schema"]
-            if str(row.get("table_name", "")).strip().upper() in selected
-        ]
+    # Require at least one object overall.
+    if not selected and not (proc_key_present and selected_procs) and not (view_key_present and selected_views):
+        return jsonify({"success": False, "error": "Select at least one discovered object (table, procedure, or view)."})
+
+    # Rebuild schema from the pristine copy filtered to the SELECTED TABLES only.
+    # This excludes deselected tables AND any view columns (views are code objects,
+    # not column-analysis rows). Rebuilding from full_schema is non-destructive, so
+    # re-selecting on a later submit always works.
+    state["selected_tables"] = selected
+    state["schema"] = [
+        row for row in full_schema
+        if str(row.get("table_name", "")).strip().upper() in set(selected)
+    ]
 
     if proc_key_present:
-        # Filter procedures to the selected set; drop conversions for deselected ones.
-        kept_names = {(p.get("name") if isinstance(p, dict) else str(p) or "").upper() for p in selected_procs}
+        kept_names = {_obj_name(p).upper() for p in selected_procs}
         state["procedures"] = selected_procs
         state["procedure_conversions"] = [
             c for c in state.get("procedure_conversions", [])
             if c.get("name", "").upper() in kept_names
         ]
+
+    if view_key_present:
+        state["views"] = selected_views
 
     state["datatype_analysis"] = []
     state["mappings"] = []
@@ -1094,6 +1163,10 @@ def select_objects():
             (p.get("name") if isinstance(p, dict) else str(p)) for p in (selected_procs if selected_procs is not None else all_procs)
         ],
         "procedure_count": len(state.get("procedures", [])),
+        "selected_views": [
+            (v.get("name") if isinstance(v, dict) else str(v)) for v in (selected_views if selected_views is not None else all_views)
+        ],
+        "view_count": len(state.get("views", [])),
     })
 
 
@@ -1981,6 +2054,7 @@ def discover_procedures():
             procedures = connector.discover_procedures()
             connector.disconnect()
             state["procedures"] = procedures
+            state["procedures_full"] = list(procedures)  # pristine copy for re-selection
             return jsonify({
                 "success": True,
                 "procedures": procedures,
@@ -2013,6 +2087,7 @@ def discover_procedures():
                 })
             conn.close()
             state["procedures"] = procedures
+            state["procedures_full"] = list(procedures)  # pristine copy for re-selection
             return jsonify({
                 "success": True,
                 "procedures": procedures,
@@ -2022,6 +2097,75 @@ def discover_procedures():
             return jsonify({"success": False, "error": str(e)})
 
     return jsonify({"success": False, "error": "Unsupported source type for procedure discovery."})
+
+# ============================================================
+# POST /api/discover_views — Discover views
+# ============================================================
+
+@app.route("/api/discover_views", methods=["POST"])
+def discover_views():
+    """Discover views from Oracle source."""
+    if not state["source_type"]:
+        return jsonify({"success": False, "error": "Not connected. Please connect first."})
+
+    if state["source_type"] in ("Oracle (Real)", "Oracle"):
+        cfg = state.get("connection_config") or {}
+        try:
+            connector = OracleConnector(
+                host=cfg.get("host", "localhost"),
+                port=cfg.get("port", 1521),
+                service_name=cfg.get("service_name"),
+                sid=cfg.get("sid"),
+                username=cfg.get("username", ""),
+                password=cfg.get("password", ""),
+                mode=cfg.get("mode", "NORMAL"),
+            )
+            connector.connect()
+            views = connector.discover_views()
+            connector.disconnect()
+            state["views"] = views
+            state["views_full"] = list(views)  # pristine copy for re-selection
+            return jsonify({
+                "success": True,
+                "views": views,
+                "count": len(views),
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+    # ---- SQL Server ----
+    elif state["source_type"] == "SQL Server":
+        if not SQLServerConnector:
+            return jsonify({"success": False, "error": "pyodbc not installed. Run: pip install pyodbc"})
+        cfg = state.get("connection_config") or {}
+        try:
+            connector = SQLServerConnector(cfg.get("server", "localhost"), cfg.get("database", "MigrationDemo"))
+            conn = connector.connect()
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT TABLE_NAME, VIEW_DEFINITION
+                FROM INFORMATION_SCHEMA.VIEWS
+                ORDER BY TABLE_NAME
+            """)
+            views = []
+            for row in cursor.fetchall():
+                views.append({
+                    "name": row[0],
+                    "type": "VIEW",
+                    "source_code": row[1] or "",
+                })
+            conn.close()
+            state["views"] = views
+            state["views_full"] = list(views)  # pristine copy for re-selection
+            return jsonify({
+                "success": True,
+                "views": views,
+                "count": len(views),
+            })
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
+
+    return jsonify({"success": False, "error": "Unsupported source type for view discovery."})
 
 
 # ============================================================
@@ -2034,7 +2178,7 @@ def analyze_procedures():
     by scanning its source code for PL/SQL features that complicate the
     PL/SQL -> T-SQL rewrite. Does NOT re-run discovery; uses state['procedures'].
     """
-    procedures = state.get("procedures") or []
+    procedures = _all_code_objects()
     if not procedures:
         # Nothing discovered yet (or none exist) — return empty, not an error.
         return jsonify({"success": True, "objects": [], "count": 0})
@@ -2109,7 +2253,7 @@ def mapping_procedures():
     score PL/SQL->T-SQL conversion risk, and auto-approve Low risk (Medium/High
     stay pending), mirroring the column-mapping approval policy.
     """
-    procedures = state.get("procedures") or []
+    procedures = _all_code_objects()
     if not procedures:
         return jsonify({"success": True, "objects": [], "count": 0})
 
@@ -2233,7 +2377,7 @@ def _generate_procedure_risk_recommendation(obj):
 def procedure_risk_recommendation():
     """Rule-based risk cards for Medium/High risk procedures/views.
     Low-risk objects are omitted (mirrors the column risk-review behavior)."""
-    procedures = state.get("procedures") or []
+    procedures = _all_code_objects()
     recommendations = []
     for p in procedures:
         if isinstance(p, dict):
@@ -2271,13 +2415,13 @@ def procedure_ai_deepdive():
         return jsonify({"success": False, "error": "procedure_name is required."})
 
     proc = None
-    for p in state.get("procedures", []):
+    for p in _all_code_objects():
         pname = (p.get("name") if isinstance(p, dict) else str(p)) or ""
         if pname.upper() == proc_name:
             proc = p
             break
     if proc is None:
-        return jsonify({"success": False, "error": f"Procedure '{proc_name}' not found. Run Schema Discovery first."})
+        return jsonify({"success": False, "error": f"Object '{proc_name}' not found. Run Schema Discovery first."})
 
     source_code = proc.get("source_code", "") if isinstance(proc, dict) else ""
     if not source_code:
@@ -2291,16 +2435,20 @@ def procedure_ai_deepdive():
             "analysis": "AI engine is not configured in this environment. The rule-based guidance on the card reflects the detected Oracle-specific constructs and their standard T-SQL rewrites.",
         })
 
+    otype = (proc.get("type") if isinstance(proc, dict) else "PROCEDURE") or "PROCEDURE"
+    is_view = str(otype).upper() == "VIEW"
+    obj_label = "view" if is_view else "PL/SQL procedure"
+    src_label = "Oracle VIEW definition" if is_view else "Oracle PL/SQL source"
     try:
-        system_message = "You are a senior database migration engineer specializing in Oracle PL/SQL to Azure SQL (T-SQL) conversion."
-        prompt = f"""Analyze this Oracle PL/SQL procedure for migration to Azure SQL (T-SQL).
+        system_message = "You are a senior database migration engineer specializing in Oracle to Azure SQL (T-SQL) conversion."
+        prompt = f"""Analyze this {obj_label} for migration to Azure SQL (T-SQL).
 
 Provide a concise assessment covering:
-1. The specific conversion challenges in THIS procedure.
+1. The specific conversion challenges in THIS {obj_label}.
 2. Concrete T-SQL rewrite guidance for each challenge.
 3. Any behavioral differences to test after conversion.
 
-Oracle PL/SQL source:
+{src_label}:
 ```sql
 {source_code}
 ```
@@ -2323,9 +2471,29 @@ def _convert_plsql_to_tsql(proc_name, source_code, source_type="PROCEDURE"):
     tsql_code = ""
     note = ""
     ai_engine = get_ai_engine()
+    is_view = str(source_type or "").upper() == "VIEW"
     if ai_engine and getattr(ai_engine, "is_available", lambda: True)():
         try:
-            prompt = f"""Convert the following Oracle PL/SQL procedure to Azure SQL Server T-SQL.
+            if is_view:
+                prompt = f"""Convert the following Oracle VIEW definition to Azure SQL Server T-SQL.
+
+Key conversion rules:
+- Use CREATE OR ALTER VIEW syntax (do NOT wrap it as a stored procedure)
+- Replace NVL with ISNULL, NVL2 with CASE
+- Replace TO_CHAR/TO_DATE/TO_NUMBER with CONVERT/FORMAT/CAST equivalents
+- Replace ROWNUM <= N filters with TOP N (move into the SELECT)
+- Replace DECODE with CASE
+- Preserve analytic/window functions (RANK, ROW_NUMBER, etc.) as-is where valid
+- Qualify objects with the dbo schema where appropriate
+
+Oracle VIEW source:
+```sql
+{source_code}
+```
+
+Return ONLY the T-SQL code, no explanation."""
+            else:
+                prompt = f"""Convert the following Oracle PL/SQL procedure to Azure SQL Server T-SQL.
 
 Key conversion rules:
 - Replace SYS_REFCURSOR with table-valued output or temp table pattern
@@ -2351,7 +2519,7 @@ Return ONLY the T-SQL code, no explanation."""
         except Exception as e:
             note = f"AI conversion failed: {str(e)[:150]}"
     else:
-        note = "AI engine not configured — convert this procedure via the AI step, or edit manually."
+        note = f"AI engine not configured — convert this {'view' if is_view else 'procedure'} via the AI step, or edit manually."
 
     conversion = {
         "name": proc_name,
@@ -2400,7 +2568,7 @@ def _normalize_tsql(text):
 
 
 def _get_target_proc_definitions():
-    """Return {UPPER(proc_name): definition_text} for procedures in the target Azure SQL.
+    """Return {UPPER(name): definition_text} for procedures AND views in the target Azure SQL.
     Returns None if the target is unreachable/unconfigured (caller then defaults to CREATE/ALTER)."""
     azure_server = os.getenv("AZURE_SQL_SERVER", "")
     azure_db = os.getenv("AZURE_SQL_DATABASE", "")
@@ -2414,6 +2582,9 @@ def _get_target_proc_definitions():
         cur.execute("""
             SELECT p.name, OBJECT_DEFINITION(p.object_id)
             FROM sys.procedures p
+            UNION ALL
+            SELECT v.name, OBJECT_DEFINITION(v.object_id)
+            FROM sys.views v
         """)
         result = {str(r[0]).strip().upper(): (r[1] or "") for r in cur.fetchall()}
         cur.close()
@@ -2444,7 +2615,7 @@ def _procedure_ddl_action(proc_name, new_tsql, target_defs):
 def generate_procedure_ddl():
     """Generate (convert) T-SQL DDL for APPROVED code objects only.
     Mirrors generate_ddl's 'approved only' rule for tables."""
-    procedures = state.get("procedures") or []
+    procedures = _all_code_objects()
     if not procedures:
         return jsonify({"success": True, "objects": [], "count": 0,
                         "message": "No procedures discovered."})
@@ -2540,15 +2711,16 @@ def convert_procedure():
     if not proc_name:
         return jsonify({"success": False, "error": "procedure_name is required."})
 
-    # Find the procedure in discovered list
+    # Find the code object (procedure or view) in the unified discovered list.
     proc = None
-    for p in state.get("procedures", []):
-        if p["name"].upper() == proc_name:
+    for p in _all_code_objects():
+        pname = (p.get("name") if isinstance(p, dict) else str(p)) or ""
+        if pname.upper() == proc_name:
             proc = p
             break
 
     if not proc:
-        return jsonify({"success": False, "error": f"Procedure '{proc_name}' not found. Run discovery first."})
+        return jsonify({"success": False, "error": f"Object '{proc_name}' not found. Run discovery first."})
 
     source_code = proc.get("source_code", "")
     if not source_code:
@@ -4362,13 +4534,17 @@ def validate_procedures():
     if not all([azure_server, azure_db, azure_user, azure_pass]):
         return jsonify({"success": False, "error": "Azure SQL target configuration is missing in environment."})
 
-    # Fetch the set of procedures that actually exist in the target.
+    # Fetch the set of code objects (procedures AND views) that actually exist in
+    # the target. Views live in INFORMATION_SCHEMA.VIEWS, not ROUTINES — without
+    # unioning them, deployed views falsely report as missing (FAIL).
     target_procs = set()
     try:
         conn = connect_azure_sql(azure_server, azure_db, azure_user, azure_pass)
         cur = conn.cursor()
         cur.execute("SELECT UPPER(ROUTINE_NAME) FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_TYPE='PROCEDURE'")
         target_procs = {row[0] for row in cur.fetchall()}
+        cur.execute("SELECT UPPER(TABLE_NAME) FROM INFORMATION_SCHEMA.VIEWS")
+        target_procs |= {row[0] for row in cur.fetchall()}
         cur.close()
         conn.close()
     except Exception as e:

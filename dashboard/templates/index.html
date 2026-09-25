@@ -263,6 +263,10 @@
                 <div class="table-container"></div>
             </div>
             <div id="schemaProcedures" class="hidden" style="margin-top:16px;"></div>
+            <div id="schemaActionBar" class="hidden" style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <button class="btn btn-primary" onclick="selectSchemaObjects()">Use selected objects</button>
+                <span id="selectedObjectsStatus" class="card-subtitle">0 object(s) selected</span>
+            </div>
         </div>
 
         <div class="bottom-nav">
@@ -360,8 +364,8 @@
                     <h2>Human Approval Gate</h2>
                     <p class="card-subtitle">Review and approve column mappings and code objects before migration execution</p>
                 </div>
-                <div>
-                    <div style="display: inline-block; position: relative;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: inline-flex; align-items: center; position: relative;">
                         <button class="btn btn-success btn-sm" onclick="approveAll()" style="border-radius: 6px 0 0 6px;"><span class="btn-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>Approve All</button><button class="btn btn-success btn-sm" onclick="toggleApproveDropdown(event)" style="border-radius: 0 6px 6px 0; border-left: 1px solid rgba(255,255,255,0.3); padding: 6px 8px;" title="Approve by risk level">▾</button>
                         <div id="approveDropdown" style="display:none; position:absolute; right:0; top:100%; margin-top:4px; background:var(--bg-card,#fff); border:1px solid var(--border,#e5e7eb); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.12); z-index:50; min-width:200px; overflow:hidden;">
                             <div style="padding:4px;">
@@ -372,7 +376,7 @@
                             </div>
                         </div>
                     </div>
-                    <button class="btn btn-outline btn-sm" onclick="unselectAll()" style="margin-left: 8px;">Unselect All</button>
+                    <button class="btn btn-outline btn-sm" onclick="unselectAll()">Unselect All</button>
                 </div>
             </div>
 
@@ -958,13 +962,10 @@ async function connectSource() {
         const tableNames = Array.isArray(res.tables) ? res.tables.join(', ') : '';
         const procCount = res.procedure_count || (Array.isArray(res.procedures) ? res.procedures.length : 0);
         const procNames = Array.isArray(res.procedures) ? res.procedures.join(', ') : '';
-        let msg = `✅ Connected! Found <strong>${tableCount}</strong> table(s) and <strong>${procCount}</strong> procedure(s)`;
-        if (tableCount > 0 && tableNames && !tableNames.includes('Not connected')) {
-            msg += `<br><strong>Tables:</strong> ${tableNames}`;
-        }
-        if (procCount > 0 && procNames) {
-            msg += `<br><strong>Procedures:</strong> ${procNames}`;
-        }
+        const viewCount = res.view_count || (Array.isArray(res.views) ? res.views.length : 0);
+        const srcBase = (type || '').toLowerCase().replace(/\s*\(.*?\)\s*/g, '').trim();
+        const srcLabel = ({ oracle: 'Oracle', sqlserver: 'SQL Server', 'sql server': 'SQL Server' }[srcBase]) || (srcBase ? srcBase.charAt(0).toUpperCase() + srcBase.slice(1) : '');
+        let msg = `✅ Connected${srcLabel ? ' to <strong>' + srcLabel + '</strong>' : ''}! Found <strong>${tableCount}</strong> table(s), <strong>${procCount}</strong> procedure(s) and <strong>${viewCount}</strong> view(s)`;
         if (res.message) msg += `<br><em>${res.message}</em>`;
         showAlert('connectStatus', 'success', msg);
         setConnStatus('source', true, type);
@@ -989,6 +990,7 @@ async function connectSource() {
 let discoveredSchemaRows = [];
 let selectedSchemaObjects = new Set();
 let selectedProcedures = new Set();
+let selectedViews = new Set();
 let schemaPage = 0;
 const schemaPageSize = 100;
 
@@ -1055,12 +1057,8 @@ function renderSchemaPage() {
     });
     html += '</div>'; // tablesBody
 
-    // ---- Stored Procedures section (rendered by renderSchemaProcedures into its own box) ----
-    // ---- Action bar ----
-    html += `<div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="selectSchemaObjects()">Use selected objects</button>
-        <span id="selectedObjectsStatus" class="card-subtitle">${selectedSchemaObjects.size} object(s) selected</span>
-    </div>`;
+    // ---- Stored Procedures & Views sections render into #schemaProcedures; the
+    //      shared action bar (#schemaActionBar) lives below all three sections. ----
     html += '</div>'; // obj-group
     table.innerHTML = html;
 }
@@ -1073,11 +1071,19 @@ function toggleObjSection(bodyId, headerEl) {
     if (caret) caret.textContent = nowHidden ? '▶' : '▼';
 }
 
+function updateSelectedObjectsStatus() {
+    const status = document.getElementById('selectedObjectsStatus');
+    if (!status) return;
+    const t = selectedSchemaObjects.size;
+    const p = selectedProcedures.size;
+    const v = selectedViews.size;
+    status.textContent = `${t} table(s), ${p} procedure(s), ${v} view(s) selected`;
+}
+
 function toggleSchemaObject(input) {
     if (input.checked) selectedSchemaObjects.add(input.value);
     else selectedSchemaObjects.delete(input.value);
-    const status = document.getElementById('selectedObjectsStatus');
-    if (status) status.textContent = `${selectedSchemaObjects.size} object(s) selected`;
+    updateSelectedObjectsStatus();
 }
 
 function changeSchemaPage(delta) {
@@ -1092,6 +1098,8 @@ async function discoverSchema() {
     document.getElementById('schemaMetrics').classList.add('hidden');
     document.getElementById('schemaTable').classList.add('hidden');
     document.getElementById('schemaProcedures').classList.add('hidden');
+    const _ab = document.getElementById('schemaActionBar');
+    if (_ab) _ab.classList.add('hidden');
 
     const res = await apiCall('/api/discover_schema', { method: 'POST', body: JSON.stringify({}) });
 
@@ -1113,10 +1121,15 @@ async function discoverSchema() {
         const schemaSet = new Set(schema.map(r => r.schema_name || '').filter(Boolean));
         selectedSchemaObjects = tableSet;
         selectedProcedures = new Set();  // reset; renderSchemaProcedures re-selects all by default
+        selectedViews = new Set();       // reset; renderSchemaProcedures re-selects all views by default
 
         // Also discover stored procedures (reuses existing endpoint)
         const procRes = await apiCall('/api/discover_procedures', { method: 'POST', body: JSON.stringify({}) });
         const procedures = (procRes && procRes.success && Array.isArray(procRes.procedures)) ? procRes.procedures : [];
+
+        // Also discover views (reuses existing endpoint)
+        const viewRes = await apiCall('/api/discover_views', { method: 'POST', body: JSON.stringify({}) });
+        const views = (viewRes && viewRes.success && Array.isArray(viewRes.views)) ? viewRes.views : [];
 
         document.getElementById('schemaMetrics').classList.remove('hidden');
         document.getElementById('schemaMetrics').innerHTML = buildMetrics([
@@ -1124,12 +1137,16 @@ async function discoverSchema() {
             { label: 'Tables', value: tableCount, cls: 'success' },
             { label: 'Columns', value: colCount, cls: '' },
             { label: 'Procedures', value: procedures.length, cls: procedures.length > 0 ? 'success' : '' },
+            { label: 'Views', value: views.length, cls: views.length > 0 ? 'success' : '' },
         ]);
 
         const table = document.getElementById('schemaTable');
         table.classList.remove('hidden');
         renderSchemaPage();
-        renderSchemaProcedures(procedures);
+        renderSchemaProcedures(procedures, views);
+        const actionBar = document.getElementById('schemaActionBar');
+        if (actionBar) actionBar.classList.remove('hidden');
+        updateSelectedObjectsStatus();
         markComplete(1);
     } else {
         showAlert('schemaTable', 'error', res.error);
@@ -1137,7 +1154,7 @@ async function discoverSchema() {
     }
 }
 
-function renderSchemaProcedures(procedures) {
+function renderSchemaProcedures(procedures, views) {
     const box = document.getElementById('schemaProcedures');
     if (!box) return;
     const procs = procedures || [];
@@ -1169,18 +1186,45 @@ function renderSchemaProcedures(procedures) {
     }
     html += '</div>'; // procsBody
 
-    // Views section (placeholder — wired for later view discovery)
+    // ---- Views section ----
+    const vws = views || [];
+    window._discoveredViews = vws;
     html += `<div class="obj-section-header" onclick="toggleObjSection('viewsBody', this)">
         <span class="obj-caret">▶</span>
-        <strong>Views (0)</strong>
+        <strong>Views (${vws.length})</strong>
     </div>`;
     html += '<div id="viewsBody" class="obj-section-body hidden">';
-    html += '<p class="card-subtitle" style="padding:8px 12px;">View discovery coming soon.</p>';
+    if (vws.length === 0) {
+        html += '<p class="card-subtitle" style="padding:8px 12px;">No views discovered.</p>';
+    } else {
+        if (selectedViews.size === 0) {
+            vws.forEach(v => selectedViews.add((v.name || v.NAME || String(v)).toUpperCase()));
+        }
+        html += '<div class="table-container"><table><thead><tr><th>Select</th><th>View</th><th>Type</th></tr></thead><tbody>';
+        vws.forEach(v => {
+            const rawName = v.name || v.NAME || String(v);
+            const name = escapeHtml(rawName);
+            const type = escapeHtml(v.type || v.object_type || 'VIEW');
+            const checked = selectedViews.has(rawName.toUpperCase()) ? 'checked' : '';
+            html += '<tr><td><input type="checkbox" class="schema-view-select" value="' + name + '" ' + checked + ' onchange="toggleViewSelect(this)" aria-label="Select ' + name + '"></td><td><strong>' + name + '</strong></td><td>' + type + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+        html += '<div style="padding:6px 8px;"><span id="selectedViewsStatus" class="card-subtitle">' + selectedViews.size + ' view(s) selected</span></div>';
+    }
     html += '</div>'; // viewsBody
 
     html += '</div>'; // obj-group
     box.innerHTML = html;
     box.classList.remove('hidden');
+}
+
+function toggleViewSelect(input) {
+    const val = (input.value || '').toUpperCase();
+    if (input.checked) selectedViews.add(val);
+    else selectedViews.delete(val);
+    const status = document.getElementById('selectedViewsStatus');
+    if (status) status.textContent = `${selectedViews.size} view(s) selected`;
+    updateSelectedObjectsStatus();
 }
 
 function toggleProcedureSelect(input) {
@@ -1189,6 +1233,7 @@ function toggleProcedureSelect(input) {
     else selectedProcedures.delete(val);
     const status = document.getElementById('selectedProcsStatus');
     if (status) status.textContent = `${selectedProcedures.size} procedure(s) selected`;
+    updateSelectedObjectsStatus();
 }
 
 async function selectSchemaObjects() {
@@ -1197,16 +1242,21 @@ async function selectSchemaObjects() {
     const procedures = (window._discoveredProcedures || [])
         .map(p => p.name || p.NAME || String(p))
         .filter(n => selectedProcedures.has(n.toUpperCase()));
+    // Send the actual view names that are selected.
+    const views = (window._discoveredViews || [])
+        .map(v => v.name || v.NAME || String(v))
+        .filter(n => selectedViews.has(n.toUpperCase()));
     const res = await apiCall('/api/select_objects', {
         method: 'POST',
-        body: JSON.stringify({ tables, procedures })
+        body: JSON.stringify({ tables, procedures, views })
     });
     const status = document.getElementById('selectedObjectsStatus');
     if (res.success) {
         const tblN = (res.selected_tables || []).length;
         const procN = (res.selected_procedures || []).length;
-        if (status) status.textContent = `${tblN} table(s), ${procN} procedure(s) selected for load`;
-        showAlert('', 'success', `Selected: ${tblN} table(s), ${procN} procedure(s)`);
+        const viewN = (res.selected_views || []).length;
+        if (status) status.textContent = `${tblN} table(s), ${procN} procedure(s), ${viewN} view(s) selected for load`;
+        showAlert('', 'success', `Selected: ${tblN} table(s), ${procN} procedure(s), ${viewN} view(s)`);
         fetchDeltaPlan();
     } else {
         if (status) status.textContent = res.error || 'Selection failed';
@@ -1304,31 +1354,54 @@ function renderCodeObjectAnalysis(objects) {
     const box = document.getElementById('analysisCodeObjects');
     if (!box) return;
     const objs = objects || [];
-    let html = '<div class="obj-group">';
-    html += `<div class="obj-section-header" onclick="toggleObjSection('codeObjBody', this)">
-        <span class="obj-caret">▶</span>
-        <strong>Code Object Conversion (${objs.length})</strong>
-        <span class="card-subtitle" style="margin-left:8px;">Procedures & views — PL/SQL → T-SQL conversion risk</span>
-    </div>`;
-    html += '<div id="codeObjBody" class="obj-section-body hidden">';
-    if (objs.length === 0) {
-        html += '<p class="card-subtitle" style="padding:8px 12px;">No procedures or views discovered. Run Schema Discovery first, or none exist in this schema.</p>';
-    } else {
-        html += '<div class="table-container"><table><thead><tr><th>Object</th><th>Type</th><th>Conversion Risk</th><th>Signals detected</th></tr></thead><tbody>';
-        objs.forEach(o => {
+    // Separate procedures/functions from views (mirrors Schema Discovery layout).
+    const isView = o => (o.type || '').toUpperCase() === 'VIEW';
+    const procs = objs.filter(o => !isView(o));
+    const views = objs.filter(isView);
+
+    // Renders one read-only risk table for a given object list.
+    function codeTable(list) {
+        let h = '<div class="table-container"><table><thead><tr><th>Object</th><th>Type</th><th>Conversion Risk</th><th>Signals detected</th></tr></thead><tbody>';
+        list.forEach(o => {
             const name = escapeHtml(o.name || '');
             const type = escapeHtml(o.type || 'PROCEDURE');
             const reasons = Array.isArray(o.reasons) ? o.reasons.map(escapeHtml).join(', ') : '';
-            html += `<tr>
+            h += `<tr>
                 <td><strong>${name}</strong></td>
                 <td>${type}</td>
                 <td>${riskBadge(o.risk)}</td>
                 <td><span class="card-subtitle">${reasons}</span></td>
             </tr>`;
         });
-        html += '</tbody></table></div>';
+        h += '</tbody></table></div>';
+        return h;
     }
-    html += '</div>'; // codeObjBody
+
+    let html = '<div class="obj-group">';
+    // ---- Stored Procedures sub-section ----
+    html += `<div class="obj-section-header" onclick="toggleObjSection('codeObjProcsBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Stored Procedures (${procs.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">PL/SQL → T-SQL conversion risk</span>
+    </div>`;
+    html += '<div id="codeObjProcsBody" class="obj-section-body hidden">';
+    html += procs.length === 0
+        ? '<p class="card-subtitle" style="padding:8px 12px;">No stored procedures discovered.</p>'
+        : codeTable(procs);
+    html += '</div>'; // codeObjProcsBody
+
+    // ---- Views sub-section ----
+    html += `<div class="obj-section-header" onclick="toggleObjSection('codeObjViewsBody', this)">
+        <span class="obj-caret">▶</span>
+        <strong>Views (${views.length})</strong>
+        <span class="card-subtitle" style="margin-left:8px;">View definition → T-SQL conversion risk</span>
+    </div>`;
+    html += '<div id="codeObjViewsBody" class="obj-section-body hidden">';
+    html += views.length === 0
+        ? '<p class="card-subtitle" style="padding:8px 12px;">No views discovered.</p>'
+        : codeTable(views);
+    html += '</div>'; // codeObjViewsBody
+
     html += '</div>'; // obj-group
     box.innerHTML = html;
     box.classList.remove('hidden');
@@ -1420,26 +1493,54 @@ function renderCodeObjectMappings(objects) {
     if (objs.length === 0) {
         html += '<p class="card-subtitle" style="padding:8px 12px;">No procedures or views to map. Run Schema Discovery first, or none exist.</p>';
     } else {
-        html += `<div style="display:flex;gap:8px;margin:6px 8px 12px;">
-            <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjects(true)">Approve All</button>
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 8px 12px;">
+            <div style="display:inline-flex;align-items:center;position:relative;">
+                <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjects(true)" style="border-radius:6px 0 0 6px;">Approve All</button>
+                <button class="btn btn-sm btn-outline" onclick="toggleDropdownById(event,'codeMapApproveDropdown')" style="border-radius:0 6px 6px 0;border-left:none;padding:6px 8px;" title="Approve by risk level">▾</button>
+                <div id="codeMapApproveDropdown" style="display:none;position:absolute;left:0;top:100%;margin-top:4px;background:var(--bg-card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:50;min-width:200px;overflow:hidden;">
+                    <div style="padding:4px;">
+                        <button class="btn btn-sm" onclick="approveCodeObjectsByRisk('all');hideDropdownById('codeMapApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">✓ Approve All</button>
+                        <button class="btn btn-sm" onclick="approveCodeObjectsByRisk('low');hideDropdownById('codeMapApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🟢 Approve Low Risk</button>
+                        <button class="btn btn-sm" onclick="approveCodeObjectsByRisk('medium');hideDropdownById('codeMapApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🟡 Approve Medium Risk</button>
+                        <button class="btn btn-sm" onclick="approveCodeObjectsByRisk('high');hideDropdownById('codeMapApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🔴 Approve High Risk</button>
+                    </div>
+                </div>
+            </div>
             <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjects(false)">Unselect All</button>
         </div>`;
-        html += '<div class="table-container"><table><thead><tr><th>Approve</th><th>Object</th><th>Type</th><th>Conversion</th><th>Risk</th><th>Signals detected</th></tr></thead><tbody>';
-        objs.forEach((o, i) => {
-            const name = escapeHtml(o.name || '');
-            const type = escapeHtml(o.type || 'PROCEDURE');
-            const reasons = Array.isArray(o.reasons) ? o.reasons.map(escapeHtml).join(', ') : '';
-            const transform = escapeHtml(o.transformation || 'PL/SQL → T-SQL');
-            html += `<tr>
-                <td><input type="checkbox" class="codeobj-approve" data-name="${name}" ${o.approved ? 'checked' : ''} onchange="toggleCodeObjectApproval('${name}', this.checked)"></td>
-                <td><strong>${name}</strong></td>
-                <td>${type}</td>
-                <td><code>${transform}</code></td>
-                <td>${riskBadge(o.risk)}</td>
-                <td><span class="card-subtitle">${reasons}</span></td>
-            </tr>`;
-        });
-        html += '</tbody></table></div>';
+        // Split into Stored Procedures and Views sub-tables (mirrors Schema Discovery).
+        const isView = o => (o.type || '').toUpperCase() === 'VIEW';
+        const procs = objs.filter(o => !isView(o));
+        const views = objs.filter(isView);
+
+        function mapTable(list) {
+            let h = '<div class="table-container"><table><thead><tr><th>Approve</th><th>Object</th><th>Type</th><th>Conversion</th><th>Risk</th><th>Signals detected</th></tr></thead><tbody>';
+            list.forEach(o => {
+                const name = escapeHtml(o.name || '');
+                const type = escapeHtml(o.type || 'PROCEDURE');
+                const reasons = Array.isArray(o.reasons) ? o.reasons.map(escapeHtml).join(', ') : '';
+                const transform = escapeHtml(o.transformation || 'PL/SQL → T-SQL');
+                h += `<tr>
+                    <td><input type="checkbox" class="codeobj-approve" data-name="${name}" ${o.approved ? 'checked' : ''} onchange="toggleCodeObjectApproval('${name}', this.checked)"></td>
+                    <td><strong>${name}</strong></td>
+                    <td>${type}</td>
+                    <td><code>${transform}</code></td>
+                    <td>${riskBadge(o.risk)}</td>
+                    <td><span class="card-subtitle">${reasons}</span></td>
+                </tr>`;
+            });
+            h += '</tbody></table></div>';
+            return h;
+        }
+
+        html += `<div class="obj-subhead" style="padding:8px 12px 4px;font-weight:600;">Stored Procedures (${procs.length})</div>`;
+        html += procs.length === 0
+            ? '<p class="card-subtitle" style="padding:4px 12px 10px;">No stored procedures.</p>'
+            : mapTable(procs);
+        html += `<div class="obj-subhead" style="padding:12px 12px 4px;font-weight:600;border-top:1px solid var(--border,#e5e7eb);">Views (${views.length})</div>`;
+        html += views.length === 0
+            ? '<p class="card-subtitle" style="padding:4px 12px 10px;">No views.</p>'
+            : mapTable(views);
     }
     html += '</div>'; // codeMapBody
     html += '</div>'; // obj-group
@@ -1694,8 +1795,19 @@ function renderApprovalCodeObjects(objects) {
         <span class="card-subtitle" style="margin-left:8px;">${approvedCount}/${objs.length} approved — final sign-off before migration</span>
     </div>`;
     html += '<div id="apprCodeBody" class="obj-section-body hidden">';
-    html += `<div style="display:flex;gap:8px;margin:6px 8px 12px;">
-        <button class="btn btn-sm btn-success" onclick="approveAllCodeObjectsApproval(true)">Approve All</button>
+    html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 8px 12px;">
+        <div style="display:inline-flex;align-items:center;position:relative;">
+            <button class="btn btn-sm btn-success" onclick="approveAllCodeObjectsApproval(true)" style="border-radius:6px 0 0 6px;">Approve All</button>
+            <button class="btn btn-sm btn-success" onclick="toggleDropdownById(event,'apprCodeApproveDropdown')" style="border-radius:0 6px 6px 0;border-left:1px solid rgba(255,255,255,0.3);padding:6px 8px;" title="Approve by risk level">▾</button>
+            <div id="apprCodeApproveDropdown" style="display:none;position:absolute;left:0;top:100%;margin-top:4px;background:var(--bg-card,#fff);border:1px solid var(--border,#e5e7eb);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.12);z-index:50;min-width:200px;overflow:hidden;">
+                <div style="padding:4px;">
+                    <button class="btn btn-sm" onclick="approveCodeObjectsByRiskApproval('all');hideDropdownById('apprCodeApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">✓ Approve All</button>
+                    <button class="btn btn-sm" onclick="approveCodeObjectsByRiskApproval('low');hideDropdownById('apprCodeApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🟢 Approve Low Risk</button>
+                    <button class="btn btn-sm" onclick="approveCodeObjectsByRiskApproval('medium');hideDropdownById('apprCodeApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🟡 Approve Medium Risk</button>
+                    <button class="btn btn-sm" onclick="approveCodeObjectsByRiskApproval('high');hideDropdownById('apprCodeApproveDropdown')" style="width:100%;text-align:left;border:none;padding:8px 12px;border-radius:6px;font-size:13px;">🔴 Approve High Risk</button>
+                </div>
+            </div>
+        </div>
         <button class="btn btn-sm btn-outline" onclick="approveAllCodeObjectsApproval(false)">Unselect All</button>
     </div>`;
     html += '<div class="table-container"><table><thead><tr><th>Approve</th><th>Object</th><th>Type</th><th>Conversion</th><th>Risk</th><th>Status</th></tr></thead><tbody>';
@@ -1745,6 +1857,58 @@ async function approveAllCodeObjectsApproval(approved) {
     renderApprovalMetrics(st.mappings || [], objs);
     recomputeApprovalGate(st.mappings || [], objs);
     showToast(`Code objects ${approved ? 'approved' : 'unselected'}`, approved ? 'success' : 'info');
+}
+
+// ---- Risk-level dropdown for code objects (procedures/views) ----
+function toggleDropdownById(e, id) {
+    e.stopPropagation();
+    const dd = document.getElementById(id);
+    if (dd) dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+}
+function hideDropdownById(id) {
+    const dd = document.getElementById(id);
+    if (dd) dd.style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+    ['codeMapApproveDropdown', 'apprCodeApproveDropdown'].forEach(id => {
+        const dd = document.getElementById(id);
+        if (dd && dd.parentElement && !dd.parentElement.contains(e.target)) dd.style.display = 'none';
+    });
+});
+
+// AI Risk Review row: approve code objects filtered by risk level
+async function approveCodeObjectsByRisk(level) {
+    const targets = (codeObjectMappings || []).filter(o =>
+        level === 'all' ? true : (o.risk || '').toLowerCase() === level);
+    for (const o of targets) {
+        await apiCall('/api/approve_procedure', {
+            method: 'POST',
+            body: JSON.stringify({ procedure_name: o.name, approved: true })
+        });
+        o.approved = true;
+    }
+    renderCodeObjectMappings(codeObjectMappings);
+    const body = document.getElementById('codeMapBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '\u25bc'; }
+    showToast(level === 'all' ? 'All code objects approved' : `All ${level} risk code objects approved`, 'success');
+}
+
+// Approval tab row: approve code objects filtered by risk level + refresh gate/metrics
+async function approveCodeObjectsByRiskApproval(level) {
+    const objs = window._codeObjApprovals || [];
+    const targets = objs.filter(o =>
+        level === 'all' ? true : (o.risk || '').toLowerCase() === level);
+    for (const o of targets) {
+        await apiCall('/api/approve_procedure', { method: 'POST', body: JSON.stringify({ procedure_name: o.name, approved: true }) });
+        o.approved = true;
+    }
+    renderApprovalCodeObjects(objs);
+    const body = document.getElementById('apprCodeBody');
+    if (body) { body.classList.remove('hidden'); const c = body.previousElementSibling?.querySelector('.obj-caret'); if (c) c.textContent = '\u25bc'; }
+    const st = await apiCall('/api/state');
+    renderApprovalMetrics(st.mappings || [], objs);
+    recomputeApprovalGate(st.mappings || [], objs);
+    showToast(level === 'all' ? 'All code objects approved' : `All ${level} risk code objects approved`, 'success');
 }
 
 async function approveAll() {
@@ -2423,7 +2587,7 @@ async function runValidation() {
                 const passCount = Object.values(checksObj).filter(s => s === 'PASS').length;
                 const statusColor = overallStatus === 'PASS' ? '#059669' : overallStatus === 'FAIL' ? '#dc2626' : '#d97706';
                 const statusIcon = overallStatus === 'PASS' ? '✅' : overallStatus === 'FAIL' ? '❌' : '⚠️';
-                const isExpanded = (overallStatus === 'FAIL' && idx === 0);
+                const isExpanded = false;  // collapse all validation tables by default; user expands as needed
 
                 html += `<div class="val-table-group" style="margin-bottom: 8px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; overflow: hidden;">
                     <div onclick="toggleValAccordion('valTblBody_${idx}')" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg-page, #f9fafb); cursor: pointer; user-select: none;">

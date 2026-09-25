@@ -1,8 +1,16 @@
 -- Generated DDL: 1 table(s), 5 column(s)
--- CREATE: 0, ALTER: 0, No Change: 1
--- Generated at: 2026-09-24 21:52:42
+-- CREATE: 1, ALTER: 0, No Change: 0
+-- Generated at: 2026-09-25 12:13:23
 
--- Table [employees] already exists in target with all columns. No DDL changes needed.
+CREATE TABLE [dbo].[EMPLOYEES] (
+    [EMPLOYEE_ID] DECIMAL(38,10) NOT NULL,
+    [FIRST_NAME] NVARCHAR(50) NULL,
+    [LAST_NAME] NVARCHAR(50) NULL,
+    [DEPARTMENT_ID] DECIMAL(38,10) NOT NULL,
+    [SALARY] DECIMAL(38,10) NULL,
+    CONSTRAINT [PK_EMPLOYEES] PRIMARY KEY ([EMPLOYEE_ID])
+);
+GO
 
 GO
 
