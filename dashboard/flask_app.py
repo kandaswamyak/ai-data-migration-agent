@@ -357,6 +357,10 @@ state = {
     "procedures": [],
     "procedure_conversions": [],
     "views": [],
+    # Retained result of the most recent executed migration, used by the
+    # Data Flow tab to render the REAL source->target flow (table_metrics,
+    # rows, mode, etc.) after the user has navigated to a later tab.
+    "migration_result": None,
 }
 
 
@@ -399,6 +403,120 @@ def get_state():
         "procedures_approved": sum(1 for c in state.get("procedure_conversions", []) if c.get("approved")),
         "views": state.get("views", []),
         "view_count": len(state.get("views", [])),
+    })
+
+
+@app.route("/api/data_flow")
+def get_data_flow():
+    """Return the REAL executed source->target data flow for the last run.
+
+    Powers the Data Flow tab (after Report). Uses the retained in-memory
+    migration result; falls back to the persisted reconciliation artifact
+    so the flow still renders after a server restart. Per-table validation
+    status is folded in from state['validation_results'] (Row Count Match).
+    """
+    result = state.get("migration_result")
+
+    # Fallback: last persisted reconciliation artifact.
+    if not result:
+        try:
+            _art_path = os.path.join(PROJECT_ROOT, "reports", "reconciliation_latest.json")
+            if os.path.exists(_art_path):
+                with open(_art_path, "r", encoding="utf-8") as f:
+                    art = json.load(f)
+                result = {
+                    "mode": art.get("mode"),
+                    "migration_mode": art.get("mode"),
+                    "rows_read": art.get("rows_read", 0),
+                    "rows_migrated": art.get("rows_written", 0),
+                    "rows_updated": art.get("rows_updated", 0),
+                    "duplicate_rows_skipped": art.get("duplicates_skipped", 0),
+                    "failed_rows": art.get("failed_rows", 0),
+                    "table_metrics": art.get("table_metrics", []),
+                    "source_type": state.get("source_type"),
+                }
+        except Exception:
+            result = None
+
+    if not result:
+        return jsonify({
+            "success": True,
+            "executed": False,
+            "message": "No migration has been executed yet. Run a migration to see the real data flow.",
+            "source_type": state.get("source_type"),
+            "tables": [],
+            "code_objects": [],
+        })
+
+    # Per-table validation status from Row Count Match checks.
+    val_status = {}
+    for v in (state.get("validation_results") or []):
+        chk = str(v.get("check", ""))
+        if chk.startswith("Row Count Match"):
+            tbl = str(v.get("table", "")).strip().upper()
+            if tbl:
+                val_status[tbl] = v.get("status", "")
+
+    # Build per-table flow rows from the run's table_metrics.
+    tables = []
+    for tm in (result.get("table_metrics") or []):
+        s_tbl = tm.get("source_table", "")
+        t_tbl = tm.get("target_table", "")
+        tables.append({
+            "source_table": s_tbl,
+            "target_table": t_tbl,
+            "rows_read": tm.get("rows_read", 0),
+            "rows_written": tm.get("rows_written", 0),
+            "rows_updated": tm.get("rows_updated", 0),
+            "duplicates_skipped": tm.get("duplicates_skipped", 0),
+            "failed_rows": tm.get("failed_rows", 0),
+            "throughput_rps": tm.get("throughput_rps", 0),
+            "validation": val_status.get(str(t_tbl).strip().upper(), ""),
+        })
+
+    # Deployed code objects (procedures + views) with their deploy status.
+    code_objects = []
+    for c in (state.get("procedure_conversions") or []):
+        if not c.get("approved"):
+            continue
+        is_view = str(c.get("source_type", "")).strip().upper() == "VIEW" or \
+                  str(c.get("type", "")).strip().upper() == "VIEW"
+        code_objects.append({
+            "name": c.get("name", ""),
+            "kind": "VIEW" if is_view else "PROCEDURE",
+            "status": c.get("status", ""),
+        })
+
+    source_label = result.get("source_type") or state.get("source_type") or "Source"
+    # When the run finished (UTC ISO). Falls back to the persisted
+    # reconciliation artifact's mtime so the label still renders after a restart.
+    finished_at = result.get("finished_at")
+    if not finished_at:
+        try:
+            _art_path = os.path.join(PROJECT_ROOT, "reports", "reconciliation_latest.json")
+            if os.path.exists(_art_path):
+                finished_at = datetime.fromtimestamp(
+                    os.path.getmtime(_art_path), timezone.utc
+                ).isoformat()
+        except Exception:
+            finished_at = None
+    return jsonify({
+        "success": True,
+        "executed": True,
+        "source_type": source_label,
+        "target_label": "Azure SQL",
+        "mode": result.get("migration_mode") or result.get("mode"),
+        "finished_at": finished_at,
+        "totals": {
+            "rows_read": result.get("rows_read", 0),
+            "rows_written": result.get("rows_migrated", 0),
+            "rows_updated": result.get("rows_updated", 0),
+            "duplicates_skipped": result.get("duplicate_rows_skipped", 0),
+            "failed_rows": result.get("failed_rows", 0),
+            "tables": len(tables),
+        },
+        "tables": tables,
+        "code_objects": code_objects,
     })
 
 
@@ -662,13 +780,17 @@ def discover_schema():
             connector = SQLServerConnector(cfg["server"], cfg["database"])
             conn = connector.connect()
             query = """
-            SELECT TABLE_NAME as table_name, COLUMN_NAME as column_name,
-                   DATA_TYPE as data_type, CHARACTER_MAXIMUM_LENGTH as data_length,
-                   NUMERIC_PRECISION as data_precision, NUMERIC_SCALE as data_scale,
-                   IS_NULLABLE as nullable
-            FROM INFORMATION_SCHEMA.COLUMNS
-            WHERE TABLE_SCHEMA = 'dbo'
-            ORDER BY TABLE_NAME, ORDINAL_POSITION
+            SELECT c.TABLE_NAME as table_name, c.COLUMN_NAME as column_name,
+                   c.DATA_TYPE as data_type, c.CHARACTER_MAXIMUM_LENGTH as data_length,
+                   c.NUMERIC_PRECISION as data_precision, c.NUMERIC_SCALE as data_scale,
+                   c.IS_NULLABLE as nullable
+            FROM INFORMATION_SCHEMA.COLUMNS c
+            JOIN INFORMATION_SCHEMA.TABLES t
+              ON t.TABLE_SCHEMA = c.TABLE_SCHEMA
+             AND t.TABLE_NAME = c.TABLE_NAME
+            WHERE c.TABLE_SCHEMA = 'dbo'
+              AND t.TABLE_TYPE = 'BASE TABLE'
+            ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION
             """
             df = pd.read_sql(query, conn)
             conn.close()
@@ -717,6 +839,23 @@ def discover_schema():
 
 @app.route("/api/analyze", methods=["POST"])
 def analyze_datatypes():
+    # Defensive guard: never analyze columns that belong to a VIEW.
+    # INFORMATION_SCHEMA.COLUMNS includes view columns, and a stale in-memory
+    # state["schema"] from before the discover_schema BASE-TABLE fix may still
+    # carry them. Drop any schema row whose table name matches a discovered
+    # view so views are never treated as tables in Datatype Analysis.
+    _view_names = {
+        str((v.get("name") if isinstance(v, dict) else v) or "").strip().upper()
+        for v in ((state.get("views") or []) + (state.get("views_full") or []))
+    }
+    if _view_names and state.get("schema"):
+        _filtered = [
+            row for row in state["schema"]
+            if str(row.get("table_name", "")).strip().upper() not in _view_names
+        ]
+        if len(_filtered) != len(state["schema"]):
+            state["schema"] = _filtered
+
     if not state["schema"]:
         # No tables selected is legitimate when the user chose only procedures/views.
         # Fail only if nothing at all was discovered/selected (no tables AND no code objects).
@@ -1179,6 +1318,22 @@ def generate_mapping():
     if not state["datatype_analysis"]:
         return jsonify({"success": False, "error": "No analysis results. Run AI analysis first."})
 
+    # Defensive guard: never build column mappings for a VIEW. Views are code
+    # objects (deployed as CREATE OR ALTER VIEW), not column structures. A stale
+    # state["datatype_analysis"] from before the analyze-step view filter may
+    # still carry view columns, which would surface as table rows in the AI
+    # Mapping & Review and Human Approval tabs. Drop any analysis row whose
+    # table name matches a discovered view (case-insensitive).
+    _view_names = {
+        str((v.get("name") if isinstance(v, dict) else v) or "").strip().upper()
+        for v in ((state.get("views") or []) + (state.get("views_full") or []))
+    }
+    if _view_names and state.get("datatype_analysis"):
+        state["datatype_analysis"] = [
+            r for r in state["datatype_analysis"]
+            if str(r.get("table", "")).strip().upper() not in _view_names
+        ]
+
     def build_mappings_from_analysis(analysis_rows):
         mappings_local = []
         for item in analysis_rows:
@@ -1218,6 +1373,24 @@ def generate_mapping():
 def approve_mapping():
     data = request.get_json(force=True, silent=True) or {}
     action = data.get("action", "")
+
+    # Defensive guard: strip any VIEW rows from state["mappings"] before acting.
+    # Column mappings are for base tables only; views are code objects. A stale
+    # mappings list from before the view filters could still contain view rows,
+    # which would show up in the Human Approval tab. Filtering here (before any
+    # index-based toggle) keeps the backend list and the re-rendered frontend
+    # list — both driven by the returned "mappings" — aligned.
+    _view_names = {
+        str((v.get("name") if isinstance(v, dict) else v) or "").strip().upper()
+        for v in ((state.get("views") or []) + (state.get("views_full") or []))
+    }
+    if _view_names and state.get("mappings"):
+        _cleaned = [
+            m for m in state["mappings"]
+            if str(m.get("source_table", "")).strip().upper() not in _view_names
+        ]
+        if len(_cleaned) != len(state["mappings"]):
+            state["mappings"] = _cleaned
 
     if action == "approve_all" or data.get("approve_all"):
         for m in state["mappings"]:
@@ -2865,9 +3038,26 @@ def deploy_procedures():
     if not all([azure_server, azure_db, azure_user, azure_pass]):
         return jsonify({"success": False, "error": "Azure SQL credentials not configured."})
 
+    # Track elapsed deployment time (mirrors the Execute Migration step).
+    _deploy_start = time.perf_counter()
+
     deployed = []
     errors = []
     skipped = []
+    # Track object type (view vs procedure) for a type-aware status message.
+    deployed_views = []
+    deployed_procs = []
+    skipped_views = []
+    skipped_procs = []
+
+    def _obj_is_view(proc_obj, tsql_text=""):
+        """Classify an object as a VIEW using its declared source_type, then
+        fall back to inspecting the generated T-SQL for CREATE ... VIEW."""
+        if str(proc_obj.get("source_type", "")).strip().upper() == "VIEW":
+            return True
+        if str(proc_obj.get("type", "")).strip().upper() == "VIEW":
+            return True
+        return bool(re.search(r"(?is)\bCREATE\s+(?:OR\s+ALTER\s+)?VIEW\b", tsql_text or ""))
 
     # Target definitions for No-Change detection (skip identical procs).
     target_defs = _get_target_proc_definitions()
@@ -2894,7 +3084,46 @@ def deploy_procedures():
                 if action == "no_change":
                     proc["status"] = "no_change"
                     skipped.append(proc.get("name", ""))
+                    if _obj_is_view(proc, tsql):
+                        skipped_views.append(proc.get("name", ""))
+                    else:
+                        skipped_procs.append(proc.get("name", ""))
                     continue
+                # Guard against object-type collisions in the target.
+                # CREATE OR ALTER VIEW/PROCEDURE fails with error 2010
+                # ("Cannot perform alter ... incompatible object type") when an
+                # object of the SAME name already exists as a DIFFERENT type
+                # (e.g. a table was created under a view's name during data
+                # migration). Detect the intended type from the T-SQL, compare
+                # with the actual target type, and drop the conflicting object
+                # first so the CREATE succeeds. Self-heals a polluted target.
+                try:
+                    obj_name = proc.get("name", "")
+                    intended_is_view = bool(
+                        re.search(r"(?is)\bCREATE\s+(?:OR\s+ALTER\s+)?VIEW\b", tsql)
+                    )
+                    intended_type = "V" if intended_is_view else "P"
+                    cursor.execute(
+                        "SELECT type FROM sys.objects WHERE object_id = OBJECT_ID(?)",
+                        f"dbo.{obj_name}",
+                    )
+                    _row = cursor.fetchone()
+                    existing_type = (_row[0].strip() if _row and _row[0] else None)
+                    # Type codes: 'V' view, 'P' procedure, 'U' user table,
+                    # 'IF'/'TF'/'FN' functions. Any mismatch => drop first.
+                    if existing_type and existing_type != intended_type:
+                        drop_map = {
+                            "U": "TABLE", "V": "VIEW", "P": "PROCEDURE",
+                            "IF": "FUNCTION", "TF": "FUNCTION", "FN": "FUNCTION",
+                        }
+                        drop_kw = drop_map.get(existing_type)
+                        if drop_kw:
+                            cursor.execute(f"DROP {drop_kw} dbo.[{obj_name}]")
+                            conn.commit()
+                except Exception:
+                    # Best-effort: if the pre-check fails, fall through and let
+                    # the normal execute surface the real error below.
+                    pass
                 # Split on GO statements for batch execution
                 batches = re.split(r"(?im)^\s*GO\s*;?\s*$", tsql)
                 for batch in batches:
@@ -2904,6 +3133,10 @@ def deploy_procedures():
                 conn.commit()
                 proc["status"] = "deployed"
                 deployed.append(proc.get("name",""))
+                if _obj_is_view(proc, tsql):
+                    deployed_views.append(proc.get("name", ""))
+                else:
+                    deployed_procs.append(proc.get("name", ""))
 
                 # Update watermark for procedure
                 try:
@@ -2933,18 +3166,48 @@ def deploy_procedures():
     except Exception as e:
         return jsonify({"success": False, "error": f"Azure SQL connection failed: {str(e)[:200]}"})
 
-    msg = f"Deployed {len(deployed)} procedure(s) to Azure SQL."
+    def _plural(n, noun):
+        return f"{n} {noun}" + ("" if n == 1 else "s")
+
+    def _type_breakdown(procs, views):
+        """e.g. '1 procedure, 3 views' — omit a bucket when it is zero."""
+        parts = []
+        if procs:
+            parts.append(_plural(len(procs), "procedure"))
+        if views:
+            parts.append(_plural(len(views), "view"))
+        return ", ".join(parts)
+
+    # Type-aware status: distinguish procedures from views instead of calling
+    # everything a "procedure".
+    if deployed:
+        msg = f"Deployed {_plural(len(deployed), 'code object')} to Azure SQL"
+        bd = _type_breakdown(deployed_procs, deployed_views)
+        msg += f" ({bd})." if bd else "."
+    else:
+        msg = "No code objects deployed."
     if skipped:
-        msg += f" Skipped {len(skipped)} unchanged."
+        msg += f" Skipped {len(skipped)} unchanged"
+        bd = _type_breakdown(skipped_procs, skipped_views)
+        msg += f" ({bd})." if bd else "."
     if errors:
         msg += f" {len(errors)} error(s)."
+    elapsed_seconds = round(time.perf_counter() - _deploy_start, 1)
+    msg += f" Completed in {elapsed_seconds}s."
     return jsonify({
         "success": True,
         "deployed": deployed,
         "deployed_count": len(deployed),
+        "deployed_procedures": deployed_procs,
+        "deployed_views": deployed_views,
+        "deployed_procedure_count": len(deployed_procs),
+        "deployed_view_count": len(deployed_views),
         "skipped": skipped,
         "skipped_count": len(skipped),
+        "skipped_procedures": skipped_procs,
+        "skipped_views": skipped_views,
         "errors": errors,
+        "elapsed_seconds": elapsed_seconds,
         "message": msg
     })
 
@@ -3741,10 +4004,11 @@ WHEN NOT MATCHED THEN
     tables_created = [s for s in executed_statements if "CREATE TABLE" in s.upper() and "SKIP" not in s.upper()]
     tables_skipped_ddl = [s for s in executed_statements if "SKIP CREATE TABLE" in s.upper()]
 
-    return jsonify({
+    _migration_payload = {
         "success": True,
         "mode": mode,
         "message": message,
+        "source_type": state.get("source_type"),
         "tables_migrated": len(set(m["target_table"] for m in approved)),
         "columns_migrated": len(approved),
         "rows_migrated": migrated_rows,
@@ -3763,7 +4027,11 @@ WHEN NOT MATCHED THEN
         "duration_sec": round(time.time() - _migration_started, 2),
         "duration_display": _format_duration(time.time() - _migration_started),
         "errors": errors,
-    })
+        "finished_at": datetime.now(timezone.utc).isoformat(),
+    }
+    # Retain for the Data Flow tab (rendered after Report).
+    state["migration_result"] = _migration_payload
+    return jsonify(_migration_payload)
 
 
 # ============================================================
@@ -5149,6 +5417,158 @@ def get_delta_plan():
             "error": str(ex),
             "delta_plan": [],
         })
+
+
+# ============================================================
+# MCP endpoint (JSON-RPC 2.0 over HTTP) for the Converge agent
+# Exposes the migration pipeline as MCP tools. Each tool reuses the
+# existing /api/* routes in-process via the Flask test client, so they
+# share the same in-memory `state`.
+# ============================================================
+import json as _json
+
+# --- CORS: required when served via dev tunnel, or the agent issues tool
+# --- calls but never receives responses (infinite loop at approval gates).
+@app.after_request
+def _add_cors_headers(resp):
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept"
+    return resp
+
+
+# Ordered MCP tool catalog. name -> (description, input_schema)
+_MCP_TOOLS = [
+    ("extract_oracle_schema", "Connect to the configured source DB and discover tables, columns, stored procedures, and views. Reads connection from server state/env.", {"type": "object", "properties": {}}),
+    ("map_data_types", "Analyze datatype compatibility for table columns and PL/SQL->T-SQL conversion risk for code objects (procedures/views).", {"type": "object", "properties": {}}),
+    ("detect_schema_drift", "Compare source vs target and return the delta/drift plan, including orphaned tables.", {"type": "object", "properties": {}}),
+    ("generate_migration_script", "Generate T-SQL DDL for approved tables and code objects (CREATE/ALTER/NO_CHANGE).", {"type": "object", "properties": {}}),
+    ("execute_data_migration", "Execute the data migration. Accepts migration_mode (append|incremental|upsert|truncate_reload).", {"type": "object", "properties": {"migration_mode": {"type": "string", "enum": ["append", "incremental", "upsert", "truncate_reload"]}}}),
+    ("validate_data_integrity", "Validate row/column reconciliation for tables and existence of deployed procedures/views in the target.", {"type": "object", "properties": {}}),
+    ("generate_migration_report", "Produce the final migration summary report.", {"type": "object", "properties": {}}),
+]
+
+
+def _mcp_run(method, payload=None, tool_client=None):
+    """Invoke an internal /api/* route in-process and return parsed JSON."""
+    c = tool_client
+    verb, path = method
+    if verb == "POST":
+        rv = c.post(path, json=(payload or {}))
+    else:
+        rv = c.get(path)
+    try:
+        return rv.get_json()
+    except Exception:
+        return {"success": False, "error": f"{path} returned non-JSON (status {rv.status_code})"}
+
+
+def _mcp_dispatch_tool(tool_name, args):
+    """Map an MCP tool to one or more internal /api routes; return a text result."""
+    args = args or {}
+    c = app.test_client()
+
+    if tool_name == "extract_oracle_schema":
+        connect = _mcp_run(("POST", "/api/connect"), {}, c)
+        if not connect.get("success"):
+            return connect
+        schema = _mcp_run(("POST", "/api/discover_schema"), {}, c)
+        procs = _mcp_run(("POST", "/api/discover_procedures"), {}, c)
+        views = _mcp_run(("POST", "/api/discover_views"), {}, c)
+        # Select all discovered objects by default so downstream steps have data.
+        table_names = sorted({str(r.get("table_name", "")) for r in (schema.get("schema") or [])})
+        proc_names = [ (p.get("name") if isinstance(p, dict) else str(p)) for p in (procs.get("procedures") or []) ]
+        view_names = [ (v.get("name") if isinstance(v, dict) else str(v)) for v in (views.get("views") or []) ]
+        _mcp_run(("POST", "/api/select_objects"), {"tables": table_names, "procedures": proc_names, "views": view_names}, c)
+        return {
+            "success": True,
+            "source_type": connect.get("source_type") or connect.get("tables") and "connected",
+            "table_count": schema.get("count", len(table_names)),
+            "column_count": len(schema.get("schema") or []),
+            "procedure_count": procs.get("count", len(proc_names)),
+            "view_count": views.get("count", len(view_names)),
+            "tables": table_names,
+            "procedures": proc_names,
+            "views": view_names,
+        }
+
+    if tool_name == "map_data_types":
+        cols = _mcp_run(("POST", "/api/analyze"), {}, c)
+        code = _mcp_run(("POST", "/api/analyze_procedures"), {}, c)
+        _mcp_run(("POST", "/api/generate_mapping"), {}, c)
+        return {"success": True, "column_analysis": cols, "code_object_analysis": code}
+
+    if tool_name == "detect_schema_drift":
+        return _mcp_run(("GET", "/api/delta"), None, c)
+
+    if tool_name == "generate_migration_script":
+        ddl = _mcp_run(("POST", "/api/generate_ddl"), {}, c)
+        pddl = _mcp_run(("POST", "/api/generate_procedure_ddl"), {}, c)
+        return {"success": True, "table_ddl": ddl, "code_object_ddl": pddl}
+
+    if tool_name == "execute_data_migration":
+        mode = args.get("migration_mode", "incremental")
+        return _mcp_run(("POST", "/api/execute_migration"), {"migration_mode": mode}, c)
+
+    if tool_name == "validate_data_integrity":
+        tables = _mcp_run(("GET", "/api/validate"), None, c)
+        code = _mcp_run(("GET", "/api/validate_procedures"), None, c)
+        return {"success": True, "table_validation": tables, "code_object_validation": code}
+
+    if tool_name == "generate_migration_report":
+        return _mcp_run(("GET", "/api/report"), None, c)
+
+    return {"success": False, "error": f"Unknown tool: {tool_name}"}
+
+
+@app.route("/mcp", methods=["POST", "OPTIONS"])
+def mcp_endpoint():
+    if request.method == "OPTIONS":
+        return ("", 204)
+
+    req = request.get_json(silent=True) or {}
+    rpc_id = req.get("id")
+    method = req.get("method", "")
+    params = req.get("params") or {}
+
+    def _rpc(result=None, error=None):
+        body = {"jsonrpc": "2.0", "id": rpc_id}
+        if error is not None:
+            body["error"] = error
+        else:
+            body["result"] = result
+        return jsonify(body)
+
+    print(f"[MCP] method={method} id={rpc_id}")
+
+    if method == "initialize":
+        return _rpc({
+            "protocolVersion": "2024-11-05",
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "ai-data-migration-agent", "version": "1.0"},
+        })
+
+    if method in ("notifications/initialized", "initialized"):
+        return ("", 204)
+
+    if method == "tools/list":
+        tools = [{"name": n, "description": d, "inputSchema": s} for (n, d, s) in _MCP_TOOLS]
+        return _rpc({"tools": tools})
+
+    if method == "tools/call":
+        tool_name = params.get("name", "")
+        args = params.get("arguments", {}) or {}
+        print(f"[MCP] tools/call name={tool_name} args={args}")
+        try:
+            result = _mcp_dispatch_tool(tool_name, args)
+        except Exception as e:
+            return _rpc(error={"code": -32000, "message": f"Tool '{tool_name}' failed: {str(e)[:300]}"})
+        return _rpc({
+            "content": [{"type": "text", "text": _json.dumps(result, default=str)}],
+            "isError": not (isinstance(result, dict) and result.get("success", True)),
+        })
+
+    return _rpc(error={"code": -32601, "message": f"Method not found: {method}"})
 
 
 if __name__ == "__main__":

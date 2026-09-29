@@ -23,6 +23,46 @@
 .obj-item-title:hover { color:var(--primary,#6c63ff); }
 .obj-item-body { padding:4px 8px 10px 30px; }
 .hidden { display:none; }
+/* Standalone nav item (Data Flow) — match .nav-step interactivity so the
+   pointer/hand cursor shows on hover. */
+.nav-standalone { cursor:pointer; }
+.nav-standalone .nav-step-label, .nav-standalone .step-num { cursor:pointer; }
+/* Data Flow tab — animated source→target flow arrows */
+.df-flow-track { position:relative; width:96px; height:26px; display:flex; align-items:center; justify-content:center; }
+.df-flow-arrow { font-size:26px; color:#9333ea; }
+.df-flow-dot {
+    position:absolute; top:50%; left:0; width:6px; height:6px; margin-top:-3px;
+    border-radius:50%; background:#9333ea; opacity:0;
+    animation: none;
+}
+/* Dots flow ONLY while the track is in the running state. */
+.df-flow-track.is-running .df-flow-dot { animation: dfFlow 1.6s linear infinite; }
+.df-flow-track.is-running .df-flow-dot:nth-child(2) { animation-delay:0.53s; }
+.df-flow-track.is-running .df-flow-dot:nth-child(3) { animation-delay:1.06s; }
+/* Completed: stop motion, arrow turns green, show a ✓ badge. */
+.df-flow-track.is-done .df-flow-dot { animation:none; opacity:0; }
+.df-flow-track.is-done .df-flow-arrow { color:#16a34a; }
+.df-flow-track.is-done::after {
+    content:"✓"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    color:#16a34a; font-size:18px; font-weight:800;
+}
+.df-flow-track.is-done .df-flow-arrow { opacity:0.25; }
+/* Failed: stop motion, arrow turns red, show a ✗ badge. */
+.df-flow-track.is-failed .df-flow-dot { animation:none; opacity:0; }
+.df-flow-track.is-failed .df-flow-arrow { color:#ef4444; opacity:0.25; }
+.df-flow-track.is-failed::after {
+    content:"✗"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    color:#ef4444; font-size:18px; font-weight:800;
+}
+@keyframes dfFlow {
+    0%   { left:2px;  opacity:0; }
+    15%  { opacity:1; }
+    85%  { opacity:1; }
+    100% { left:80px; opacity:0; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .df-flow-track.is-running .df-flow-dot { animation:none; display:none; }
+}
 </style>
 </head>
 <body>
@@ -85,6 +125,12 @@
         <div class="nav-step" data-step="8" onclick="goToStep(8)" title="Report">
             <span class="step-num"><span>9</span></span> <span class="nav-step-label">Report</span>
             <span class="step-meta" id="metaReport"></span>
+        </div>
+
+        <div class="nav-section">Insights</div>
+        <div class="nav-standalone" id="navDataFlow" onclick="showDataFlow()" title="Real source → target data flow of the last run">
+            <span class="step-num"><span>↯</span></span> <span class="nav-step-label">Data Flow</span>
+            <span class="step-meta" id="metaDataFlow"></span>
         </div>
     </div>
     <div class="rail-foot">
@@ -161,6 +207,81 @@
             </div>
 
             <div id="deltaPreviewTable"></div>
+        </div>
+
+        <!-- ========== Migration Overview (cardinality legend, shown before connecting) ========== -->
+        <div class="card" id="migrationOverviewCard">
+            <div class="card-header">
+                <div>
+                    <h2>How Migration Works</h2>
+                    <p class="card-subtitle">Source → AI Engine → Target, and the source-to-target mapping patterns supported today</p>
+                </div>
+            </div>
+
+            <!-- Flow row -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:14px 0 20px;">
+                <div style="text-align:center;min-width:130px;">
+                    <div style="font-size:30px;">🗄️</div>
+                    <div style="font-weight:700;margin-top:4px;">Oracle / SQL Server</div>
+                    <div style="font-size:12px;color:#6b7280;">Source Database</div>
+                </div>
+                <div class="df-flow-track" aria-hidden="true">
+                    <span class="df-flow-dot"></span><span class="df-flow-dot"></span><span class="df-flow-dot"></span>
+                    <span class="df-flow-arrow">⟶</span>
+                </div>
+                <div style="text-align:center;min-width:110px;">
+                    <div style="display:flex;justify-content:center;">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" aria-label="AI Engine" role="img">
+                            <rect x="5" y="7" width="14" height="12" rx="3" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.6"/>
+                            <circle cx="9.5" cy="13" r="1.4" fill="#7c3aed"/><circle cx="14.5" cy="13" r="1.4" fill="#7c3aed"/>
+                            <path d="M12 4v3M9 19v2M15 19v2M19 11h2M3 11h2M19 15h2M3 15h2" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"/>
+                            <circle cx="12" cy="3.4" r="1.3" fill="#7c3aed"/>
+                        </svg>
+                    </div>
+                    <div style="font-weight:700;margin-top:4px;">AI Engine</div>
+                    <div style="font-size:12px;color:#6b7280;">Analyze · Map · Convert</div>
+                </div>
+                <div class="df-flow-track" aria-hidden="true">
+                    <span class="df-flow-dot"></span><span class="df-flow-dot"></span><span class="df-flow-dot"></span>
+                    <span class="df-flow-arrow">⟶</span>
+                </div>
+                <div style="text-align:center;min-width:130px;">
+                    <div style="font-size:30px;">☁️</div>
+                    <div style="font-weight:700;margin-top:4px;">Azure SQL</div>
+                    <div style="font-size:12px;color:#6b7280;">Target Database</div>
+                </div>
+            </div>
+
+            <!-- Cardinality legend -->
+            <div style="border-top:1px solid rgba(0,0,0,0.08);padding-top:14px;">
+                <div style="font-weight:700;margin-bottom:10px;">Source → Target Mapping Cardinalities</div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:200px;border:1px solid rgba(34,197,94,0.35);border-left:3px solid #16a34a;border-radius:8px;padding:10px 12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <b>1-1</b><span style="font-size:11px;color:#16a34a;font-weight:700;">● Now</span>
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">One source → one target</div>
+                    </div>
+                    <div style="flex:1;min-width:200px;border:1px solid rgba(34,197,94,0.35);border-left:3px solid #16a34a;border-radius:8px;padding:10px 12px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <b>2-1</b><span style="font-size:11px;color:#16a34a;font-weight:700;">● Now</span>
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">Two sources → one target (merge)</div>
+                    </div>
+                    <div style="flex:1;min-width:200px;border:1px solid rgba(0,0,0,0.12);border-left:3px solid #9ca3af;border-radius:8px;padding:10px 12px;opacity:.75;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <b>2-2</b><span style="font-size:11px;color:#9ca3af;font-weight:700;">◇ Future</span>
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">Two sources → two targets</div>
+                    </div>
+                    <div style="flex:1;min-width:200px;border:1px solid rgba(0,0,0,0.12);border-left:3px solid #9ca3af;border-radius:8px;padding:10px 12px;opacity:.75;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <b>1-2</b><span style="font-size:11px;color:#9ca3af;font-weight:700;">◇ Future</span>
+                        </div>
+                        <div style="font-size:12px;color:#6b7280;">One source → two targets (split)</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card">
@@ -339,7 +460,14 @@
             <div id="aiReviewSection" class="hidden" style="margin-top: 20px;">
                 <div style="border: 2px solid #7c3aed; border-radius: 12px; padding: 16px; background: var(--bg-card, #faf5ff);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h3 style="margin: 0; color: #7c3aed;">🤖 AI Risk Review</h3>
+                        <h3 style="margin: 0; color: #7c3aed; display:flex; align-items:center; gap:8px;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex:none;">
+                                <rect x="5" y="7" width="14" height="12" rx="3" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.6"/>
+                                <circle cx="9.5" cy="13" r="1.4" fill="#7c3aed"/><circle cx="14.5" cy="13" r="1.4" fill="#7c3aed"/>
+                                <path d="M12 4v3M9 19v2M15 19v2M19 11h2M3 11h2M19 15h2M3 15h2" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"/>
+                                <circle cx="12" cy="3.4" r="1.3" fill="#7c3aed"/>
+                            </svg>
+                            AI Risk Review</h3>
                         <button class="btn btn-sm" onclick="generateAllAIRecommendations()" style="color: #7c3aed; border-color: #7c3aed; background: transparent;">Regenerate</button>
                     </div>
                     <p class="card-subtitle" style="margin-bottom: 12px;">AI compatibility analysis for medium and high risk mappings and code objects — helps data architects decide approval</p>
@@ -532,6 +660,27 @@
         <div class="bottom-nav">
             <button class="btn btn-outline" onclick="goToStep(7)">← Back: Validation</button>
             <span class="step-indicator">Step 9 of 9</span>
+            <button class="btn btn-primary" onclick="showDataFlow()" title="View the real source → target data flow of this run">View Data Flow →</button>
+        </div>
+    </div>
+
+    <!-- ========== DATA FLOW (standalone, after Report) ========== -->
+    <!-- NOT a .step-panel and NOT a .nav-step: kept out of the goToStep
+         index model so it never reindexes the 9 pipeline steps. -->
+    <div class="dataflow-panel hidden" id="panel-dataflow">
+        <div class="card">
+            <div class="card-header">
+                <div>
+                    <h2>Data Flow — Real Migration</h2>
+                    <p class="card-subtitle">Actual source → target flow executed in the last run, with live row counts and validation status</p>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadDataFlow()">↻ Refresh</button>
+            </div>
+            <div id="dataFlowContent"><div class="empty-hint" style="padding:24px;color:var(--text-muted,#9ca3af);">Loading…</div></div>
+        </div>
+        <div class="bottom-nav">
+            <button class="btn btn-outline" onclick="goToStep(8)">← Back: Report</button>
+            <span class="step-indicator">Insights</span>
             <div></div>
         </div>
     </div>
@@ -625,6 +774,8 @@ function updateDashboardStats(state) {
     setText('metaMigration', state?.migration_executed ? 'ok' : '');
     setText('metaValidation', state?.validation_count > 0 ? state.validation_count : '');
     setText('metaReport', state?.report_generated ? 'ok' : '');
+    // Data Flow nav indicator: a filled dot once a real migration run exists.
+    setText('metaDataFlow', state?.migration_executed ? '●' : '');
 
     const approvalStep = navSteps[4];
     if (approvalStep) {
@@ -715,6 +866,12 @@ function goToStep(index) {
     steps.forEach(s => s.classList.remove('active'));
     navSteps.forEach(n => { n.classList.remove('active'); });
 
+    // Leaving the standalone Data Flow view (if it was open).
+    const _df = document.getElementById('panel-dataflow');
+    if (_df) _df.classList.add('hidden');
+    const _dfNav = document.getElementById('navDataFlow');
+    if (_dfNav) _dfNav.classList.remove('active');
+
     // Show target
     steps[index].classList.add('active');
     navSteps[index].classList.add('active');
@@ -742,6 +899,177 @@ function markComplete(index) {
     completedSteps.add(index);
     navSteps[index].classList.add('completed');
     updateDashboardStats();
+}
+
+// ============================================================
+// DATA FLOW TAB (real source -> target flow of the last run)
+// ============================================================
+function showDataFlow() {
+    // Hide the 9 pipeline step panels; show the standalone Data Flow panel.
+    steps.forEach(s => s.classList.remove('active'));
+    navSteps.forEach(n => n.classList.remove('active'));
+    const panel = document.getElementById('panel-dataflow');
+    if (panel) panel.classList.remove('hidden');
+    const nav = document.getElementById('navDataFlow');
+    if (nav) nav.classList.add('active');
+    const crumb = document.getElementById('crumb');
+    if (crumb) crumb.innerHTML = 'Insights / <b>Data Flow</b>';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    loadDataFlow();
+}
+
+function loadDataFlow() {
+    const host = document.getElementById('dataFlowContent');
+    if (host) host.innerHTML = '<div class="empty-hint" style="padding:24px;color:#9ca3af;">Loading…</div>';
+    fetch('/api/data_flow')
+        .then(r => r.json())
+        .then(renderDataFlow)
+        .catch(err => {
+            if (host) host.innerHTML = '<div class="empty-hint" style="padding:24px;color:var(--red,#ef4444);">Failed to load data flow: ' + (err && err.message ? err.message : err) + '</div>';
+        });
+}
+
+function _dfEsc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderDataFlow(data) {
+    const host = document.getElementById('dataFlowContent');
+    if (!host) return;
+    if (!data || !data.success) {
+        host.innerHTML = '<div class="empty-hint" style="padding:24px;color:var(--red,#ef4444);">Could not load data flow.</div>';
+        return;
+    }
+    if (!data.executed) {
+        host.innerHTML = '<div class="empty-hint" style="padding:32px;text-align:center;color:#9ca3af;">'
+            + '<div style="font-size:28px;margin-bottom:8px;">↯</div>'
+            + _dfEsc(data.message || 'No migration has been executed yet.')
+            + '<div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="goToStep(6)">Go to Migration →</button></div>'
+            + '</div>';
+        return;
+    }
+
+    const src = _dfEsc(data.source_type || 'Source');
+    const tgt = _dfEsc(data.target_label || 'Azure SQL');
+    const t = data.totals || {};
+    const tables = data.tables || [];
+    const codeObjs = data.code_objects || [];
+    const mode = _dfEsc(data.mode || '');
+
+    const valColor = v => v === 'PASS' ? '#16a34a' : (v === 'FAIL' ? '#ef4444' : '#9ca3af');
+
+    // ---- "Showing last run" label (this tab is a historical record, not live) ----
+    let ranLabel = '';
+    if (data.finished_at) {
+        const d = new Date(data.finished_at);
+        if (!isNaN(d)) {
+            ranLabel = d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+        }
+    }
+    let html = '<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;color:#6b7280;">'
+        + '<span style="display:inline-flex;align-items:center;gap:6px;background:#f3f4f6;border:1px solid rgba(0,0,0,0.08);border-radius:14px;padding:3px 10px;">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" style="flex:none;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+        + 'Showing last completed run' + (ranLabel ? ' · <b style="color:#374151;font-weight:600;">' + _dfEsc(ranLabel) + '</b>' : '')
+        + '</span></div>';
+
+    // ---- Totals strip ----
+    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">';
+    const chip = (label, val, color) =>
+        '<div style="flex:1;min-width:120px;border:1px solid rgba(0,0,0,0.10);border-radius:10px;padding:10px 14px;">'
+        + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#9ca3af;">' + label + '</div>'
+        + '<div style="font-size:20px;font-weight:700;color:' + (color || 'inherit') + ';">' + val + '</div></div>';
+    html += chip('Mode', mode || '—');
+    html += chip('Tables', t.tables || 0);
+    html += chip('Rows Read', t.rows_read || 0);
+    html += chip('Rows Written', t.rows_written || 0, '#16a34a');
+    html += chip('Updated', t.rows_updated || 0);
+    html += chip('Skipped', t.duplicates_skipped || 0, '#d97706');
+    html += chip('Failed', t.failed_rows || 0, (t.failed_rows ? '#ef4444' : 'inherit'));
+    html += '</div>';
+
+    // ---- Visual flow: Source column -> engine -> Target column ----
+    html += '<div style="display:flex;align-items:stretch;gap:16px;margin:8px 0 26px;">';
+
+    // Source side
+    html += '<div style="flex:1;">'
+        + '<div style="font-weight:700;margin-bottom:8px;">' + src + ' <span style="color:#9ca3af;font-weight:500;">(source)</span></div>';
+    tables.forEach(row => {
+        html += '<div style="border:1px solid rgba(0,0,0,0.12);border-radius:8px;padding:8px 12px;margin-bottom:8px;background:#f9fafb;">'
+            + '<div style="font-weight:600;">' + _dfEsc(row.source_table) + '</div>'
+            + '<div style="font-size:12px;color:#6b7280;">' + (row.rows_read || 0) + ' rows read</div></div>';
+    });
+    html += '</div>';
+
+    // Engine / arrow
+    html += '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:120px;">'
+        + '<div style="font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Migration</div>'
+        + '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="margin-bottom:6px;"><rect x="5" y="7" width="14" height="12" rx="3" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.6"/><circle cx="9.5" cy="13" r="1.4" fill="#7c3aed"/><circle cx="14.5" cy="13" r="1.4" fill="#7c3aed"/><path d="M12 4v3M9 19v2M15 19v2M19 11h2M3 11h2M19 15h2M3 15h2" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="3.4" r="1.3" fill="#7c3aed"/></svg>'
+        + '<div class="df-flow-track" aria-hidden="true">'
+        +   '<span class="df-flow-dot"></span><span class="df-flow-dot"></span><span class="df-flow-dot"></span>'
+        +   '<span class="df-flow-arrow">⟶</span>'
+        + '</div>'
+        + '<div style="font-size:11px;color:#6b7280;margin-top:6px;text-align:center;">extract → map<br>convert → load</div></div>';
+
+    // Target side
+    html += '<div style="flex:1;">'
+        + '<div style="font-weight:700;margin-bottom:8px;">' + tgt + ' <span style="color:#9ca3af;font-weight:500;">(target)</span></div>';
+    tables.forEach(row => {
+        const vc = valColor(row.validation);
+        html += '<div style="border:1px solid ' + vc + '33;border-left:3px solid ' + vc + ';border-radius:8px;padding:8px 12px;margin-bottom:8px;background:#ffffff;">'
+            + '<div style="font-weight:600;display:flex;justify-content:space-between;">'
+            + '<span>' + _dfEsc(row.target_table) + '</span>'
+            + (row.validation ? '<span style="font-size:11px;color:' + vc + ';font-weight:700;">' + _dfEsc(row.validation) + '</span>' : '')
+            + '</div>'
+            + '<div style="font-size:12px;color:#6b7280;">' + (row.rows_written || 0) + ' written'
+            + (row.duplicates_skipped ? ' · ' + row.duplicates_skipped + ' skipped' : '')
+            + (row.failed_rows ? ' · <span style="color:#ef4444;">' + row.failed_rows + ' failed</span>' : '')
+            + '</div></div>';
+    });
+    html += '</div>';
+    html += '</div>';
+
+    // ---- Detailed table ----
+    html += '<h3 style="margin:18px 0 8px;">Detailed Flow</h3>';
+    html += '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">'
+        + '<thead><tr style="text-align:left;border-bottom:2px solid rgba(0,0,0,0.1);">'
+        + '<th style="padding:8px;">Source Table</th><th style="padding:8px;">Target Table</th>'
+        + '<th style="padding:8px;text-align:right;">Read</th><th style="padding:8px;text-align:right;">Written</th>'
+        + '<th style="padding:8px;text-align:right;">Updated</th><th style="padding:8px;text-align:right;">Skipped</th>'
+        + '<th style="padding:8px;text-align:right;">Failed</th><th style="padding:8px;">Validation</th></tr></thead><tbody>';
+    if (!tables.length) {
+        html += '<tr><td colspan="8" style="padding:12px;color:#9ca3af;">No table-level metrics for this run.</td></tr>';
+    }
+    tables.forEach(row => {
+        const vc = valColor(row.validation);
+        html += '<tr style="border-bottom:1px solid rgba(0,0,0,0.06);">'
+            + '<td style="padding:8px;font-weight:600;">' + _dfEsc(row.source_table) + '</td>'
+            + '<td style="padding:8px;">' + _dfEsc(row.target_table) + '</td>'
+            + '<td style="padding:8px;text-align:right;">' + (row.rows_read || 0) + '</td>'
+            + '<td style="padding:8px;text-align:right;color:#16a34a;">' + (row.rows_written || 0) + '</td>'
+            + '<td style="padding:8px;text-align:right;">' + (row.rows_updated || 0) + '</td>'
+            + '<td style="padding:8px;text-align:right;color:#d97706;">' + (row.duplicates_skipped || 0) + '</td>'
+            + '<td style="padding:8px;text-align:right;color:' + (row.failed_rows ? '#ef4444' : 'inherit') + ';">' + (row.failed_rows || 0) + '</td>'
+            + '<td style="padding:8px;font-weight:700;color:' + vc + ';">' + _dfEsc(row.validation || '—') + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+
+    // ---- Code objects ----
+    if (codeObjs.length) {
+        html += '<h3 style="margin:22px 0 8px;">Code Objects Deployed</h3><div style="display:flex;flex-wrap:wrap;gap:8px;">';
+        codeObjs.forEach(o => {
+            const isView = o.kind === 'VIEW';
+            html += '<span style="border:1px solid rgba(0,0,0,0.12);border-radius:16px;padding:4px 12px;font-size:12px;background:'
+                + (isView ? '#f3e8ff' : '#eff6ff') + ';">'
+                + '<b>' + _dfEsc(o.kind) + '</b> · ' + _dfEsc(o.name)
+                + (o.status ? ' <span style="color:#6b7280;">(' + _dfEsc(o.status) + ')</span>' : '')
+                + '</span>';
+        });
+        html += '</div>';
+    }
+
+    host.innerHTML = html;
+    // A completed run is being rendered → show the arrows in the done state.
+    setFlowState('done');
 }
 
 // ============================================================
@@ -2014,7 +2342,7 @@ function renderCodeObjectRiskCards(recs) {
         html += `<div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <button class="btn btn-sm btn-success" onclick="setCodeObjectApproval('${name}', true, this)" style="font-size:12px;">✓ Approve</button>
             <button class="btn btn-sm btn-outline" onclick="setCodeObjectApproval('${name}', false, this)" style="font-size:12px;color:#dc2626;border-color:#dc2626;">✗ Reject</button>
-            <button class="btn btn-sm btn-outline" onclick="askAIDeepDive('${name}', this)" style="font-size:12px;color:#7c3aed;border-color:#7c3aed;">🤖 Ask AI for deeper analysis</button>
+            <button class="btn btn-sm btn-outline" onclick="askAIDeepDive('${name}', this)" style="font-size:12px;color:#7c3aed;border-color:#7c3aed;display:inline-flex;align-items:center;gap:6px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="flex:none;"><rect x="5" y="7" width="14" height="12" rx="3" fill="#f3e8ff" stroke="#7c3aed" stroke-width="1.8"/><circle cx="9.5" cy="13" r="1.4" fill="#7c3aed"/><circle cx="14.5" cy="13" r="1.4" fill="#7c3aed"/><path d="M12 4v3M9 19v2M15 19v2M19 11h2M3 11h2M19 15h2M3 15h2" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="3.4" r="1.3" fill="#7c3aed"/></svg>Ask AI for deeper analysis</button>
         </div>
         <div id="deepdive_${i}" data-proc="${name}" style="display:none;margin-top:8px;font-size:12px;background:var(--bg-page,#faf5ff);border:1px solid #ddd6fe;border-radius:6px;padding:8px;white-space:pre-wrap;"></div>
         </div>`;
@@ -2387,12 +2715,30 @@ async function setApproval(index, approved) {
 // ============================================================
 // STEP 7: MIGRATION
 // ============================================================
+// ============================================================
+// FLOW-ARROW ANIMATION STATE
+// Toggles the running / done / failed classes on every .df-flow-track
+// (Data Flow tab arrows AND the "How Migration Works" overview arrows).
+// Idle = no class (static arrow, no motion).
+// ============================================================
+function setFlowState(state) {
+    var tracks = document.querySelectorAll('.df-flow-track');
+    tracks.forEach(function (t) {
+        t.classList.remove('is-running', 'is-done', 'is-failed');
+        if (state === 'running') t.classList.add('is-running');
+        else if (state === 'done') t.classList.add('is-done');
+        else if (state === 'failed') t.classList.add('is-failed');
+        // state === 'idle' (or anything else) leaves it static.
+    });
+}
+
 async function executeMigration() {
     const btn = document.getElementById('btnMigrate');
     const mode = (document.getElementById('migrationMode')?.value || 'append');
     btn.disabled = true;
     showLoading('migrationLoading', true);
     document.getElementById('migrationResult').classList.add('hidden');
+    setFlowState('running');   // arrows animate while the real migration runs
 
     const res = await apiCall('/api/execute_migration', { method: 'POST', body: JSON.stringify({ migration_mode: mode }) });
 
@@ -2421,8 +2767,10 @@ async function executeMigration() {
             ${errHtml}
         </div>`;
         markComplete(6);
+        setFlowState('done');   // success → green ✓ on the arrows
     } else {
         result.innerHTML = `<div class="alert alert-error">❌ ${res.error}</div>`;
+        setFlowState('failed'); // failure → red ✗ on the arrows
     }
 }
 
