@@ -84,6 +84,13 @@
             <span class="badge">POC v1.0</span>
         </div>
     </div>
+    <a href="/" class="nav-home-link" title="Back to home page"
+       style="display:flex;align-items:center;gap:8px;margin:6px 12px 4px;padding:7px 10px;border-radius:8px;color:var(--rail-fg,#b9bcd4);text-decoration:none;font-size:13px;font-weight:500;transition:all .16s;"
+       onmouseover="this.style.background='var(--rail-hover,rgba(255,255,255,.06))';this.style.color='var(--rail-fg-strong,#fff)';"
+       onmouseout="this.style.background='transparent';this.style.color='var(--rail-fg,#b9bcd4)';">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Home
+    </a>
     <div class="nav-steps" id="navSteps">
         <div class="nav-section">Discover</div>
         <div class="nav-step active" data-step="0" onclick="goToStep(0)" title="Source">
@@ -150,6 +157,10 @@
      TOPBAR
      ============================================================ -->
 <header class="topbar">
+    <a href="/" class="btn btn-outline btn-sm" title="Back to home page" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-right:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+        Home
+    </a>
     <div class="crumb" id="crumb">Discover / <b>Source</b></div>
     <div class="spacer"></div>
     <div class="conn-pill"><span class="dot" id="srcDot"></span> Source <b id="srcName">not connected</b></div>

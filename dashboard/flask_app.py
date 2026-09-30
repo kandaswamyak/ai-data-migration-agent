@@ -377,8 +377,21 @@ def _all_code_objects():
 # ============================================================
 
 @app.route("/")
+def home():
+    """Landing page for the POC. The migration workflow lives at /migrate."""
+    return render_template("home.html")
+
+
+@app.route("/migrate")
 def index():
+    """The migration workflow dashboard (Step 1 → Report)."""
     return render_template("index.html")
+
+
+@app.route("/dashboard")
+def dashboard():
+    """Migration overview dashboard (stat cards, journey, risk, insights)."""
+    return render_template("dashboard.html")
 
 
 @app.route("/api/state")
@@ -3383,10 +3396,18 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                 return text
 
             def extract_create_table_name(stmt):
-                # Supports formats like CREATE TABLE [dbo].[CUSTOMER] (...)
-                m = re.search(r"(?is)^\s*CREATE\s+TABLE\s+\[dbo\]\.\[([^\]]+)\]", stmt or "")
+                # Robustly extract the table name from any CREATE TABLE form:
+                #   CREATE TABLE [dbo].[Name]  |  CREATE TABLE dbo.Name
+                #   CREATE TABLE [Name]        |  CREATE TABLE Name
+                # (optional schema, optional brackets, any casing/whitespace)
+                m = re.search(
+                    r"(?is)^\s*CREATE\s+TABLE\s+"
+                    r"(?:(?:\[[^\]]+\]|[A-Za-z0-9_]+)\s*\.\s*)?"   # optional schema qualifier
+                    r"(?:\[([^\]]+)\]|([A-Za-z0-9_]+))",           # table name (bracketed or bare)
+                    stmt or "",
+                )
                 if m:
-                    return m.group(1)
+                    return (m.group(1) or m.group(2)).strip()
                 return None
 
             def target_table_exists(table_name):
@@ -3560,6 +3581,29 @@ IF COL_LENGTH('dbo.MIGRATION_WATERMARKS', 'last_message') IS NULL
                         target_cols = [str(m.get("target_column", "")).strip() for m in mappings]
                         if not source_cols or not target_cols:
                             return result
+
+                        # --- Target existence guard (demo-safe error) ---------------
+                        # If the DDL step did not actually create the target table,
+                        # surface a clear, actionable message instead of a cryptic
+                        # ODBC 208 "Invalid object name 'dbo.<t>'" during INSERT.
+                        try:
+                            tgt_cur.execute(
+                                "SELECT 1 FROM INFORMATION_SCHEMA.TABLES "
+                                "WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = ?",
+                                target_table,
+                            )
+                            if tgt_cur.fetchone() is None:
+                                result["errors"].append(
+                                    f"Target table dbo.{target_table} does not exist — "
+                                    f"its CREATE TABLE DDL did not run. Re-generate DDL "
+                                    f"and ensure the '{target_table}' CREATE statement executed."
+                                )
+                                result["duration_sec"] = round(time.time() - started, 2)
+                                return result
+                        except Exception:
+                            # If the existence check itself fails, fall through and let
+                            # the normal copy path report the underlying error.
+                            pass
 
                         key_cols = detect_key_cols(target_cols)
                         non_key_cols = [c for c in target_cols if c not in key_cols]

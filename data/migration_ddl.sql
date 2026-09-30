@@ -1,61 +1,28 @@
--- Generated DDL: 3 table(s), 36 column(s)
--- CREATE: 3, ALTER: 0, No Change: 0
--- Generated at: 2026-09-29 11:44:24
+-- Generated DDL: 6 table(s), 41 column(s)
+-- CREATE: 0, ALTER: 0, No Change: 6
+-- Generated at: 2026-09-30 17:13:06
 
-CREATE TABLE [dbo].[CUSTOMER] (
-    [CUSTOMER_ID] BIGINT NOT NULL,
-    [CUSTOMER_NAME] VARCHAR(100) NOT NULL,
-    [EMAIL] NVARCHAR(150) NULL,
-    [CITY] NVARCHAR(50) NULL,
-    [CREDIT_LIMIT] DECIMAL(12,2) NULL,
-    [IS_ACTIVE] NCHAR(1) NULL,
-    [CREATED_DATE] DATETIME2 NULL,
-    [UPDATED_TS] DATETIME2(7) NULL,
-    [PHONE_NUMBER] NVARCHAR(50) NULL,
-    CONSTRAINT [PK_CUSTOMER] PRIMARY KEY ([CUSTOMER_ID])
-);
-GO
+-- Table [CUSTOMER] already exists in target with all columns. No DDL changes needed.
 
 GO
 
-CREATE TABLE [dbo].[EMPLOYEES] (
-    [EMPLOYEE_ID] DECIMAL(38,10) NOT NULL,
-    [FIRST_NAME] NVARCHAR(50) NULL,
-    [LAST_NAME] NVARCHAR(50) NULL,
-    [DEPARTMENT_ID] DECIMAL(38,10) NOT NULL,
-    [SALARY] DECIMAL(38,10) NULL,
-    CONSTRAINT [PK_EMPLOYEES] PRIMARY KEY ([EMPLOYEE_ID])
-);
-GO
+-- Table [employees] already exists in target with all columns. No DDL changes needed.
 
 GO
 
-CREATE TABLE [dbo].[MIGRATION_COMPATIBILITY_TEST] (
-    [ID] BIGINT NOT NULL,
-    [CUSTOMER_NAME] VARCHAR(100) NULL,
-    [EMAIL] NVARCHAR(200) NULL,
-    [CREATED_DATE] DATETIME2 NULL,
-    [CREDIT_LIMIT] DECIMAL(12,2) NULL,
-    [LARGE_AMOUNT] DECIMAL(38,10) NULL,
-    [VERY_LARGE_NUMBER] DECIMAL(38,0) NULL,
-    [SHORT_CODE] NCHAR(10) NULL,
-    [LONG_DESCRIPTION] NVARCHAR(4000) NULL,
-    [UNICODE_TEXT] NVARCHAR(4000) NULL,
-    [CLOB_DATA] NVARCHAR(4000) NULL,
-    [CREATED_TIMESTAMP] DATETIME2(7) NULL,
-    [CREATED_TZ] DATETIMEOFFSET(7) NULL,
-    [CREATED_LOCAL_TZ] DATETIMEOFFSET(7) NULL,
-    [DOCUMENT_DATA] VARBINARY(4000) NULL,
-    [RAW_DATA] VARBINARY(2000) NULL,
-    [XML_DATA] NVARCHAR(2000) NULL,
-    [FLOAT_VALUE] REAL NULL,
-    [DOUBLE_VALUE] FLOAT NULL,
-    [YEAR_MONTH_INTERVAL] VARCHAR(50) NULL,
-    [DAY_TIME_INTERVAL] VARCHAR(50) NULL,
-    [ACTIVE_FLAG] TINYINT NULL,
-    CONSTRAINT [PK_MIGRATION_COMPATIBILITY_TEST] PRIMARY KEY ([ID])
-);
+-- Table [MIGRATION_DEMO_CUSTOMER] already exists in target with all columns. No DDL changes needed.
+
 GO
+
+-- Table [MIGRATION_WATERMARKS] already exists in target with all columns. No DDL changes needed.
+
+GO
+
+-- Table [Orders] already exists in target with all columns. No DDL changes needed.
+
+GO
+
+-- Table [Product] already exists in target with all columns. No DDL changes needed.
 
 GO
 
