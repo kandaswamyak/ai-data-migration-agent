@@ -1,0 +1,379 @@
+{
+  "name": "Pipeline_IncrementalLoad",
+  "properties": {
+    "description": "ADF pipeline for incremental/delta load migration from Oracle/SQL Server to Azure SQL Database. Uses a watermark column to identify new or changed rows since the last load, copies only the delta, and updates the watermark in a control table.",
+    "activities": [
+      {
+        "name": "LookupCurrentWatermark",
+        "description": "Get the maximum watermark value from the source table for rows newer than the last watermark.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": {
+            "value": "@pipeline().parameters.retryCount",
+            "type": "Expression"
+          },
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+              "type": "Expression"
+            },
+            "oracleReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT MAX(', pipeline().parameters.watermarkColumn, ') AS NEW_WATERMARK, COUNT(*) AS DELTA_ROW_COUNT FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, ' WHERE ', pipeline().parameters.watermarkColumn, ' > TO_TIMESTAMP(''', pipeline().parameters.lastWatermarkValue, ''', ''YYYY-MM-DD HH24:MI:SS.FF'')'), '')",
+              "type": "Expression"
+            },
+            "sqlReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT MAX([', pipeline().parameters.watermarkColumn, ']) AS NEW_WATERMARK, COUNT(*) AS DELTA_ROW_COUNT FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, '] WHERE [', pipeline().parameters.watermarkColumn, '] > ''', pipeline().parameters.lastWatermarkValue, ''''), '')",
+              "type": "Expression"
+            },
+            "queryTimeout": "00:30:00"
+          },
+          "dataset": {
+            "referenceName": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+              "type": "Expression"
+            },
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.sourceSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.sourceTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "IfDeltaRowsExist",
+        "description": "Proceed only if there are new/changed rows since the last watermark.",
+        "type": "IfCondition",
+        "dependsOn": [
+          {
+            "activity": "LookupCurrentWatermark",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "expression": {
+            "value": "@and(greater(int(activity('LookupCurrentWatermark').output.firstRow.DELTA_ROW_COUNT), 0), not(equals(activity('LookupCurrentWatermark').output.firstRow.NEW_WATERMARK, null)))",
+            "type": "Expression"
+          },
+          "ifTrueActivities": [
+            {
+              "name": "CopyIncrementalData",
+              "description": "Copy only new/changed rows from source to Azure SQL Database where watermarkColumn > lastWatermarkValue.",
+              "type": "Copy",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.04:00:00",
+                "retry": {
+                  "value": "@pipeline().parameters.retryCount",
+                  "type": "Expression"
+                },
+                "retryIntervalInSeconds": 60,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "source": {
+                  "type": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+                    "type": "Expression"
+                  },
+                  "oracleReaderQuery": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT * FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, ' WHERE ', pipeline().parameters.watermarkColumn, ' > TO_TIMESTAMP(''', pipeline().parameters.lastWatermarkValue, ''', ''YYYY-MM-DD HH24:MI:SS.FF'') AND ', pipeline().parameters.watermarkColumn, ' <= TO_TIMESTAMP(''', activity('LookupCurrentWatermark').output.firstRow.NEW_WATERMARK, ''', ''YYYY-MM-DD HH24:MI:SS.FF'')'), '')",
+                    "type": "Expression"
+                  },
+                  "sqlReaderQuery": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT * FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, '] WHERE [', pipeline().parameters.watermarkColumn, '] > ''', pipeline().parameters.lastWatermarkValue, ''' AND [', pipeline().parameters.watermarkColumn, '] <= ''', activity('LookupCurrentWatermark').output.firstRow.NEW_WATERMARK, ''''), '')",
+                    "type": "Expression"
+                  },
+                  "queryTimeout": "04:00:00",
+                  "partitionOption": "None"
+                },
+                "sink": {
+                  "type": "AzureSqlSink",
+                  "writeBatchSize": {
+                    "value": "@pipeline().parameters.batchSize",
+                    "type": "Expression"
+                  },
+                  "writeBatchTimeout": "00:30:00",
+                  "sqlWriterUseTableLock": false,
+                  "upsertSettings": {
+                    "useTempDB": true,
+                    "interimSchemaName": "dbo",
+                    "keys": {
+                      "value": "@json(pipeline().parameters.keyColumns)",
+                      "type": "Expression"
+                    }
+                  },
+                  "writeAction": {
+                    "value": "@pipeline().parameters.writeAction",
+                    "type": "Expression"
+                  },
+                  "disableMetricsCollection": false
+                },
+                "enableStaging": false,
+                "translator": {
+                  "value": "@json(pipeline().parameters.columnMapping)",
+                  "type": "Expression"
+                },
+                "enableSkipIncompatibleRow": true,
+                "redirectIncompatibleRowSettings": {
+                  "linkedServiceName": {
+                    "referenceName": "LS_AzureBlobStorage",
+                    "type": "LinkedServiceReference"
+                  },
+                  "path": {
+                    "value": "@concat(pipeline().parameters.loggingContainer, '/incompatible-rows/', pipeline().parameters.sourceSchema, '/', pipeline().parameters.sourceTable, '/incremental/', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'))",
+                    "type": "Expression"
+                  }
+                },
+                "logSettings": {
+                  "enableCopyActivityLog": true,
+                  "copyActivityLogSettings": {
+                    "logLevel": "Warning",
+                    "enableReliableLogging": true
+                  },
+                  "logLocationSettings": {
+                    "linkedServiceName": {
+                      "referenceName": "LS_AzureBlobStorage",
+                      "type": "LinkedServiceReference"
+                    },
+                    "path": {
+                      "value": "@concat(pipeline().parameters.loggingContainer, '/copy-logs/', pipeline().parameters.sourceSchema, '/', pipeline().parameters.sourceTable, '/incremental/', formatDateTime(utcNow(), 'yyyyMMdd_HHmmss'))",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              },
+              "inputs": [
+                {
+                  "referenceName": {
+                    "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+                    "type": "Expression"
+                  },
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@pipeline().parameters.sourceSchema",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@pipeline().parameters.sourceTable",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ],
+              "outputs": [
+                {
+                  "referenceName": "DS_AzureSql_Parameterized",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@pipeline().parameters.targetSchema",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@pipeline().parameters.targetTable",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "UpdateWatermarkInControlTable",
+              "description": "Update the watermark value in the control table after a successful incremental copy so the next run picks up from this point.",
+              "type": "SqlServerStoredProcedure",
+              "dependsOn": [
+                {
+                  "activity": "CopyIncrementalData",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.00:10:00",
+                "retry": 3,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "storedProcedureName": "[dbo].[usp_UpdateWatermark]",
+                "storedProcedureParameters": {
+                  "LastModifiedDate": {
+                    "value": {
+                      "value": "@activity('LookupCurrentWatermark').output.firstRow.NEW_WATERMARK",
+                      "type": "Expression"
+                    },
+                    "type": "DateTime"
+                  },
+                  "TableName": {
+                    "value": {
+                      "value": "@concat(pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable)",
+                      "type": "Expression"
+                    },
+                    "type": "String"
+                  },
+                  "PipelineRunId": {
+                    "value": {
+                      "value": "@pipeline().RunId",
+                      "type": "Expression"
+                    },
+                    "type": "String"
+                  },
+                  "RowsCopied": {
+                    "value": {
+                      "value": "@activity('CopyIncrementalData').output.rowsCopied",
+                      "type": "Expression"
+                    },
+                    "type": "Int64"
+                  }
+                }
+              },
+              "linkedServiceName": {
+                "referenceName": "LS_AzureSqlDatabase",
+                "type": "LinkedServiceReference"
+              }
+            },
+            {
+              "name": "SetIncrementalResultMetadata",
+              "description": "Build a JSON result object with delta copy metrics.",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "UpdateWatermarkInControlTable",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "incrementalResult",
+                "value": {
+                  "value": "@concat('{', '\"pipelineRunId\": \"', pipeline().RunId, '\",', '\"sourceType\": \"', pipeline().parameters.sourceType, '\",', '\"sourceTable\": \"', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, '\",', '\"targetTable\": \"', pipeline().parameters.targetSchema, '.', pipeline().parameters.targetTable, '\",', '\"watermarkColumn\": \"', pipeline().parameters.watermarkColumn, '\",', '\"previousWatermark\": \"', pipeline().parameters.lastWatermarkValue, '\",', '\"newWatermark\": \"', string(activity('LookupCurrentWatermark').output.firstRow.NEW_WATERMARK), '\",', '\"deltaRowCount\": ', string(activity('LookupCurrentWatermark').output.firstRow.DELTA_ROW_COUNT), ',', '\"rowsRead\": ', string(activity('CopyIncrementalData').output.rowsRead), ',', '\"rowsCopied\": ', string(activity('CopyIncrementalData').output.rowsCopied), ',', '\"rowsSkipped\": ', string(activity('CopyIncrementalData').output.rowsSkipped), ',', '\"copyDurationSeconds\": ', string(activity('CopyIncrementalData').output.copyDuration), ',', '\"throughputKBps\": ', string(activity('CopyIncrementalData').output.throughput), ',', '\"migrationTimestamp\": \"', utcNow(), '\",', '\"status\": \"Succeeded\"', '}')",
+                  "type": "Expression"
+                }
+              }
+            }
+          ],
+          "ifFalseActivities": [
+            {
+              "name": "SetNoDeltaResult",
+              "description": "Record that no new/changed rows were found since the last watermark.",
+              "type": "SetVariable",
+              "dependsOn": [],
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "incrementalResult",
+                "value": {
+                  "value": "@concat('{', '\"pipelineRunId\": \"', pipeline().RunId, '\",', '\"sourceType\": \"', pipeline().parameters.sourceType, '\",', '\"sourceTable\": \"', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, '\",', '\"targetTable\": \"', pipeline().parameters.targetSchema, '.', pipeline().parameters.targetTable, '\",', '\"watermarkColumn\": \"', pipeline().parameters.watermarkColumn, '\",', '\"previousWatermark\": \"', pipeline().parameters.lastWatermarkValue, '\",', '\"deltaRowCount\": 0,', '\"status\": \"Skipped_NoDeltaRows\",', '\"migrationTimestamp\": \"', utcNow(), '\"', '}')",
+                  "type": "Expression"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "sourceType": {
+        "type": "string",
+        "defaultValue": "SQLServer"
+      },
+      "sourceConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "sourceSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "sourceTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "targetTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "columnMapping": {
+        "type": "string",
+        "defaultValue": "{\"type\": \"TabularTranslator\", \"mappings\": []}"
+      },
+      "batchSize": {
+        "type": "int",
+        "defaultValue": 10000
+      },
+      "retryCount": {
+        "type": "int",
+        "defaultValue": 3
+      },
+      "loggingContainer": {
+        "type": "string",
+        "defaultValue": "adf-migration-logs"
+      },
+      "watermarkColumn": {
+        "type": "string",
+        "defaultValue": "LastModifiedDate"
+      },
+      "lastWatermarkValue": {
+        "type": "string",
+        "defaultValue": "1900-01-01 00:00:00.000"
+      },
+      "keyColumns": {
+        "type": "string",
+        "defaultValue": "[]"
+      },
+      "writeAction": {
+        "type": "string",
+        "defaultValue": "insert"
+      }
+    },
+    "variables": {
+      "incrementalResult": {
+        "type": "String"
+      }
+    },
+    "folder": {
+      "name": "DataMigration/IncrementalLoad"
+    },
+    "annotations": [
+      "DataMigration",
+      "IncrementalLoad",
+      "Delta",
+      "POC"
+    ]
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}

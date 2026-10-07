@@ -1,0 +1,30 @@
+{
+  "_comment": "=== SIMULATED SAMPLE DATA — NOT A REAL MIGRATION REQUEST ===",
+  "_purpose": "Demonstrates the migration-request.schema.json format for an Oracle HR schema migration.",
+  "sourceType": "Oracle",
+  "sourceHost": "oracle-prod.contoso.internal",
+  "sourcePort": 1521,
+  "sourceDatabase": "ORCL",
+  "sourceSchema": "HR",
+  "targetServer": "migpoc-sql-abc123def.database.windows.net",
+  "targetDatabase": "hr-migrated",
+  "targetSchema": "dbo",
+  "tables": [
+    "EMPLOYEES",
+    "DEPARTMENTS",
+    "JOB_HISTORY"
+  ],
+  "migrationMode": "full",
+  "dryRun": false,
+  "requestedBy": "dba-team@contoso.com",
+  "priority": "high",
+  "notifyOnCompletion": [
+    "dba-team@contoso.com",
+    "hr-project-lead@contoso.com"
+  ],
+  "tags": {
+    "project": "HR-Modernization",
+    "costCenter": "IT-4200",
+    "ticket": "JIRA-MIG-1042"
+  }
+}

@@ -1,0 +1,405 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "$connections": {
+      "type": "Object",
+      "defaultValue": {}
+    },
+    "keyVaultName": {
+      "type": "String",
+      "defaultValue": "kv-datamigration-poc"
+    },
+    "storageAccountName": {
+      "type": "String",
+      "defaultValue": "stadatamigrationpoc"
+    },
+    "approvalContainerName": {
+      "type": "String",
+      "defaultValue": "approval-records"
+    },
+    "approvalTimeoutDays": {
+      "type": "Int",
+      "defaultValue": 7
+    },
+    "approverEmails": {
+      "type": "String",
+      "defaultValue": "dba-approvers@contoso.com"
+    },
+    "callbackBaseUrl": {
+      "type": "String",
+      "defaultValue": ""
+    }
+  },
+  "triggers": {
+    "manual": {
+      "type": "Request",
+      "kind": "Http",
+      "inputs": {
+        "schema": {
+          "type": "object",
+          "properties": {
+            "migrationPlanId": {
+              "type": "string",
+              "description": "Unique migration plan identifier"
+            },
+            "migrationId": {
+              "type": "string",
+              "description": "Parent migration identifier"
+            },
+            "sourceDb": {
+              "type": "object",
+              "description": "Source database details",
+              "properties": {
+                "type": { "type": "string" },
+                "server": { "type": "string" },
+                "database": { "type": "string" },
+                "schema": { "type": "string" }
+              }
+            },
+            "targetDb": {
+              "type": "object",
+              "description": "Target database details",
+              "properties": {
+                "server": { "type": "string" },
+                "database": { "type": "string" },
+                "schema": { "type": "string" }
+              }
+            },
+            "tableMappings": {
+              "type": "array",
+              "description": "Table and column mappings with datatype conversions",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "tableName": { "type": "string" },
+                  "columnMappings": { "type": "array" },
+                  "tableRiskLevel": { "type": "string" },
+                  "sourceRowCount": { "type": "integer" }
+                }
+              }
+            },
+            "overallRiskLevel": {
+              "type": "string",
+              "enum": ["LOW", "MEDIUM", "HIGH"]
+            },
+            "dryRunResult": {
+              "type": "object",
+              "description": "Results from dry-run validation",
+              "properties": {
+                "status": { "type": "string" },
+                "issues": { "type": "array" },
+                "estimatedDuration": { "type": "string" }
+              }
+            },
+            "requestedBy": {
+              "type": "object",
+              "description": "User identity who requested migration",
+              "properties": {
+                "userId": { "type": "string" },
+                "displayName": { "type": "string" },
+                "email": { "type": "string" }
+              }
+            }
+          },
+          "required": [
+            "migrationPlanId",
+            "migrationId",
+            "sourceDb",
+            "targetDb",
+            "tableMappings",
+            "overallRiskLevel",
+            "requestedBy"
+          ]
+        },
+        "method": "POST"
+      }
+    }
+  },
+  "actions": {
+    "Initialize_ApprovalState": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "approvalState",
+            "type": "string",
+            "value": "AWAITING_APPROVAL"
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Initialize_ApprovalRecord": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "approvalRecord",
+            "type": "object",
+            "value": {
+              "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+              "migrationId": "@{triggerBody()?['migrationId']}",
+              "state": "AWAITING_APPROVAL",
+              "requestedBy": "@triggerBody()?['requestedBy']",
+              "requestedAt": "@{utcNow()}",
+              "approvedBy": null,
+              "approvalDecision": null,
+              "approvalComments": null,
+              "decidedAt": null
+            }
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_ApprovalState": ["Succeeded"]
+      }
+    },
+    "Build_Approval_Summary": {
+      "type": "Compose",
+      "inputs": "## Data Migration Approval Request\n\n**Migration Plan ID:** @{triggerBody()?['migrationPlanId']}\n**Migration ID:** @{triggerBody()?['migrationId']}\n**Requested By:** @{triggerBody()?['requestedBy']?['displayName']} (@{triggerBody()?['requestedBy']?['email']})\n**Overall Risk Level:** @{triggerBody()?['overallRiskLevel']}\n\n### Source Database\n- **Type:** @{triggerBody()?['sourceDb']?['type']}\n- **Server:** @{triggerBody()?['sourceDb']?['server']}\n- **Database:** @{triggerBody()?['sourceDb']?['database']}\n- **Schema:** @{triggerBody()?['sourceDb']?['schema']}\n\n### Target Database\n- **Server:** @{triggerBody()?['targetDb']?['server']}\n- **Database:** @{triggerBody()?['targetDb']?['database']}\n- **Schema:** @{triggerBody()?['targetDb']?['schema']}\n\n### Tables & Conversions\n- **Total Tables:** @{length(triggerBody()?['tableMappings'])}\n\n### Dry-Run Result\n- **Status:** @{coalesce(triggerBody()?['dryRunResult']?['status'], 'NOT_PERFORMED')}\n- **Issues:** @{coalesce(string(triggerBody()?['dryRunResult']?['issues']), 'None')}\n- **Estimated Duration:** @{coalesce(triggerBody()?['dryRunResult']?['estimatedDuration'], 'Unknown')}\n\n### Table Details\n@{string(triggerBody()?['tableMappings'])}",
+      "runAfter": {
+        "Initialize_ApprovalRecord": ["Succeeded"]
+      }
+    },
+    "Save_Initial_Approval_Record": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['azureblob']['connectionId']"
+          }
+        },
+        "method": "post",
+        "path": "/v2/datasets/@{parameters('storageAccountName')}/files",
+        "body": "@variables('approvalRecord')",
+        "queries": {
+          "folderPath": "/@{parameters('approvalContainerName')}",
+          "name": "approval-@{triggerBody()?['migrationPlanId']}-pending.json",
+          "queryParametersSingleEncoded": true
+        }
+      },
+      "runAfter": {
+        "Build_Approval_Summary": ["Succeeded"]
+      }
+    },
+    "Start_Approval": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['approvals']['connectionId']"
+          }
+        },
+        "method": "post",
+        "path": "/v2/approvals/create",
+        "body": {
+          "title": "Data Migration Approval: @{triggerBody()?['migrationPlanId']}",
+          "assignedTo": "@{parameters('approverEmails')}",
+          "details": "@{outputs('Build_Approval_Summary')}",
+          "itemLink": "@{parameters('callbackBaseUrl')}/api/migrations/@{triggerBody()?['migrationId']}/plans/@{triggerBody()?['migrationPlanId']}",
+          "itemLinkDescription": "View Migration Plan Details",
+          "requestor": "@{triggerBody()?['requestedBy']?['email']}",
+          "enableNotifications": true,
+          "enableReassignment": true,
+          "options": "Approve, Reject"
+        }
+      },
+      "runAfter": {
+        "Save_Initial_Approval_Record": ["Succeeded"]
+      }
+    },
+    "Wait_For_Approval_With_Timeout": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['approvals']['connectionId']"
+          }
+        },
+        "method": "post",
+        "path": "/v2/approvals/@{body('Start_Approval')?['approvalId']}/wait",
+        "body": {
+          "notificationUrl": "@{listCallbackUrl()}"
+        }
+      },
+      "runAfter": {
+        "Start_Approval": ["Succeeded"]
+      },
+      "limit": {
+        "timeout": "P@{parameters('approvalTimeoutDays')}D"
+      }
+    },
+    "Switch_Approval_Decision": {
+      "type": "Switch",
+      "expression": "@body('Wait_For_Approval_With_Timeout')?['outcome']",
+      "cases": {
+        "Approve": {
+          "case": "Approve",
+          "actions": {
+            "Set_State_Approved": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "approvalState",
+                "value": "APPROVED"
+              },
+              "runAfter": {}
+            },
+            "Update_Record_Approved": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "approvalRecord",
+                "value": {
+                  "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+                  "migrationId": "@{triggerBody()?['migrationId']}",
+                  "state": "APPROVED",
+                  "requestedBy": "@triggerBody()?['requestedBy']",
+                  "requestedAt": "@{variables('approvalRecord')?['requestedAt']}",
+                  "approvedBy": "@{body('Wait_For_Approval_With_Timeout')?['responder']?['email']}",
+                  "approvalDecision": "APPROVED",
+                  "approvalComments": "@{body('Wait_For_Approval_With_Timeout')?['comments']}",
+                  "decidedAt": "@{utcNow()}"
+                }
+              },
+              "runAfter": {
+                "Set_State_Approved": ["Succeeded"]
+              }
+            }
+          }
+        },
+        "Reject": {
+          "case": "Reject",
+          "actions": {
+            "Set_State_Cancelled": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "approvalState",
+                "value": "CANCELLED"
+              },
+              "runAfter": {}
+            },
+            "Update_Record_Rejected": {
+              "type": "SetVariable",
+              "inputs": {
+                "name": "approvalRecord",
+                "value": {
+                  "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+                  "migrationId": "@{triggerBody()?['migrationId']}",
+                  "state": "CANCELLED",
+                  "requestedBy": "@triggerBody()?['requestedBy']",
+                  "requestedAt": "@{variables('approvalRecord')?['requestedAt']}",
+                  "approvedBy": "@{body('Wait_For_Approval_With_Timeout')?['responder']?['email']}",
+                  "approvalDecision": "REJECTED",
+                  "approvalComments": "@{body('Wait_For_Approval_With_Timeout')?['comments']}",
+                  "decidedAt": "@{utcNow()}"
+                }
+              },
+              "runAfter": {
+                "Set_State_Cancelled": ["Succeeded"]
+              }
+            }
+          }
+        }
+      },
+      "default": {
+        "actions": {
+          "Set_State_Timeout": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "approvalState",
+              "value": "TIMED_OUT"
+            },
+            "runAfter": {}
+          },
+          "Update_Record_Timeout": {
+            "type": "SetVariable",
+            "inputs": {
+              "name": "approvalRecord",
+              "value": {
+                "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+                "migrationId": "@{triggerBody()?['migrationId']}",
+                "state": "TIMED_OUT",
+                "requestedBy": "@triggerBody()?['requestedBy']",
+                "requestedAt": "@{variables('approvalRecord')?['requestedAt']}",
+                "approvedBy": null,
+                "approvalDecision": "TIMED_OUT",
+                "approvalComments": "Approval request expired after @{parameters('approvalTimeoutDays')} days without a response.",
+                "decidedAt": "@{utcNow()}"
+              }
+            },
+            "runAfter": {
+              "Set_State_Timeout": ["Succeeded"]
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "Wait_For_Approval_With_Timeout": ["Succeeded", "TimedOut"]
+      }
+    },
+    "Save_Final_Approval_Record": {
+      "type": "ApiConnection",
+      "inputs": {
+        "host": {
+          "connection": {
+            "name": "@parameters('$connections')['azureblob']['connectionId']"
+          }
+        },
+        "method": "post",
+        "path": "/v2/datasets/@{parameters('storageAccountName')}/files",
+        "body": "@variables('approvalRecord')",
+        "queries": {
+          "folderPath": "/@{parameters('approvalContainerName')}",
+          "name": "approval-@{triggerBody()?['migrationPlanId']}-@{variables('approvalState')}-@{formatDateTime(utcNow(), 'yyyyMMdd-HHmmss')}.json",
+          "queryParametersSingleEncoded": true
+        }
+      },
+      "runAfter": {
+        "Switch_Approval_Decision": ["Succeeded"]
+      }
+    },
+    "Success_Response": {
+      "type": "Response",
+      "kind": "Http",
+      "inputs": {
+        "statusCode": 200,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+          "migrationId": "@{triggerBody()?['migrationId']}",
+          "approvalState": "@{variables('approvalState')}",
+          "approvalRecord": "@variables('approvalRecord')",
+          "callbackEndpoint": "@{concat(parameters('callbackBaseUrl'), '/api/migrations/', triggerBody()?['migrationId'], '/approve')}",
+          "workflowRunId": "@{workflow()?['run']?['name']}"
+        }
+      },
+      "runAfter": {
+        "Save_Final_Approval_Record": ["Succeeded"]
+      }
+    },
+    "Error_Response": {
+      "type": "Response",
+      "kind": "Http",
+      "inputs": {
+        "statusCode": 500,
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "migrationPlanId": "@{triggerBody()?['migrationPlanId']}",
+          "migrationId": "@{triggerBody()?['migrationId']}",
+          "status": "APPROVAL_WORKFLOW_FAILED",
+          "error": "The approval workflow encountered an unexpected error.",
+          "workflowRunId": "@{workflow()?['run']?['name']}",
+          "timestamp": "@{utcNow()}"
+        }
+      },
+      "runAfter": {
+        "Save_Final_Approval_Record": ["Failed", "TimedOut"]
+      }
+    }
+  },
+  "outputs": {}
+}

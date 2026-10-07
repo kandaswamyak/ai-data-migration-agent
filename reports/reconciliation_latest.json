@@ -1,0 +1,85 @@
+{
+  "generated_at_utc": "2026-09-30T11:43:30.341612+00:00",
+  "mode": "upsert",
+  "rows_read": 11,
+  "rows_written": 11,
+  "rows_updated": 0,
+  "duplicates_skipped": 0,
+  "failed_rows": 0,
+  "table_metrics": [
+    {
+      "source_table": "CUSTOMER",
+      "target_table": "CUSTOMER",
+      "rows_read": 0,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.568,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "MIGRATION_WATERMARKS",
+      "target_table": "MIGRATION_WATERMARKS",
+      "rows_read": 0,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.784,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "MIGRATION_DEMO_CUSTOMER",
+      "target_table": "MIGRATION_DEMO_CUSTOMER",
+      "rows_read": 0,
+      "rows_written": 0,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.823,
+      "throughput_rps": 0.0
+    },
+    {
+      "source_table": "employees",
+      "target_table": "employees",
+      "rows_read": 5,
+      "rows_written": 5,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 4.463,
+      "throughput_rps": 1.12
+    },
+    {
+      "source_table": "Orders",
+      "target_table": "Orders",
+      "rows_read": 3,
+      "rows_written": 3,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.273,
+      "throughput_rps": 0.92
+    },
+    {
+      "source_table": "Product",
+      "target_table": "Product",
+      "rows_read": 3,
+      "rows_written": 3,
+      "rows_updated": 0,
+      "duplicates_skipped": 0,
+      "failed_rows": 0,
+      "partition_count": 1,
+      "duration_sec": 3.252,
+      "throughput_rps": 0.92
+    }
+  ],
+  "failed_rows_sample": [],
+  "retry_candidates": []
+}

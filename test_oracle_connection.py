@@ -42,12 +42,6 @@ def test_oracle_connection():
     print(f"  Username:       {Config.ORACLE_USERNAME}")
     print(f"  Mode:           {get_oracle_mode()}")
     print(f"  Thick Mode:     {Config.ORACLE_THICK_MODE}")
-    print(f"  Use Simulator:  {Config.ORACLE_USE_SIMULATOR}")
-
-    if Config.ORACLE_USE_SIMULATOR:
-        print("\n⚠️  SIMULATOR MODE ENABLED - Using mock data only")
-        print("   Set ORACLE_USE_SIMULATOR=false in .env to connect to real database\n")
-        return
 
     print("\n⏳ Attempting connection...")
 

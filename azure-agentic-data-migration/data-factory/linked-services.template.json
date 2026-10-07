@@ -1,0 +1,243 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "ARM template for Azure Data Factory linked services used in the data migration POC. Includes Oracle (self-hosted IR + Key Vault), SQL Server (self-hosted IR + Key Vault), Azure SQL Database (managed identity or Key Vault), Azure Blob Storage (managed identity), and Azure Key Vault (managed identity). No credentials are hardcoded — all secrets are resolved from Key Vault at runtime."
+  },
+  "parameters": {
+    "dataFactoryName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure Data Factory instance."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure Key Vault containing connection string secrets."
+      }
+    },
+    "keyVaultResourceGroup": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": {
+        "description": "Resource group of the Azure Key Vault."
+      }
+    },
+    "selfHostedIRName": {
+      "type": "string",
+      "defaultValue": "SelfHostedIntegrationRuntime",
+      "metadata": {
+        "description": "Name of the self-hosted integration runtime for on-premises sources."
+      }
+    },
+    "oracleConnectionSecretName": {
+      "type": "string",
+      "defaultValue": "oracle-connection-string",
+      "metadata": {
+        "description": "Key Vault secret name for the Oracle connection string."
+      }
+    },
+    "sqlServerConnectionSecretName": {
+      "type": "string",
+      "defaultValue": "sqlserver-connection-string",
+      "metadata": {
+        "description": "Key Vault secret name for the SQL Server connection string."
+      }
+    },
+    "azureSqlConnectionSecretName": {
+      "type": "string",
+      "defaultValue": "azuresql-connection-string",
+      "metadata": {
+        "description": "Key Vault secret name for the Azure SQL Database connection string."
+      }
+    },
+    "azureSqlUseManagedIdentity": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "If true, Azure SQL Database linked service uses managed identity instead of Key Vault secret."
+      }
+    },
+    "azureSqlServerFQDN": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure SQL Server FQDN (e.g., myserver.database.windows.net). Required when using managed identity."
+      }
+    },
+    "azureSqlDatabaseName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Azure SQL Database name. Required when using managed identity."
+      }
+    },
+    "storageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure Storage account for logging and staging."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    }
+  },
+  "variables": {
+    "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('dataFactoryName'))]",
+    "keyVaultLinkedServiceName": "LS_AzureKeyVault",
+    "keyVaultBaseUrl": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net/')]"
+  },
+  "resources": [
+    {
+      "name": "[concat(parameters('dataFactoryName'), '/LS_AzureKeyVault')]",
+      "type": "Microsoft.DataFactory/factories/linkedServices",
+      "apiVersion": "2018-06-01",
+      "properties": {
+        "description": "Azure Key Vault linked service using Data Factory managed identity. Provides secure secret retrieval for all other linked services.",
+        "annotations": [
+          "KeyVault",
+          "ManagedIdentity",
+          "DataMigration"
+        ],
+        "type": "AzureKeyVault",
+        "typeProperties": {
+          "baseUrl": "[variables('keyVaultBaseUrl')]"
+        }
+      }
+    },
+    {
+      "name": "[concat(parameters('dataFactoryName'), '/LS_Oracle')]",
+      "type": "Microsoft.DataFactory/factories/linkedServices",
+      "apiVersion": "2018-06-01",
+      "dependsOn": [
+        "[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
+      ],
+      "properties": {
+        "description": "Oracle Database linked service using self-hosted integration runtime. Connection string is retrieved from Azure Key Vault at runtime.",
+        "annotations": [
+          "Oracle",
+          "OnPremises",
+          "SelfHostedIR",
+          "DataMigration"
+        ],
+        "type": "Oracle",
+        "typeProperties": {
+          "connectionString": {
+            "type": "AzureKeyVaultSecret",
+            "store": {
+              "referenceName": "[variables('keyVaultLinkedServiceName')]",
+              "type": "LinkedServiceReference"
+            },
+            "secretName": "[parameters('oracleConnectionSecretName')]"
+          }
+        },
+        "connectVia": {
+          "referenceName": "[parameters('selfHostedIRName')]",
+          "type": "IntegrationRuntimeReference"
+        }
+      }
+    },
+    {
+      "name": "[concat(parameters('dataFactoryName'), '/LS_SqlServer')]",
+      "type": "Microsoft.DataFactory/factories/linkedServices",
+      "apiVersion": "2018-06-01",
+      "dependsOn": [
+        "[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
+      ],
+      "properties": {
+        "description": "On-premises SQL Server linked service using self-hosted integration runtime. Connection string is retrieved from Azure Key Vault at runtime.",
+        "annotations": [
+          "SQLServer",
+          "OnPremises",
+          "SelfHostedIR",
+          "DataMigration"
+        ],
+        "type": "SqlServer",
+        "typeProperties": {
+          "connectionString": {
+            "type": "AzureKeyVaultSecret",
+            "store": {
+              "referenceName": "[variables('keyVaultLinkedServiceName')]",
+              "type": "LinkedServiceReference"
+            },
+            "secretName": "[parameters('sqlServerConnectionSecretName')]"
+          }
+        },
+        "connectVia": {
+          "referenceName": "[parameters('selfHostedIRName')]",
+          "type": "IntegrationRuntimeReference"
+        }
+      }
+    },
+    {
+      "name": "[concat(parameters('dataFactoryName'), '/LS_AzureSqlDatabase')]",
+      "type": "Microsoft.DataFactory/factories/linkedServices",
+      "apiVersion": "2018-06-01",
+      "dependsOn": [
+        "[concat(variables('factoryId'), '/linkedServices/LS_AzureKeyVault')]"
+      ],
+      "properties": {
+        "description": "Azure SQL Database linked service. Supports managed identity (recommended) or Key Vault secret for connection string. Controlled via azureSqlUseManagedIdentity parameter.",
+        "annotations": [
+          "AzureSQL",
+          "Target",
+          "DataMigration"
+        ],
+        "type": "AzureSqlDatabase",
+        "typeProperties": {
+          "connectionString": "[if(parameters('azureSqlUseManagedIdentity'), concat('Data Source=', parameters('azureSqlServerFQDN'), ';Initial Catalog=', parameters('azureSqlDatabaseName'), ';'), json('null'))]",
+          "azureKeyVaultSecret": "[if(not(parameters('azureSqlUseManagedIdentity')), json(concat('{\"store\": {\"referenceName\": \"', variables('keyVaultLinkedServiceName'), '\", \"type\": \"LinkedServiceReference\"}, \"secretName\": \"', parameters('azureSqlConnectionSecretName'), '\"}')), json('null'))]"
+        }
+      }
+    },
+    {
+      "name": "[concat(parameters('dataFactoryName'), '/LS_AzureBlobStorage')]",
+      "type": "Microsoft.DataFactory/factories/linkedServices",
+      "apiVersion": "2018-06-01",
+      "properties": {
+        "description": "Azure Blob Storage linked service using Data Factory managed identity. Used for copy activity logging, incompatible row redirection, and staging.",
+        "annotations": [
+          "BlobStorage",
+          "Logging",
+          "ManagedIdentity",
+          "DataMigration"
+        ],
+        "type": "AzureBlobStorage",
+        "typeProperties": {
+          "serviceEndpoint": "[concat('https://', parameters('storageAccountName'), '.blob.core.windows.net')]",
+          "accountKind": "StorageV2",
+          "credential": {
+            "type": "ManagedIdentity"
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "keyVaultLinkedServiceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('dataFactoryName'), 'LS_AzureKeyVault')]"
+    },
+    "oracleLinkedServiceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('dataFactoryName'), 'LS_Oracle')]"
+    },
+    "sqlServerLinkedServiceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('dataFactoryName'), 'LS_SqlServer')]"
+    },
+    "azureSqlLinkedServiceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('dataFactoryName'), 'LS_AzureSqlDatabase')]"
+    },
+    "blobStorageLinkedServiceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.DataFactory/factories/linkedServices', parameters('dataFactoryName'), 'LS_AzureBlobStorage')]"
+    }
+  }
+}

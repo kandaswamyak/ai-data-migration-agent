@@ -1,0 +1,221 @@
+{
+  "_comment": "=== SIMULATED SAMPLE DATA — NOT A REAL VALIDATION REPORT ===",
+  "_purpose": "Demonstrates the migration-result.schema.json format with per-table outcomes and validation check results for an Oracle HR schema migration.",
+  "planId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "executionId": "f7e6d5c4-b3a2-1098-fedc-ba9876543210",
+  "status": "COMPLETED",
+  "pipelineRunId": "adf-run-20260903-143022-xyz789",
+  "startedAt": "2026-09-03T14:30:22Z",
+  "completedAt": "2026-09-03T14:42:08Z",
+  "totalDuration": "0h 11m 46s",
+  "tablesProcessed": [
+    {
+      "tableName": "dbo.DEPARTMENTS",
+      "rowsCopied": 27,
+      "sourceRowCount": 27,
+      "duration": "0m 4s",
+      "status": "SUCCESS",
+      "errors": [],
+      "throughputRowsPerSec": 6.75
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "rowsCopied": 107,
+      "sourceRowCount": 107,
+      "duration": "0m 12s",
+      "status": "SUCCESS",
+      "errors": [],
+      "throughputRowsPerSec": 8.92
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "rowsCopied": 10,
+      "sourceRowCount": 10,
+      "duration": "0m 3s",
+      "status": "SUCCESS",
+      "errors": [],
+      "throughputRowsPerSec": 3.33
+    }
+  ],
+  "validationResults": [
+    {
+      "tableName": "dbo.DEPARTMENTS",
+      "checkType": "ROW_COUNT",
+      "passed": true,
+      "sourceValue": "27",
+      "targetValue": "27",
+      "details": "Row counts match exactly."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "ROW_COUNT",
+      "passed": true,
+      "sourceValue": "107",
+      "targetValue": "107",
+      "details": "Row counts match exactly."
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "checkType": "ROW_COUNT",
+      "passed": true,
+      "sourceValue": "10",
+      "targetValue": "10",
+      "details": "Row counts match exactly."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "NULL_COUNT",
+      "passed": true,
+      "sourceValue": "{\"FIRST_NAME\": 0, \"PHONE_NUMBER\": 4, \"SALARY\": 0, \"COMMISSION_PCT\": 72, \"MANAGER_ID\": 1, \"DEPARTMENT_ID\": 1}",
+      "targetValue": "{\"FIRST_NAME\": 0, \"PHONE_NUMBER\": 4, \"SALARY\": 0, \"COMMISSION_PCT\": 72, \"MANAGER_ID\": 1, \"DEPARTMENT_ID\": 1}",
+      "details": "Null counts match for all columns."
+    },
+    {
+      "tableName": "dbo.DEPARTMENTS",
+      "checkType": "NULL_COUNT",
+      "passed": true,
+      "sourceValue": "{\"MANAGER_ID\": 11, \"LOCATION_ID\": 0}",
+      "targetValue": "{\"MANAGER_ID\": 11, \"LOCATION_ID\": 0}",
+      "details": "Null counts match for all nullable columns."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "DUPLICATE_CHECK",
+      "passed": true,
+      "sourceValue": "0",
+      "targetValue": "0",
+      "details": "No duplicate EMPLOYEE_ID values found."
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "checkType": "DUPLICATE_CHECK",
+      "passed": true,
+      "sourceValue": "0",
+      "targetValue": "0",
+      "details": "No duplicate (EMPLOYEE_ID, START_DATE) combinations found."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "TRUNCATION_CHECK",
+      "passed": true,
+      "column": "FIRST_NAME",
+      "sourceValue": "17",
+      "targetValue": "20",
+      "details": "Max actual length (17) fits within target NVARCHAR(20). No truncation."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "TRUNCATION_CHECK",
+      "passed": true,
+      "column": "LAST_NAME",
+      "sourceValue": "11",
+      "targetValue": "25",
+      "details": "Max actual length (11) fits within target NVARCHAR(25). No truncation."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "TRUNCATION_CHECK",
+      "passed": true,
+      "column": "EMAIL",
+      "sourceValue": "8",
+      "targetValue": "25",
+      "details": "Max actual length (8) fits within target NVARCHAR(25). No truncation."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "OVERFLOW_CHECK",
+      "passed": true,
+      "column": "SALARY",
+      "sourceValue": "max=24000.00",
+      "targetValue": "DECIMAL(8,2) max=999999.99",
+      "details": "No overflow detected. Source max 24000.00 fits within DECIMAL(8,2)."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "MIN_MAX_AVG",
+      "passed": true,
+      "column": "SALARY",
+      "sourceValue": "{\"min\": 2100.00, \"max\": 24000.00, \"avg\": 6461.68}",
+      "targetValue": "{\"min\": 2100.00, \"max\": 24000.00, \"avg\": 6461.68}",
+      "details": "Numeric statistics match between source and target."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "MIN_MAX_AVG",
+      "passed": true,
+      "column": "COMMISSION_PCT",
+      "sourceValue": "{\"min\": 0.10, \"max\": 0.40, \"avg\": 0.22}",
+      "targetValue": "{\"min\": 0.10, \"max\": 0.40, \"avg\": 0.22}",
+      "details": "Commission percentage statistics match."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "STRING_LENGTH",
+      "passed": true,
+      "column": "FIRST_NAME",
+      "sourceValue": "{\"minLen\": 2, \"maxLen\": 17, \"avgLen\": 5.4}",
+      "targetValue": "{\"minLen\": 2, \"maxLen\": 17, \"avgLen\": 5.4}",
+      "details": "String length distribution consistent."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "CHECKSUM",
+      "passed": true,
+      "sourceValue": "1847293650",
+      "targetValue": "1847293650",
+      "details": "CHECKSUM_AGG values match — row-level data integrity confirmed."
+    },
+    {
+      "tableName": "dbo.DEPARTMENTS",
+      "checkType": "CHECKSUM",
+      "passed": true,
+      "sourceValue": "582041937",
+      "targetValue": "582041937",
+      "details": "CHECKSUM_AGG values match."
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "checkType": "CHECKSUM",
+      "passed": true,
+      "sourceValue": "309128745",
+      "targetValue": "309128745",
+      "details": "CHECKSUM_AGG values match."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "REFERENTIAL_INTEGRITY",
+      "passed": true,
+      "details": "FK_EMPLOYEES_DEPARTMENT: 0 orphaned rows. FK_EMPLOYEES_MANAGER: 0 orphaned rows."
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "checkType": "REFERENTIAL_INTEGRITY",
+      "passed": true,
+      "details": "FK_JOB_HISTORY_EMPLOYEE: 0 orphaned rows. FK_JOB_HISTORY_DEPARTMENT: 0 orphaned rows."
+    },
+    {
+      "tableName": "dbo.EMPLOYEES",
+      "checkType": "SCHEMA_COMPARE",
+      "passed": true,
+      "details": "All 11 columns present with correct datatypes, nullability, and constraints."
+    },
+    {
+      "tableName": "dbo.DEPARTMENTS",
+      "checkType": "SCHEMA_COMPARE",
+      "passed": true,
+      "details": "All 4 columns present with correct datatypes, nullability, and constraints."
+    },
+    {
+      "tableName": "dbo.JOB_HISTORY",
+      "checkType": "SCHEMA_COMPARE",
+      "passed": true,
+      "details": "All 5 columns present with correct datatypes, nullability, and constraints."
+    }
+  ],
+  "overallResult": "PASSED",
+  "failedCheckCount": 0,
+  "totalRowsCopied": 144,
+  "reportUrl": "https://migpocstabc123.blob.core.windows.net/reports/a1b2c3d4-e5f6-7890-abcd-ef1234567890/validation-report-20260903.json",
+  "reportBlobPath": "reports/a1b2c3d4-e5f6-7890-abcd-ef1234567890/validation-report-20260903.json",
+  "summary": "Migration of Oracle HR schema (EMPLOYEES, DEPARTMENTS, JOB_HISTORY) completed successfully. All 144 rows copied across 3 tables with 0 errors. 22 validation checks executed — all PASSED. Row counts, null distributions, numeric statistics, checksums, referential integrity, and schema comparisons all verified. No truncation or overflow detected."
+}

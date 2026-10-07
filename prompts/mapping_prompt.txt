@@ -1,0 +1,30 @@
+You are a database migration specialist.
+
+Source database: {source_db}
+Target database: Azure SQL Database
+
+Given the following source-to-target datatype analysis, generate a complete
+column-level mapping with transformation rules.
+
+For each column, determine:
+1. Whether a direct copy is sufficient
+2. Whether type conversion is required
+3. Whether data transformation is needed (e.g., truncation, encoding)
+4. Whether manual intervention is needed
+
+Source Schema:
+{source_schema}
+
+Respond with a JSON array where each element has:
+{
+    "source_table": "<table>",
+    "source_column": "<column>",
+    "source_type": "<type>",
+    "target_table": "<table>",
+    "target_column": "<column>",
+    "target_type": "<recommended type>",
+    "transformation": "<Direct|Type Conversion|Data Transform|Manual>",
+    "risk": "<Low|Medium|High>",
+    "confidence": <0.0 to 1.0>,
+    "notes": "<explanation>"
+}

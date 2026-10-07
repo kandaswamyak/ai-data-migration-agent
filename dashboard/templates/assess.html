@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Migration Assessment | AI Data Migration Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/landing.css">
+  <style>
+    .assess-main { padding: 5vh 5.5vw; }
+    .assess-heading { margin-bottom: 5vh; }
+    .assess-heading h1 { font-size: clamp(2.2rem, 4vw, 3.8rem); }
+    .assess-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 28px; }
+    .assess-card { padding: 28px; border-radius: 2px; min-height: 200px; }
+    .assess-card h3 { font-family: var(--mono); font-size: 10px; letter-spacing: .09em; margin: 0 0 20px; }
+    .assess-card h2 { font-size: 22px; line-height: 1.1; letter-spacing: -.04em; margin: 0 0 18px; font-weight: 800; }
+    .card-source { background: var(--deep); color: var(--paper); }
+    .card-source h3 { color: var(--acid); }
+    .card-target { background: var(--mint); color: var(--ink); }
+    .card-target h3 { color: var(--teal); }
+    .card-risk { background: var(--paper); border: 1px solid var(--line); color: var(--ink); }
+    .card-risk h3 { color: var(--teal); }
+    .card-scope { background: var(--teal); color: var(--paper); }
+    .card-scope h3 { color: var(--acid); }
+    .card-ai { background: var(--ink); color: var(--paper); grid-column: 1 / -1; }
+    .card-ai h3 { color: var(--acid); }
+    .stat-row { display: flex; gap: 32px; margin-top: 16px; }
+    .stat { display: flex; flex-direction: column; }
+    .stat-value { font-size: 28px; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+    .stat-label { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; margin-top: 6px; opacity: .7; }
+    .detail-list { margin: 0; padding: 0; list-style: none; }
+    .detail-list li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.1); font-size: 13px; display: flex; justify-content: space-between; }
+    .card-target .detail-list li, .card-risk .detail-list li { border-color: rgba(0,0,0,.1); }
+    .tag { font-family: var(--mono); font-size: 9px; padding: 2px 8px; border-radius: 2px; letter-spacing: .04em; }
+    .tag-pass { background: rgba(183,238,208,.25); color: #0f7472; }
+    .tag-warn { background: rgba(217,245,106,.3); color: #071b20; }
+    .tag-fail { background: rgba(200,50,50,.15); color: #c83232; }
+    .tag-new { background: rgba(217,245,106,.3); color: #071b20; }
+    .assess-actions { display: flex; gap: 14px; align-items: center; margin-top: 10px; }
+    .assess-actions .primary-cta { width: auto; padding: 16px 28px; }
+    .loading-msg { font-family: var(--mono); font-size: 11px; color: var(--teal); }
+    .spinner-dot { display: inline-block; width: 6px; height: 6px; background: var(--acid); border-radius: 50%; margin-right: 4px; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity:.3; } 50% { opacity:1; } }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <header class="topbar workspace-topbar" style="background:var(--deep);border:0;">
+    <a class="brand" href="/" aria-label="Home">
+      <span class="brand-mark"><span></span><span></span><span></span></span>
+      <span>MIGRATION<span class="brand-dot"> AI</span></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:30px;">
+      <span style="font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:rgba(243,240,232,.6);">
+        <span style="color:var(--acid);">STEP 1 /</span> ASSESSMENT &amp; PLANNING
+      </span>
+      <a href="/" style="font-family:var(--mono);font-size:10px;letter-spacing:.09em;color:var(--mint);text-decoration:none;">
+        Back to overview <span style="color:var(--acid);font-size:14px;margin-left:4px;">&#8598;</span>
+      </a>
+    </div>
+  </header>
+
+  <main class="assess-main">
+    <div class="assess-heading">
+      <p class="eyebrow"><span>01</span> MIGRATION ASSESSMENT</p>
+      <h1>Assess your migration<br><em>readiness.</em></h1>
+    </div>
+
+    <div id="assessContent">
+      <p class="loading-msg"><span class="spinner-dot"></span><span class="spinner-dot" style="animation-delay:.2s"></span><span class="spinner-dot" style="animation-delay:.4s"></span> Analyzing source and target environments...</p>
+    </div>
+
+    <div class="assess-actions" id="assessActions" style="display:none;">
+      <a class="primary-cta" href="/dashboard">
+        <span>Proceed to Migration</span>
+        <span class="cta-arrow">&#8599;</span>
+      </a>
+      <a href="/" style="font-family:var(--mono);font-size:11px;color:var(--teal);text-decoration:none;">Cancel</a>
+    </div>
+  </main>
+
+  <script>
+  async function runAssessment() {
+    try {
+      const res = await fetch('/api/assess');
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('assessContent').innerHTML = '<p style="color:#c83232;">Assessment failed: ' + (data.error || 'Unknown error') + '</p>';
+        return;
+      }
+      renderAssessment(data);
+    } catch (e) {
+      document.getElementById('assessContent').innerHTML = '<p style="color:#c83232;">Error: ' + e.message + '</p>';
+    }
+  }
+
+  function renderAssessment(d) {
+    const src = d.source || {};
+    const tgt = d.target || {};
+    const risk = d.risk || {};
+    const scope = d.scope || {};
+    const ai = d.recommendation || {};
+
+    let html = '<div class="assess-grid">';
+
+    // SOURCE CARD
+    html += '<div class="assess-card card-source">';
+    html += '<h3>SOURCE DATABASE</h3>';
+    html += '<h2>' + (src.type || 'Not configured') + '</h2>';
+    html += '<ul class="detail-list">';
+    html += '<li><span>Server</span><strong>' + (src.server || '—') + '</strong></li>';
+    html += '<li><span>Database</span><strong>' + (src.database || '—') + '</strong></li>';
+    html += '<li><span>Status</span><span class="tag ' + (src.connected ? 'tag-pass' : 'tag-fail') + '">' + (src.connected ? 'CONNECTED' : 'UNREACHABLE') + '</span></li>';
+    html += '</ul>';
+    html += '<div class="stat-row">';
+    html += '<div class="stat"><span class="stat-value">' + (src.table_count || 0) + '</span><span class="stat-label">TABLES</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (src.total_rows || 0).toLocaleString() + '</span><span class="stat-label">TOTAL ROWS</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (src.column_count || 0) + '</span><span class="stat-label">COLUMNS</span></div>';
+    html += '</div></div>';
+
+    // TARGET CARD
+    html += '<div class="assess-card card-target">';
+    html += '<h3>TARGET DATABASE</h3>';
+    html += '<h2>' + (tgt.type || 'Not configured') + '</h2>';
+    html += '<ul class="detail-list">';
+    html += '<li><span>Server</span><strong>' + (tgt.server || '—') + '</strong></li>';
+    html += '<li><span>Database</span><strong>' + (tgt.database || '—') + '</strong></li>';
+    html += '<li><span>Status</span><span class="tag ' + (tgt.connected ? 'tag-pass' : 'tag-fail') + '">' + (tgt.connected ? 'CONNECTED' : 'UNREACHABLE') + '</span></li>';
+    html += '</ul>';
+    html += '<div class="stat-row">';
+    html += '<div class="stat"><span class="stat-value" style="color:var(--teal);">' + (tgt.existing_tables || 0) + '</span><span class="stat-label">EXISTING TABLES</span></div>';
+    html += '<div class="stat"><span class="stat-value" style="color:var(--teal);">' + (tgt.total_rows || 0).toLocaleString() + '</span><span class="stat-label">TOTAL ROWS</span></div>';
+    html += '</div></div>';
+
+    // RISK CARD
+    html += '<div class="assess-card card-risk">';
+    html += '<h3>RISK ASSESSMENT</h3>';
+    html += '<h2>Compatibility Score</h2>';
+    const score = risk.score || 0;
+    const scoreColor = score >= 80 ? 'var(--teal)' : score >= 50 ? '#b7791f' : '#c83232';
+    html += '<div class="stat-row">';
+    html += '<div class="stat"><span class="stat-value" style="color:' + scoreColor + ';">' + score + '%</span><span class="stat-label">OVERALL SCORE</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (risk.high_risk || 0) + '</span><span class="stat-label">HIGH RISK</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (risk.medium_risk || 0) + '</span><span class="stat-label">MEDIUM RISK</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (risk.low_risk || 0) + '</span><span class="stat-label">LOW RISK</span></div>';
+    html += '</div>';
+    if (risk.flagged_types && risk.flagged_types.length) {
+      html += '<ul class="detail-list" style="margin-top:14px;">';
+      risk.flagged_types.forEach(function(t) {
+        html += '<li><span>' + t.type + '</span><span class="tag tag-warn">' + t.issue + '</span></li>';
+      });
+      html += '</ul>';
+    }
+    html += '</div>';
+
+    // SCOPE CARD
+    html += '<div class="assess-card card-scope">';
+    html += '<h3>MIGRATION SCOPE</h3>';
+    html += '<h2>What needs to move</h2>';
+    html += '<div class="stat-row">';
+    html += '<div class="stat"><span class="stat-value">' + (scope.new_tables || 0) + '</span><span class="stat-label">NEW TABLES</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (scope.changed_tables || 0) + '</span><span class="stat-label">CHANGED</span></div>';
+    html += '<div class="stat"><span class="stat-value">' + (scope.unchanged_tables || 0) + '</span><span class="stat-label">UNCHANGED</span></div>';
+    html += '</div>';
+    if (scope.tables && scope.tables.length) {
+      html += '<ul class="detail-list" style="margin-top:14px;">';
+      scope.tables.forEach(function(t) {
+        const tagClass = t.status === 'new' ? 'tag-new' : t.status === 'changed' ? 'tag-warn' : 'tag-pass';
+        html += '<li><span>' + t.name + '</span><span class="tag ' + tagClass + '">' + t.status.toUpperCase() + '</span></li>';
+      });
+      html += '</ul>';
+    }
+    html += '</div>';
+
+    // AI RECOMMENDATION CARD
+    html += '<div class="assess-card card-ai">';
+    html += '<h3>AI RECOMMENDATION</h3>';
+    html += '<h2>' + (ai.summary || 'Ready to migrate') + '</h2>';
+    html += '<ul class="detail-list">';
+    html += '<li><span>Recommended Mode</span><strong>' + (ai.mode || 'Upsert') + '</strong></li>';
+    html += '<li><span>Estimated Duration</span><strong>' + (ai.duration || '< 1 minute') + '</strong></li>';
+    html += '<li><span>Sequencing</span><strong>' + (ai.sequencing || 'No dependencies detected') + '</strong></li>';
+    html += '<li><span>Batch Size</span><strong>' + (ai.batch_size || '5,000 rows') + '</strong></li>';
+    html += '</ul></div>';
+
+    html += '</div>';
+    document.getElementById('assessContent').innerHTML = html;
+    document.getElementById('assessActions').style.display = 'flex';
+  }
+
+  // Auto-run on page load
+  runAssessment();
+  </script>
+</body>
+</html>

@@ -1,0 +1,3239 @@
+{
+  "generated_at_utc": "2026-09-30T11:44:34.275873+00:00",
+  "overall": "Validation mismatches detected",
+  "all_passed": false,
+  "migration_summary": {
+    "tables_migrated": 6,
+    "total_source_rows": 11,
+    "total_target_rows": 39,
+    "tables_passed": 2,
+    "tables_with_issues": 4,
+    "validation_completion": "100%",
+    "total_checks": 232,
+    "checks_passed": 126,
+    "checks_failed": 106,
+    "rejected_rows": 0,
+    "overall_status": "FAIL"
+  },
+  "table_validation": {
+    "CUSTOMER": {
+      "checks_total": 47,
+      "checks_passed": 17,
+      "checks_failed": 30,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "FAIL",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "FAIL",
+        "NULL Count: CUSTOMER_ID": "PASS",
+        "Column Count: CUSTOMER_ID": "FAIL",
+        "Distinct Values: CUSTOMER_ID": "FAIL",
+        "MIN: CUSTOMER_ID": "FAIL",
+        "MAX: CUSTOMER_ID": "FAIL",
+        "SUM: CUSTOMER_ID": "FAIL",
+        "NULL Count: CUSTOMER_NAME": "PASS",
+        "Column Count: CUSTOMER_NAME": "FAIL",
+        "Distinct Values: CUSTOMER_NAME": "FAIL",
+        "Max String Length: CUSTOMER_NAME": "PASS",
+        "NULL Count: EMAIL": "PASS",
+        "Column Count: EMAIL": "FAIL",
+        "Distinct Values: EMAIL": "FAIL",
+        "Max String Length: EMAIL": "PASS",
+        "NULL Count: CITY": "PASS",
+        "Column Count: CITY": "FAIL",
+        "Distinct Values: CITY": "FAIL",
+        "Max String Length: CITY": "PASS",
+        "NULL Count: CREDIT_LIMIT": "PASS",
+        "Column Count: CREDIT_LIMIT": "FAIL",
+        "Distinct Values: CREDIT_LIMIT": "FAIL",
+        "MIN: CREDIT_LIMIT": "FAIL",
+        "MAX: CREDIT_LIMIT": "FAIL",
+        "SUM: CREDIT_LIMIT": "FAIL",
+        "NULL Count: IS_ACTIVE": "PASS",
+        "Column Count: IS_ACTIVE": "FAIL",
+        "Distinct Values: IS_ACTIVE": "FAIL",
+        "Max String Length: IS_ACTIVE": "PASS",
+        "NULL Count: CREATED_DATE": "PASS",
+        "Column Count: CREATED_DATE": "FAIL",
+        "Distinct Values: CREATED_DATE": "FAIL",
+        "MIN: CREATED_DATE": "FAIL",
+        "MAX: CREATED_DATE": "FAIL",
+        "NULL Count: UPDATED_TS": "FAIL",
+        "Column Count: UPDATED_TS": "FAIL",
+        "Distinct Values: UPDATED_TS": "FAIL",
+        "MIN: UPDATED_TS": "FAIL",
+        "MAX: UPDATED_TS": "FAIL",
+        "NULL Count: PHONE_NUMBER": "FAIL",
+        "Column Count: PHONE_NUMBER": "PASS",
+        "Distinct Values: PHONE_NUMBER": "PASS",
+        "Max String Length: PHONE_NUMBER": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 9,
+          "failed": 11
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 6,
+          "failed": 19
+        }
+      }
+    },
+    "MIGRATION_DEMO_CUSTOMER": {
+      "checks_total": 28,
+      "checks_passed": 11,
+      "checks_failed": 17,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "FAIL",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "FAIL",
+        "NULL Count: CUSTOMER_ID": "PASS",
+        "Column Count: CUSTOMER_ID": "FAIL",
+        "Distinct Values: CUSTOMER_ID": "FAIL",
+        "MIN: CUSTOMER_ID": "FAIL",
+        "MAX: CUSTOMER_ID": "FAIL",
+        "SUM: CUSTOMER_ID": "FAIL",
+        "NULL Count: CUSTOMER_NAME": "PASS",
+        "Column Count: CUSTOMER_NAME": "FAIL",
+        "Distinct Values: CUSTOMER_NAME": "FAIL",
+        "Max String Length: CUSTOMER_NAME": "PASS",
+        "NULL Count: EMAIL": "PASS",
+        "Column Count: EMAIL": "FAIL",
+        "Distinct Values: EMAIL": "FAIL",
+        "Max String Length: EMAIL": "PASS",
+        "NULL Count: CITY": "PASS",
+        "Column Count: CITY": "FAIL",
+        "Distinct Values: CITY": "FAIL",
+        "Max String Length: CITY": "PASS",
+        "NULL Count: CREATED_DATE": "PASS",
+        "Column Count: CREATED_DATE": "FAIL",
+        "Distinct Values: CREATED_DATE": "FAIL",
+        "MIN: CREATED_DATE": "FAIL",
+        "MAX: CREATED_DATE": "FAIL",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 6,
+          "failed": 6
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 3,
+          "failed": 11
+        }
+      }
+    },
+    "MIGRATION_WATERMARKS": {
+      "checks_total": 69,
+      "checks_passed": 13,
+      "checks_failed": 56,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "FAIL",
+        "Checksum Match": "FAIL",
+        "NULL Count: source_table": "PASS",
+        "Column Count: source_table": "FAIL",
+        "Distinct Values: source_table": "FAIL",
+        "Max String Length: source_table": "PASS",
+        "NULL Count: last_success_ts": "PASS",
+        "Column Count: last_success_ts": "FAIL",
+        "Distinct Values: last_success_ts": "FAIL",
+        "MIN: last_success_ts": "FAIL",
+        "MAX: last_success_ts": "FAIL",
+        "NULL Count: last_row_count": "FAIL",
+        "Column Count: last_row_count": "FAIL",
+        "Distinct Values: last_row_count": "FAIL",
+        "MIN: last_row_count": "FAIL",
+        "MAX: last_row_count": "FAIL",
+        "SUM: last_row_count": "FAIL",
+        "NULL Count: last_scn": "FAIL",
+        "Column Count: last_scn": "FAIL",
+        "Distinct Values: last_scn": "FAIL",
+        "MIN: last_scn": "FAIL",
+        "MAX: last_scn": "FAIL",
+        "SUM: last_scn": "FAIL",
+        "NULL Count: last_mode": "PASS",
+        "Column Count: last_mode": "FAIL",
+        "Distinct Values: last_mode": "FAIL",
+        "Max String Length: last_mode": "PASS",
+        "NULL Count: last_run_status": "PASS",
+        "Column Count: last_run_status": "FAIL",
+        "Distinct Values: last_run_status": "FAIL",
+        "Max String Length: last_run_status": "PASS",
+        "NULL Count: last_error": "FAIL",
+        "Column Count: last_error": "PASS",
+        "Distinct Values: last_error": "PASS",
+        "Max String Length: last_error": "PASS",
+        "NULL Count: last_rows_read": "FAIL",
+        "Column Count: last_rows_read": "FAIL",
+        "Distinct Values: last_rows_read": "FAIL",
+        "MIN: last_rows_read": "FAIL",
+        "MAX: last_rows_read": "FAIL",
+        "SUM: last_rows_read": "FAIL",
+        "NULL Count: last_rows_updated": "FAIL",
+        "Column Count: last_rows_updated": "FAIL",
+        "Distinct Values: last_rows_updated": "FAIL",
+        "MIN: last_rows_updated": "FAIL",
+        "MAX: last_rows_updated": "FAIL",
+        "SUM: last_rows_updated": "FAIL",
+        "NULL Count: last_duplicates_skipped": "FAIL",
+        "Column Count: last_duplicates_skipped": "FAIL",
+        "Distinct Values: last_duplicates_skipped": "FAIL",
+        "MIN: last_duplicates_skipped": "FAIL",
+        "MAX: last_duplicates_skipped": "FAIL",
+        "SUM: last_duplicates_skipped": "FAIL",
+        "NULL Count: last_failed_rows": "FAIL",
+        "Column Count: last_failed_rows": "FAIL",
+        "Distinct Values: last_failed_rows": "FAIL",
+        "MIN: last_failed_rows": "FAIL",
+        "MAX: last_failed_rows": "FAIL",
+        "SUM: last_failed_rows": "FAIL",
+        "NULL Count: last_message": "FAIL",
+        "Column Count: last_message": "FAIL",
+        "Distinct Values: last_message": "FAIL",
+        "Max String Length: last_message": "PASS",
+        "NULL Count: updated_at": "PASS",
+        "Column Count: updated_at": "FAIL",
+        "Distinct Values: updated_at": "FAIL",
+        "MIN: updated_at": "FAIL",
+        "MAX: updated_at": "FAIL",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 7,
+          "failed": 21
+        },
+        "accuracy": {
+          "passed": 6,
+          "failed": 35
+        }
+      }
+    },
+    "Orders": {
+      "checks_total": 32,
+      "checks_passed": 32,
+      "checks_failed": 0,
+      "status": "PASS",
+      "overall": "PASS",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Checksum Match": "PASS",
+        "NULL Count: OrderID": "PASS",
+        "Column Count: OrderID": "PASS",
+        "Distinct Values: OrderID": "PASS",
+        "MIN: OrderID": "PASS",
+        "MAX: OrderID": "PASS",
+        "SUM: OrderID": "PASS",
+        "NULL Count: CustomerID": "PASS",
+        "Column Count: CustomerID": "PASS",
+        "Distinct Values: CustomerID": "PASS",
+        "MIN: CustomerID": "PASS",
+        "MAX: CustomerID": "PASS",
+        "SUM: CustomerID": "PASS",
+        "NULL Count: ProductID": "PASS",
+        "Column Count: ProductID": "PASS",
+        "Distinct Values: ProductID": "PASS",
+        "MIN: ProductID": "PASS",
+        "MAX: ProductID": "PASS",
+        "SUM: ProductID": "PASS",
+        "NULL Count: Quantity": "PASS",
+        "Column Count: Quantity": "PASS",
+        "Distinct Values: Quantity": "PASS",
+        "MIN: Quantity": "PASS",
+        "MAX: Quantity": "PASS",
+        "SUM: Quantity": "PASS",
+        "NULL Count: OrderDate": "PASS",
+        "Column Count: OrderDate": "PASS",
+        "Distinct Values: OrderDate": "PASS",
+        "MIN: OrderDate": "PASS",
+        "MAX: OrderDate": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 12,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 20,
+          "failed": 0
+        }
+      }
+    },
+    "Product": {
+      "checks_total": 23,
+      "checks_passed": 23,
+      "checks_failed": 0,
+      "status": "PASS",
+      "overall": "PASS",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Checksum Match": "PASS",
+        "NULL Count: ProductID": "PASS",
+        "Column Count: ProductID": "PASS",
+        "Distinct Values: ProductID": "PASS",
+        "MIN: ProductID": "PASS",
+        "MAX: ProductID": "PASS",
+        "SUM: ProductID": "PASS",
+        "NULL Count: ProductName": "PASS",
+        "Column Count: ProductName": "PASS",
+        "Distinct Values: ProductName": "PASS",
+        "Max String Length: ProductName": "PASS",
+        "NULL Count: Category": "PASS",
+        "Column Count: Category": "PASS",
+        "Distinct Values: Category": "PASS",
+        "Max String Length: Category": "PASS",
+        "NULL Count: Price": "PASS",
+        "Column Count: Price": "PASS",
+        "Distinct Values: Price": "PASS",
+        "MIN: Price": "PASS",
+        "MAX: Price": "PASS",
+        "SUM: Price": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 10,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 13,
+          "failed": 0
+        }
+      }
+    },
+    "employees": {
+      "checks_total": 31,
+      "checks_passed": 30,
+      "checks_failed": 1,
+      "status": "FAIL",
+      "overall": "FAIL",
+      "checks": {
+        "Row Count Match": "PASS",
+        "Null PK": "PASS",
+        "Duplicate PK": "PASS",
+        "Checksum Match": "FAIL",
+        "NULL Count: employee_id": "PASS",
+        "Column Count: employee_id": "PASS",
+        "Distinct Values: employee_id": "PASS",
+        "MIN: employee_id": "PASS",
+        "MAX: employee_id": "PASS",
+        "SUM: employee_id": "PASS",
+        "NULL Count: first_name": "PASS",
+        "Column Count: first_name": "PASS",
+        "Distinct Values: first_name": "PASS",
+        "Max String Length: first_name": "PASS",
+        "NULL Count: last_name": "PASS",
+        "Column Count: last_name": "PASS",
+        "Distinct Values: last_name": "PASS",
+        "Max String Length: last_name": "PASS",
+        "NULL Count: department_id": "PASS",
+        "Column Count: department_id": "PASS",
+        "Distinct Values: department_id": "PASS",
+        "MIN: department_id": "PASS",
+        "MAX: department_id": "PASS",
+        "SUM: department_id": "PASS",
+        "NULL Count: salary": "PASS",
+        "Column Count: salary": "PASS",
+        "Distinct Values: salary": "PASS",
+        "MIN: salary": "PASS",
+        "MAX: salary": "PASS",
+        "SUM: salary": "PASS",
+        "Rejected Rows": "PASS"
+      },
+      "categories": {
+        "completeness": {
+          "passed": 12,
+          "failed": 0
+        },
+        "integrity": {
+          "passed": 2,
+          "failed": 0
+        },
+        "accuracy": {
+          "passed": 16,
+          "failed": 1
+        }
+      }
+    }
+  },
+  "column_details": {
+    "CUSTOMER": [
+      {
+        "column": "CUSTOMER_ID",
+        "source_column": "CUSTOMER_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 9,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "1001",
+        "max_src": "None",
+        "max_tgt": "2005",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "14029",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CUSTOMER_NAME",
+        "source_column": "CUSTOMER_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 9,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 14,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "EMAIL",
+        "source_column": "EMAIL",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 8,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 26,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CITY",
+        "source_column": "CITY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 8,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 9,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREDIT_LIMIT",
+        "source_column": "CREDIT_LIMIT",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 8,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "3500.75",
+        "max_src": "None",
+        "max_tgt": "75000.00",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "136501.75",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "IS_ACTIVE",
+        "source_column": "IS_ACTIVE",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 2,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 1,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREATED_DATE",
+        "source_column": "CREATED_DATE",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 7,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "2026-01-15 00:00:00",
+        "max_src": "None",
+        "max_tgt": "2026-09-18 23:34:53",
+        "minmax_status": "FAIL",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "UPDATED_TS",
+        "source_column": "UPDATED_TS",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 1,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 7,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "2026-01-15 10:20:45",
+        "max_src": "None",
+        "max_tgt": "2026-08-25 16:40:30.933451",
+        "minmax_status": "FAIL",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "PHONE_NUMBER",
+        "source_column": "PHONE_NUMBER",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 9,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 0,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 0,
+        "maxlen_status": "PASS"
+      }
+    ],
+    "MIGRATION_DEMO_CUSTOMER": [
+      {
+        "column": "CUSTOMER_ID",
+        "source_column": "CUSTOMER_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 5,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "1",
+        "max_src": "None",
+        "max_tgt": "5",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "15",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CUSTOMER_NAME",
+        "source_column": "CUSTOMER_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 5,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 13,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "EMAIL",
+        "source_column": "EMAIL",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 5,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 13,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CITY",
+        "source_column": "CITY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 5,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 9,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "CREATED_DATE",
+        "source_column": "CREATED_DATE",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 2,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "2026-09-18 14:22:10",
+        "max_src": "None",
+        "max_tgt": "2026-09-18 14:22:15",
+        "minmax_status": "FAIL",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ],
+    "MIGRATION_WATERMARKS": [
+      {
+        "column": "source_table",
+        "source_column": "SOURCE_TABLE",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 14,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 28,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "last_success_ts",
+        "source_column": "LAST_SUCCESS_TS",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 14,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "2026-09-30 09:55:56.629911",
+        "max_src": "None",
+        "max_tgt": "2026-09-30 11:43:37.682402",
+        "minmax_status": "FAIL",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_row_count",
+        "source_column": "LAST_ROW_COUNT",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 3,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "5",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "14",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_scn",
+        "source_column": "LAST_SCN",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 5,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "27710658",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "99280026",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_mode",
+        "source_column": "LAST_MODE",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 3,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 9,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "last_run_status",
+        "source_column": "LAST_RUN_STATUS",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 1,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 7,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "last_error",
+        "source_column": "LAST_ERROR",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 14,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 0,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 0,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "last_rows_read",
+        "source_column": "LAST_ROWS_READ",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 3,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "5",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "14",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_rows_updated",
+        "source_column": "LAST_ROWS_UPDATED",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 1,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "0",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "0",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_duplicates_skipped",
+        "source_column": "LAST_DUPLICATES_SKIPPED",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 1,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "0",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "0",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_failed_rows",
+        "source_column": "LAST_FAILED_ROWS",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 1,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "0",
+        "max_src": "None",
+        "max_tgt": "0",
+        "minmax_status": "FAIL",
+        "sum_src": "",
+        "sum_tgt": "0",
+        "sum_status": "FAIL",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "last_message",
+        "source_column": "LAST_MESSAGE",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 7,
+        "null_status": "FAIL",
+        "distinct_src": 0,
+        "distinct_tgt": 3,
+        "distinct_status": "FAIL",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 0,
+        "maxlen_tgt": 44,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "updated_at",
+        "source_column": "UPDATED_AT",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 0,
+        "distinct_tgt": 14,
+        "distinct_status": "FAIL",
+        "min_src": "None",
+        "min_tgt": "2026-09-30 09:55:56.629911",
+        "max_src": "None",
+        "max_tgt": "2026-09-30 11:43:37.682402",
+        "minmax_status": "FAIL",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ],
+    "Orders": [
+      {
+        "column": "OrderID",
+        "source_column": "ORDERID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "1001",
+        "min_tgt": "1001",
+        "max_src": "1003",
+        "max_tgt": "1003",
+        "minmax_status": "PASS",
+        "sum_src": "3006",
+        "sum_tgt": "3006",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "CustomerID",
+        "source_column": "CUSTOMERID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "1",
+        "min_tgt": "1",
+        "max_src": "3",
+        "max_tgt": "3",
+        "minmax_status": "PASS",
+        "sum_src": "6",
+        "sum_tgt": "6",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "ProductID",
+        "source_column": "PRODUCTID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "101",
+        "min_tgt": "101",
+        "max_src": "103",
+        "max_tgt": "103",
+        "minmax_status": "PASS",
+        "sum_src": "306",
+        "sum_tgt": "306",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "Quantity",
+        "source_column": "QUANTITY",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": "1",
+        "min_tgt": "1",
+        "max_src": "2",
+        "max_tgt": "2",
+        "minmax_status": "PASS",
+        "sum_src": "4",
+        "sum_tgt": "4",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "OrderDate",
+        "source_column": "ORDERDATE",
+        "category": "date",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "2025-05-01 00:00:00",
+        "min_tgt": "2025-05-01 00:00:00",
+        "max_src": "2025-05-10 00:00:00",
+        "max_tgt": "2025-05-10 00:00:00",
+        "minmax_status": "PASS",
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ],
+    "Product": [
+      {
+        "column": "ProductID",
+        "source_column": "PRODUCTID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "101",
+        "min_tgt": "101",
+        "max_src": "103",
+        "max_tgt": "103",
+        "minmax_status": "PASS",
+        "sum_src": "306",
+        "sum_tgt": "306",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "ProductName",
+        "source_column": "PRODUCTNAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 6,
+        "maxlen_tgt": 6,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "Category",
+        "source_column": "CATEGORY",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 2,
+        "distinct_tgt": 2,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 11,
+        "maxlen_tgt": 11,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "Price",
+        "source_column": "PRICE",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "25.00",
+        "min_tgt": "25.00",
+        "max_src": "1200.00",
+        "max_tgt": "1200.00",
+        "minmax_status": "PASS",
+        "sum_src": "1405.00",
+        "sum_tgt": "1405.00",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ],
+    "employees": [
+      {
+        "column": "employee_id",
+        "source_column": "EMPLOYEE_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": "1",
+        "min_tgt": "1.0000000000",
+        "max_src": "5",
+        "max_tgt": "5.0000000000",
+        "minmax_status": "PASS",
+        "sum_src": "15",
+        "sum_tgt": "15.0000000000",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "first_name",
+        "source_column": "FIRST_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 5,
+        "maxlen_tgt": 5,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "last_name",
+        "source_column": "LAST_NAME",
+        "category": "string",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 5,
+        "distinct_tgt": 5,
+        "distinct_status": "PASS",
+        "min_src": null,
+        "min_tgt": null,
+        "max_src": null,
+        "max_tgt": null,
+        "minmax_status": null,
+        "sum_src": null,
+        "sum_tgt": null,
+        "sum_status": null,
+        "maxlen_src": 5,
+        "maxlen_tgt": 5,
+        "maxlen_status": "PASS"
+      },
+      {
+        "column": "department_id",
+        "source_column": "DEPARTMENT_ID",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "10",
+        "min_tgt": "10.0000000000",
+        "max_src": "30",
+        "max_tgt": "30.0000000000",
+        "minmax_status": "PASS",
+        "sum_src": "90",
+        "sum_tgt": "90.0000000000",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      },
+      {
+        "column": "salary",
+        "source_column": "SALARY",
+        "category": "numeric",
+        "null_src": 0,
+        "null_tgt": 0,
+        "null_status": "PASS",
+        "distinct_src": 3,
+        "distinct_tgt": 3,
+        "distinct_status": "PASS",
+        "min_src": "50000",
+        "min_tgt": "50000.0000000000",
+        "max_src": "70000",
+        "max_tgt": "70000.0000000000",
+        "minmax_status": "PASS",
+        "sum_src": "290000",
+        "sum_tgt": "290000.0000000000",
+        "sum_status": "PASS",
+        "maxlen_src": null,
+        "maxlen_tgt": null,
+        "maxlen_status": null
+      }
+    ]
+  },
+  "mismatched_tables": [
+    "CUSTOMER->CUSTOMER",
+    "MIGRATION_DEMO_CUSTOMER->MIGRATION_DEMO_CUSTOMER",
+    "MIGRATION_WATERMARKS->MIGRATION_WATERMARKS",
+    "employees->employees"
+  ],
+  "checksum_results": [
+    {
+      "table": "CUSTOMER->CUSTOMER",
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "target_hash": "c85aa75c3f7500048d818893c17e8337348333d8dd79bbc99a3d1487e9cf4292",
+      "status": "FAIL"
+    },
+    {
+      "table": "MIGRATION_DEMO_CUSTOMER->MIGRATION_DEMO_CUSTOMER",
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "target_hash": "b17f76de26d595e94719568160a98454afbed2baef9cedba6a3a69e697854f8b",
+      "status": "FAIL"
+    },
+    {
+      "table": "MIGRATION_WATERMARKS->MIGRATION_WATERMARKS",
+      "source_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "target_hash": "f084b391317cbd9b065b03983663ea1e35cafea72f7b7c0dcda456c84adb0a22",
+      "status": "FAIL"
+    },
+    {
+      "table": "Orders->Orders",
+      "source_hash": "45b2e9a95e85ac9e5b471e6baf05921ccc43c44a6cd65eb3f20c55a235d71ac8",
+      "target_hash": "45b2e9a95e85ac9e5b471e6baf05921ccc43c44a6cd65eb3f20c55a235d71ac8",
+      "status": "PASS"
+    },
+    {
+      "table": "Product->Product",
+      "source_hash": "a2c97b3eefa4ac2fa80c815ab7620ec3aa0bfc16dcb35f87ccd4f4d827684de0",
+      "target_hash": "a2c97b3eefa4ac2fa80c815ab7620ec3aa0bfc16dcb35f87ccd4f4d827684de0",
+      "status": "PASS"
+    },
+    {
+      "table": "employees->employees",
+      "source_hash": "d06f6d1c897952f2cedb6079c5226a23694f44de687c6c32d0be60b8a7c3fdb8",
+      "target_hash": "ce67e3882525d223776c1fe8d41da29d28835e7c7d6e5dac883658c7828507e3",
+      "status": "FAIL"
+    }
+  ],
+  "watermark_info": {
+    "CUSTOMER": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 0,
+      "message": "written=0, updated=0, duplicates=0, failed=0"
+    },
+    "MIGRATION_DEMO_CUSTOMER": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 0,
+      "message": "written=0, updated=0, duplicates=0, failed=0"
+    },
+    "MIGRATION_WATERMARKS": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 0,
+      "message": "written=0, updated=0, duplicates=0, failed=0"
+    },
+    "Orders": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 3,
+      "message": "written=3, updated=0, duplicates=0, failed=0"
+    },
+    "Product": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 3,
+      "message": "written=3, updated=0, duplicates=0, failed=0"
+    },
+    "employees": {
+      "failed_rows": 0,
+      "duplicates_skipped": 0,
+      "rows_read": 5,
+      "message": "written=5, updated=0, duplicates=0, failed=0"
+    }
+  },
+  "errors": [],
+  "retry_candidates": [
+    "CUSTOMER->CUSTOMER",
+    "MIGRATION_DEMO_CUSTOMER->MIGRATION_DEMO_CUSTOMER",
+    "MIGRATION_WATERMARKS->MIGRATION_WATERMARKS",
+    "employees->employees"
+  ],
+  "results": [
+    {
+      "check": "Row Count Match (CUSTOMER)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Null PK (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Duplicate PK (CUSTOMER.CUSTOMER_ID)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Checksum Match (CUSTOMER)",
+      "source": "e3b0c44298fc",
+      "target": "c85aa75c3f75",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "1001",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "2005",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "SUM (CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "14029",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "14",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "8",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "26",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CITY)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CITY)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CITY)",
+      "source": "0",
+      "target": "8",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.CITY)",
+      "source": "0",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CREDIT_LIMIT)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CREDIT_LIMIT)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CREDIT_LIMIT)",
+      "source": "0",
+      "target": "8",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.CREDIT_LIMIT)",
+      "source": "NULL",
+      "target": "3500.75",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.CREDIT_LIMIT)",
+      "source": "NULL",
+      "target": "75000.00",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "SUM (CUSTOMER.CREDIT_LIMIT)",
+      "source": "NULL",
+      "target": "136501.75",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.IS_ACTIVE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.IS_ACTIVE)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.IS_ACTIVE)",
+      "source": "0",
+      "target": "2",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.IS_ACTIVE)",
+      "source": "0",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.CREATED_DATE)",
+      "source": "NULL",
+      "target": "2026-01-15 00:00:00",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.CREATED_DATE)",
+      "source": "NULL",
+      "target": "2026-09-18 23:34:53",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.UPDATED_TS)",
+      "source": "0",
+      "target": "1",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.UPDATED_TS)",
+      "source": "0",
+      "target": "8",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.UPDATED_TS)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MIN (CUSTOMER.UPDATED_TS)",
+      "source": "NULL",
+      "target": "2026-01-15 10:20:45",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "MAX (CUSTOMER.UPDATED_TS)",
+      "source": "NULL",
+      "target": "2026-08-25 16:40:30.933451",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "NULL Count (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "9",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Column Count (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Max String Length (CUSTOMER.PHONE_NUMBER)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Rejected Rows (CUSTOMER)",
+      "source": "0",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "CUSTOMER"
+    },
+    {
+      "check": "Row Count Match (MIGRATION_DEMO_CUSTOMER)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Null PK (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Duplicate PK (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Checksum Match (MIGRATION_DEMO_CUSTOMER)",
+      "source": "e3b0c44298fc",
+      "target": "b17f76de26d5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MIN (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "1",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MAX (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "SUM (MIGRATION_DEMO_CUSTOMER.CUSTOMER_ID)",
+      "source": "NULL",
+      "target": "15",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.CUSTOMER_NAME)",
+      "source": "0",
+      "target": "13",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.EMAIL)",
+      "source": "0",
+      "target": "13",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Max String Length (MIGRATION_DEMO_CUSTOMER.CITY)",
+      "source": "0",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "NULL Count (MIGRATION_DEMO_CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Column Count (MIGRATION_DEMO_CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_DEMO_CUSTOMER.CREATED_DATE)",
+      "source": "0",
+      "target": "2",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MIN (MIGRATION_DEMO_CUSTOMER.CREATED_DATE)",
+      "source": "NULL",
+      "target": "2026-09-18 14:22:10",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "MAX (MIGRATION_DEMO_CUSTOMER.CREATED_DATE)",
+      "source": "NULL",
+      "target": "2026-09-18 14:22:15",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Rejected Rows (MIGRATION_DEMO_CUSTOMER)",
+      "source": "0",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_DEMO_CUSTOMER"
+    },
+    {
+      "check": "Row Count Match (MIGRATION_WATERMARKS)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Checksum Match (MIGRATION_WATERMARKS)",
+      "source": "e3b0c44298fc",
+      "target": "f084b391317c",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.source_table)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.source_table)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.source_table)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Max String Length (MIGRATION_WATERMARKS.source_table)",
+      "source": "0",
+      "target": "28",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_success_ts)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_success_ts)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_success_ts)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_success_ts)",
+      "source": "NULL",
+      "target": "2026-09-30 09:55:56.629911",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_success_ts)",
+      "source": "NULL",
+      "target": "2026-09-30 11:43:37.682402",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "0",
+      "target": "3",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "NULL",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_row_count)",
+      "source": "NULL",
+      "target": "14",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_scn)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_scn)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_scn)",
+      "source": "0",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_scn)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_scn)",
+      "source": "NULL",
+      "target": "27710658",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_scn)",
+      "source": "NULL",
+      "target": "99280026",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_mode)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_mode)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_mode)",
+      "source": "0",
+      "target": "3",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Max String Length (MIGRATION_WATERMARKS.last_mode)",
+      "source": "0",
+      "target": "9",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_run_status)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_run_status)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_run_status)",
+      "source": "0",
+      "target": "1",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Max String Length (MIGRATION_WATERMARKS.last_run_status)",
+      "source": "0",
+      "target": "7",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_error)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_error)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_error)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Max String Length (MIGRATION_WATERMARKS.last_error)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "0",
+      "target": "3",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "NULL",
+      "target": "5",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_rows_read)",
+      "source": "NULL",
+      "target": "14",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "0",
+      "target": "1",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_rows_updated)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "0",
+      "target": "1",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_duplicates_skipped)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "0",
+      "target": "1",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "SUM (MIGRATION_WATERMARKS.last_failed_rows)",
+      "source": "NULL",
+      "target": "0",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.last_message)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.last_message)",
+      "source": "0",
+      "target": "7",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.last_message)",
+      "source": "0",
+      "target": "3",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Max String Length (MIGRATION_WATERMARKS.last_message)",
+      "source": "0",
+      "target": "44",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "NULL Count (MIGRATION_WATERMARKS.updated_at)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Column Count (MIGRATION_WATERMARKS.updated_at)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Distinct Values (MIGRATION_WATERMARKS.updated_at)",
+      "source": "0",
+      "target": "14",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MIN (MIGRATION_WATERMARKS.updated_at)",
+      "source": "NULL",
+      "target": "2026-09-30 09:55:56.629911",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "MAX (MIGRATION_WATERMARKS.updated_at)",
+      "source": "NULL",
+      "target": "2026-09-30 11:43:37.682402",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Rejected Rows (MIGRATION_WATERMARKS)",
+      "source": "0",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "MIGRATION_WATERMARKS"
+    },
+    {
+      "check": "Row Count Match (Orders)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Checksum Match (Orders)",
+      "source": "45b2e9a95e85",
+      "target": "45b2e9a95e85",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "NULL Count (Orders.OrderID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Column Count (Orders.OrderID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Distinct Values (Orders.OrderID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MIN (Orders.OrderID)",
+      "source": "1001",
+      "target": "1001",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MAX (Orders.OrderID)",
+      "source": "1003",
+      "target": "1003",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "SUM (Orders.OrderID)",
+      "source": "3006",
+      "target": "3006",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "NULL Count (Orders.CustomerID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Column Count (Orders.CustomerID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Distinct Values (Orders.CustomerID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MIN (Orders.CustomerID)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MAX (Orders.CustomerID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "SUM (Orders.CustomerID)",
+      "source": "6",
+      "target": "6",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "NULL Count (Orders.ProductID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Column Count (Orders.ProductID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Distinct Values (Orders.ProductID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MIN (Orders.ProductID)",
+      "source": "101",
+      "target": "101",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MAX (Orders.ProductID)",
+      "source": "103",
+      "target": "103",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "SUM (Orders.ProductID)",
+      "source": "306",
+      "target": "306",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "NULL Count (Orders.Quantity)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Column Count (Orders.Quantity)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Distinct Values (Orders.Quantity)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MIN (Orders.Quantity)",
+      "source": "1",
+      "target": "1",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MAX (Orders.Quantity)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "SUM (Orders.Quantity)",
+      "source": "4",
+      "target": "4",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "NULL Count (Orders.OrderDate)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Column Count (Orders.OrderDate)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Distinct Values (Orders.OrderDate)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MIN (Orders.OrderDate)",
+      "source": "2025-05-01 00:00:00",
+      "target": "2025-05-01 00:00:00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "MAX (Orders.OrderDate)",
+      "source": "2025-05-10 00:00:00",
+      "target": "2025-05-10 00:00:00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Orders"
+    },
+    {
+      "check": "Rejected Rows (Orders)",
+      "source": "3",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Orders"
+    },
+    {
+      "check": "Row Count Match (Product)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Checksum Match (Product)",
+      "source": "a2c97b3eefa4",
+      "target": "a2c97b3eefa4",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "NULL Count (Product.ProductID)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Column Count (Product.ProductID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Distinct Values (Product.ProductID)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "MIN (Product.ProductID)",
+      "source": "101",
+      "target": "101",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "MAX (Product.ProductID)",
+      "source": "103",
+      "target": "103",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "SUM (Product.ProductID)",
+      "source": "306",
+      "target": "306",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "NULL Count (Product.ProductName)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Column Count (Product.ProductName)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Distinct Values (Product.ProductName)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "Max String Length (Product.ProductName)",
+      "source": "6",
+      "target": "6",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "NULL Count (Product.Category)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Column Count (Product.Category)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Distinct Values (Product.Category)",
+      "source": "2",
+      "target": "2",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "Max String Length (Product.Category)",
+      "source": "11",
+      "target": "11",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "NULL Count (Product.Price)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Column Count (Product.Price)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Distinct Values (Product.Price)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "MIN (Product.Price)",
+      "source": "25.00",
+      "target": "25.00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "MAX (Product.Price)",
+      "source": "1200.00",
+      "target": "1200.00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "SUM (Product.Price)",
+      "source": "1405.00",
+      "target": "1405.00",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "Product"
+    },
+    {
+      "check": "Rejected Rows (Product)",
+      "source": "3",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "Product"
+    },
+    {
+      "check": "Row Count Match (employees)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Null PK (employees.employee_id)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "employees"
+    },
+    {
+      "check": "Duplicate PK (employees.employee_id)",
+      "source": "0 duplicates",
+      "target": "0 duplicates",
+      "status": "PASS",
+      "category": "integrity",
+      "table": "employees"
+    },
+    {
+      "check": "Checksum Match (employees)",
+      "source": "d06f6d1c8979",
+      "target": "ce67e3882525",
+      "status": "FAIL",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "NULL Count (employees.employee_id)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Column Count (employees.employee_id)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Distinct Values (employees.employee_id)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MIN (employees.employee_id)",
+      "source": "1",
+      "target": "1.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MAX (employees.employee_id)",
+      "source": "5",
+      "target": "5.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "SUM (employees.employee_id)",
+      "source": "15",
+      "target": "15.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "NULL Count (employees.first_name)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Column Count (employees.first_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Distinct Values (employees.first_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "Max String Length (employees.first_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "NULL Count (employees.last_name)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Column Count (employees.last_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Distinct Values (employees.last_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "Max String Length (employees.last_name)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "NULL Count (employees.department_id)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Column Count (employees.department_id)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Distinct Values (employees.department_id)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MIN (employees.department_id)",
+      "source": "10",
+      "target": "10.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MAX (employees.department_id)",
+      "source": "30",
+      "target": "30.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "SUM (employees.department_id)",
+      "source": "90",
+      "target": "90.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "NULL Count (employees.salary)",
+      "source": "0",
+      "target": "0",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Column Count (employees.salary)",
+      "source": "5",
+      "target": "5",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Distinct Values (employees.salary)",
+      "source": "3",
+      "target": "3",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MIN (employees.salary)",
+      "source": "50000",
+      "target": "50000.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "MAX (employees.salary)",
+      "source": "70000",
+      "target": "70000.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "SUM (employees.salary)",
+      "source": "290000",
+      "target": "290000.0000000000",
+      "status": "PASS",
+      "category": "accuracy",
+      "table": "employees"
+    },
+    {
+      "check": "Rejected Rows (employees)",
+      "source": "5",
+      "target": "0 failed, 0 skipped",
+      "status": "PASS",
+      "category": "completeness",
+      "table": "employees"
+    },
+    {
+      "check": "Total Row Count Match",
+      "source": "11",
+      "target": "39",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "_SUMMARY"
+    },
+    {
+      "check": "Table-Level Match Ratio",
+      "source": "3/6",
+      "target": "1.00",
+      "status": "FAIL",
+      "category": "completeness",
+      "table": "_SUMMARY"
+    }
+  ]
+}

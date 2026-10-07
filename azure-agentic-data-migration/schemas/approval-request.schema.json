@@ -1,0 +1,205 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://contoso.com/schemas/approval-request.schema.json",
+  "title": "Migration Approval Request",
+  "description": "Schema for an approval request sent to a human reviewer before migration execution. Contains summary information about the plan, risk assessment, and dry-run results so the approver can make an informed decision.",
+  "type": "object",
+  "required": [
+    "planId",
+    "sourceDatabase",
+    "targetDatabase",
+    "tables",
+    "datatypeConversions",
+    "riskLevel",
+    "estimatedRowCounts",
+    "dryRunResult",
+    "requestedBy",
+    "requestedAt",
+    "approverEmail"
+  ],
+  "properties": {
+    "planId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "The migration plan ID this approval is for."
+    },
+    "sourceDatabase": {
+      "type": "object",
+      "description": "Summary of the source database.",
+      "required": ["type", "host", "database", "schema"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Oracle", "SQLServer"]
+        },
+        "host": { "type": "string" },
+        "database": { "type": "string" },
+        "schema": { "type": "string" },
+        "version": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "targetDatabase": {
+      "type": "object",
+      "description": "Summary of the target Azure SQL Database.",
+      "required": ["server", "database", "schema"],
+      "properties": {
+        "server": { "type": "string" },
+        "database": { "type": "string" },
+        "schema": { "type": "string" },
+        "serviceTier": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "tables": {
+      "type": "array",
+      "description": "List of tables included in the migration.",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["tableName", "estimatedRows", "riskLevel"],
+        "properties": {
+          "tableName": { "type": "string" },
+          "estimatedRows": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH"]
+          },
+          "columnCount": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "hasHighRiskConversions": {
+            "type": "boolean",
+            "description": "True if any column in this table has a HIGH risk conversion."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "datatypeConversions": {
+      "type": "array",
+      "description": "Summary of notable datatype conversions the approver should review.",
+      "items": {
+        "type": "object",
+        "required": [
+          "tableName",
+          "columnName",
+          "sourceDatatype",
+          "targetDatatype",
+          "riskLevel"
+        ],
+        "properties": {
+          "tableName": { "type": "string" },
+          "columnName": { "type": "string" },
+          "sourceDatatype": { "type": "string" },
+          "targetDatatype": { "type": "string" },
+          "riskLevel": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH"]
+          },
+          "notes": {
+            "type": "string",
+            "description": "AI agent's notes about this conversion."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "riskLevel": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"],
+      "description": "Overall risk level for the migration."
+    },
+    "riskSummary": {
+      "type": "string",
+      "description": "Human-readable summary of identified risks."
+    },
+    "estimatedRowCounts": {
+      "type": "object",
+      "description": "Map of table name → estimated row count.",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "estimatedDuration": {
+      "type": "string",
+      "description": "Human-readable estimated migration duration."
+    },
+    "dryRunResult": {
+      "type": "object",
+      "description": "Results from the dry-run execution.",
+      "required": ["executed", "passed"],
+      "properties": {
+        "executed": {
+          "type": "boolean",
+          "description": "Whether a dry run was actually performed."
+        },
+        "passed": {
+          "type": "boolean",
+          "description": "Whether the dry run passed all checks."
+        },
+        "ddlValidated": {
+          "type": "boolean",
+          "description": "Whether all DDL statements were validated successfully."
+        },
+        "connectivityVerified": {
+          "type": "boolean",
+          "description": "Whether source and target connectivity was confirmed."
+        },
+        "sampleRowsTested": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of sample rows tested during dry run."
+        },
+        "issues": {
+          "type": "array",
+          "description": "Issues found during dry run.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "severity": {
+                "type": "string",
+                "enum": ["INFO", "WARNING", "ERROR"]
+              },
+              "table": { "type": "string" },
+              "message": { "type": "string" }
+            },
+            "required": ["severity", "message"]
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requestedBy": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of the person who initiated the migration request."
+    },
+    "requestedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of the original migration request."
+    },
+    "approverEmail": {
+      "type": "string",
+      "format": "email",
+      "description": "Email of the designated approver."
+    },
+    "approvalDeadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional deadline after which the approval request expires."
+    },
+    "approvalUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the approval portal / Logic App trigger."
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+{
+  "constraints": [
+    {"constraint_name": "PK_CUSTOMER", "constraint_type": "P", "table_name": "CUSTOMER", "column_name": "CUSTOMER_ID", "position": 1, "referenced_table": null, "referenced_column": null},
+    {"constraint_name": "PK_PRODUCT", "constraint_type": "P", "table_name": "PRODUCT", "column_name": "PRODUCT_ID", "position": 1, "referenced_table": null, "referenced_column": null}
+  ],
+  "indexes": [
+    {"index_name": "PK_CUSTOMER", "table_name": "CUSTOMER", "uniqueness": "UNIQUE", "column_name": "CUSTOMER_ID", "position": 1},
+    {"index_name": "PK_PRODUCT", "table_name": "PRODUCT", "uniqueness": "UNIQUE", "column_name": "PRODUCT_ID", "position": 1}
+  ]
+}

@@ -1,0 +1,9 @@
+[
+    {
+        "name": "GET_CUSTOMER_ORDERS",
+        "type": "PROCEDURE",
+        "status": "VALID",
+        "last_ddl_time": "2026-08-25T14:30:00",
+        "source_code": "PROCEDURE GET_CUSTOMER_ORDERS (\n    p_customer_id IN NUMBER,\n    p_cursor OUT SYS_REFCURSOR\n) AS\nBEGIN\n    OPEN p_cursor FOR\n        SELECT o.OrderID, o.OrderDate, o.Quantity, p.ProductName, p.Price\n        FROM Orders o\n        JOIN Product p ON o.ProductID = p.ProductID\n        WHERE o.CustomerID = p_customer_id\n        ORDER BY o.OrderDate DESC;\nEXCEPTION\n    WHEN NO_DATA_FOUND THEN\n        DBMS_OUTPUT.PUT_LINE('No orders found for customer ' || p_customer_id);\n    WHEN OTHERS THEN\n        DBMS_OUTPUT.PUT_LINE('Error: ' || SQLERRM);\n        RAISE;\nEND GET_CUSTOMER_ORDERS;"
+    }
+]

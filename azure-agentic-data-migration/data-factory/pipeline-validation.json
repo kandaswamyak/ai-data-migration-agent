@@ -1,0 +1,375 @@
+{
+  "name": "Pipeline_PostMigrationValidation",
+  "properties": {
+    "description": "ADF pipeline for post-migration validation. Compares source and target tables across multiple dimensions: row count, null counts per column, duplicate checks, and data type verification. Produces a structured JSON validation report.",
+    "activities": [
+      {
+        "name": "LookupSourceRowCount",
+        "description": "Get total row count from the source table for comparison.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+              "type": "Expression"
+            },
+            "oracleReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT COUNT(*) AS ROW_COUNT FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable), '')",
+              "type": "Expression"
+            },
+            "sqlReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT COUNT(*) AS ROW_COUNT FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, ']'), '')",
+              "type": "Expression"
+            },
+            "queryTimeout": "00:30:00"
+          },
+          "dataset": {
+            "referenceName": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+              "type": "Expression"
+            },
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.sourceSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.sourceTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "LookupTargetRowCount",
+        "description": "Get total row count from the target Azure SQL table for comparison.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": {
+              "value": "@concat('SELECT COUNT(*) AS ROW_COUNT FROM [', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, ']')",
+              "type": "Expression"
+            },
+            "queryTimeout": "00:30:00"
+          },
+          "dataset": {
+            "referenceName": "DS_AzureSql_Parameterized",
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.targetSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.targetTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "LookupSourceNullCounts",
+        "description": "Get null counts per column from the source table. Uses dynamic SQL to generate SUM(CASE WHEN col IS NULL THEN 1 ELSE 0 END) for each column.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'OracleSource', 'SqlServerSource')",
+              "type": "Expression"
+            },
+            "oracleReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), concat('SELECT ', pipeline().parameters.nullCheckExpression, ' FROM ', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable), '')",
+              "type": "Expression"
+            },
+            "sqlReaderQuery": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'SQLServer'), concat('SELECT ', pipeline().parameters.nullCheckExpression, ' FROM [', pipeline().parameters.sourceSchema, '].[', pipeline().parameters.sourceTable, ']'), '')",
+              "type": "Expression"
+            },
+            "queryTimeout": "01:00:00"
+          },
+          "dataset": {
+            "referenceName": {
+              "value": "@if(equals(pipeline().parameters.sourceType, 'Oracle'), 'DS_Oracle_Parameterized', 'DS_SqlServer_Parameterized')",
+              "type": "Expression"
+            },
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.sourceSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.sourceTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "LookupTargetNullCounts",
+        "description": "Get null counts per column from the target Azure SQL table.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": {
+              "value": "@concat('SELECT ', pipeline().parameters.nullCheckExpression, ' FROM [', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, ']')",
+              "type": "Expression"
+            },
+            "queryTimeout": "01:00:00"
+          },
+          "dataset": {
+            "referenceName": "DS_AzureSql_Parameterized",
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.targetSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.targetTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "LookupTargetDuplicateCheck",
+        "description": "Check for duplicate rows in the target table based on the specified key columns.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": {
+              "value": "@concat('SELECT COUNT(*) AS DUPLICATE_GROUPS, ISNULL(SUM(DUP_COUNT), 0) AS TOTAL_DUPLICATE_ROWS FROM (SELECT ', pipeline().parameters.duplicateCheckColumns, ', COUNT(*) AS DUP_COUNT FROM [', pipeline().parameters.targetSchema, '].[', pipeline().parameters.targetTable, '] GROUP BY ', pipeline().parameters.duplicateCheckColumns, ' HAVING COUNT(*) > 1) AS dups')",
+              "type": "Expression"
+            },
+            "queryTimeout": "01:00:00"
+          },
+          "dataset": {
+            "referenceName": "DS_AzureSql_Parameterized",
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.targetSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.targetTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": true
+        }
+      },
+      {
+        "name": "LookupTargetDataTypes",
+        "description": "Retrieve column data types from the target Azure SQL table for data type validation.",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": {
+              "value": "@concat('SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, NUMERIC_PRECISION, NUMERIC_SCALE, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ''', pipeline().parameters.targetSchema, ''' AND TABLE_NAME = ''', pipeline().parameters.targetTable, ''' ORDER BY ORDINAL_POSITION')",
+              "type": "Expression"
+            },
+            "queryTimeout": "00:10:00"
+          },
+          "dataset": {
+            "referenceName": "DS_AzureSql_Parameterized",
+            "type": "DatasetReference",
+            "parameters": {
+              "schemaName": {
+                "value": "@pipeline().parameters.targetSchema",
+                "type": "Expression"
+              },
+              "tableName": {
+                "value": "@pipeline().parameters.targetTable",
+                "type": "Expression"
+              }
+            }
+          },
+          "firstRowOnly": false
+        }
+      },
+      {
+        "name": "SetValidationResult",
+        "description": "Build a comprehensive validation result JSON comparing all source vs target metrics.",
+        "type": "SetVariable",
+        "dependsOn": [
+          {
+            "activity": "LookupSourceRowCount",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "LookupTargetRowCount",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "LookupSourceNullCounts",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "LookupTargetNullCounts",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "LookupTargetDuplicateCheck",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          },
+          {
+            "activity": "LookupTargetDataTypes",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [],
+        "typeProperties": {
+          "variableName": "validationResult",
+          "value": {
+            "value": "@concat('{', '\"pipelineRunId\": \"', pipeline().RunId, '\",', '\"validationTimestamp\": \"', utcNow(), '\",', '\"sourceType\": \"', pipeline().parameters.sourceType, '\",', '\"sourceTable\": \"', pipeline().parameters.sourceSchema, '.', pipeline().parameters.sourceTable, '\",', '\"targetTable\": \"', pipeline().parameters.targetSchema, '.', pipeline().parameters.targetTable, '\",', '\"checks\": {', '\"rowCount\": {', '\"sourceRowCount\": ', string(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), ',', '\"targetRowCount\": ', string(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT), ',', '\"difference\": ', string(sub(int(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), int(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT))), ',', '\"passed\": ', if(equals(int(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), int(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT)), 'true', 'false'), '},', '\"nullCount\": {', '\"sourceNulls\": ', string(activity('LookupSourceNullCounts').output.firstRow), ',', '\"targetNulls\": ', string(activity('LookupTargetNullCounts').output.firstRow), ',', '\"passed\": ', if(equals(string(activity('LookupSourceNullCounts').output.firstRow), string(activity('LookupTargetNullCounts').output.firstRow)), 'true', 'false'), '},', '\"duplicateCheck\": {', '\"duplicateGroups\": ', string(activity('LookupTargetDuplicateCheck').output.firstRow.DUPLICATE_GROUPS), ',', '\"totalDuplicateRows\": ', string(activity('LookupTargetDuplicateCheck').output.firstRow.TOTAL_DUPLICATE_ROWS), ',', '\"passed\": ', if(equals(int(activity('LookupTargetDuplicateCheck').output.firstRow.DUPLICATE_GROUPS), 0), 'true', 'false'), '},', '\"datatypeCheck\": {', '\"targetColumnCount\": ', string(activity('LookupTargetDataTypes').output.count), ',', '\"columns\": ', string(activity('LookupTargetDataTypes').output.value), '}', '},', '\"overallPassed\": ', if(and(and(equals(int(activity('LookupSourceRowCount').output.firstRow.ROW_COUNT), int(activity('LookupTargetRowCount').output.firstRow.ROW_COUNT)), equals(string(activity('LookupSourceNullCounts').output.firstRow), string(activity('LookupTargetNullCounts').output.firstRow))), equals(int(activity('LookupTargetDuplicateCheck').output.firstRow.DUPLICATE_GROUPS), 0)), 'true', 'false'), '}')",
+            "type": "Expression"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "sourceType": {
+        "type": "string",
+        "defaultValue": "SQLServer"
+      },
+      "sourceConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetConnectionSecret": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "sourceSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "sourceTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "targetSchema": {
+        "type": "string",
+        "defaultValue": "dbo"
+      },
+      "targetTable": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "validationChecks": {
+        "type": "array",
+        "defaultValue": [
+          "rowCount",
+          "nullCount",
+          "duplicateCheck",
+          "datatypeCheck"
+        ]
+      },
+      "nullCheckExpression": {
+        "type": "string",
+        "defaultValue": "SUM(CASE WHEN col1 IS NULL THEN 1 ELSE 0 END) AS col1_nulls"
+      },
+      "duplicateCheckColumns": {
+        "type": "string",
+        "defaultValue": "*"
+      }
+    },
+    "variables": {
+      "validationResult": {
+        "type": "String"
+      }
+    },
+    "folder": {
+      "name": "DataMigration/Validation"
+    },
+    "annotations": [
+      "DataMigration",
+      "Validation",
+      "PostMigration",
+      "POC"
+    ]
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}
